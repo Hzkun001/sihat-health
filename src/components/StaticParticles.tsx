@@ -1,67 +1,81 @@
+// src/components/StaticParticles.tsx
 import { useEffect, useState } from 'react';
 
 interface Particle {
   id: number;
-  x: number;
-  y: number;
-  size: number;
+  x: number;   // 0..100 (viewBox)
+  y: number;   // 0..100 (viewBox)
+  size: number; // px-ish, nanti diskalakan
   color: string;
   opacity: number;
   blur: boolean;
 }
 
+type Groups = {
+  normal: Particle[];
+  blurred: Particle[];
+};
+
 export function StaticParticles() {
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [groups, setGroups] = useState<Groups>({ normal: [], blurred: [] });
+  const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
+    // SSR guard
+    if (typeof window === 'undefined') return;
+
+    // Reduced motion
+    const mql = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const updateReduced = () => setReduced(!!mql?.matches);
+    updateReduced();
+    mql?.addEventListener?.('change', updateReduced);
+
+    const colors = ['#1BA351', '#5AC8FA', '#A7F3D0', '#DCFCE7'];
+
     const generateParticles = () => {
       const width = window.innerWidth;
-      let count = 40; // Desktop default
-      
-      // Responsive particle count
-      if (width < 640) {
-        count = 12; // Mobile
-      } else if (width < 1024) {
-        count = 22; // Tablet
-      }
+      // Responsif + reduced motion:
+      let count = width < 640 ? 12 : width < 1024 ? 22 : 40;
+      if (reduced) count = Math.floor(count * 0.35); // kurangi banyak kalau reduced
 
-      const colors = [
-        '#1BA351', // brand-green
-        '#5AC8FA', // brand-blue
-        '#A7F3D0', // light mint
-        '#DCFCE7', // very light mint
-      ];
+      const normal: Particle[] = [];
+      const blurred: Particle[] = [];
 
-      const newParticles: Particle[] = [];
       for (let i = 0; i < count; i++) {
-        newParticles.push({
+        const p: Particle = {
           id: i,
-          x: Math.random() * 100, // percentage
-          y: Math.random() * 100, // percentage
-          size: Math.random() * 3 + 1.5, // 1.5-4.5px
-          color: colors[Math.floor(Math.random() * colors.length)],
-          opacity: Math.random() * 0.25 + 0.15, // 0.15-0.4
-          blur: i < count * 0.2 && Math.random() > 0.5, // 20% chance for blur
-        });
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 3 + 1.5,          // 1.5–4.5
+          color: colors[(Math.random() * colors.length) | 0],
+          opacity: Math.random() * 0.25 + 0.15,   // 0.15–0.4
+          blur: i < count * 0.2 && Math.random() > 0.5,
+        };
+        (p.blur ? blurred : normal).push(p);
       }
-      setParticles(newParticles);
+      setGroups({ normal, blurred });
     };
 
-    generateParticles();
-
-    // Regenerate on resize
-    let timeoutId: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(generateParticles, 300);
+    // Debounce resize tanpa NodeJS.Timeout
+    let tid: number | null = null;
+    const onResize = () => {
+      if (tid) window.clearTimeout(tid);
+      tid = window.setTimeout(generateParticles, 250);
     };
 
-    window.addEventListener('resize', handleResize, { passive: true });
+    // generate pertama kali (idle-ish)
+    // pakai timeout kecil supaya paint hero duluan
+    const first = window.setTimeout(generateParticles, 0);
+
+    window.addEventListener('resize', onResize, { passive: true });
+
     return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
+      if (tid) window.clearTimeout(tid);
+      window.clearTimeout(first);
+      window.removeEventListener('resize', onResize);
+      mql?.removeEventListener?.('change', updateReduced);
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <svg
@@ -69,37 +83,53 @@ export function StaticParticles() {
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid slice"
       style={{ opacity: 0.6 }}
+      aria-hidden="true"
     >
       <defs>
-        {/* Soft blur filter for depth particles */}
+        {/* Satu filter blur untuk seluruh grup blur */}
         <filter id="soft-blur">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.35" />
         </filter>
       </defs>
 
-      {/* Static particles */}
-      {particles.map((particle) => (
-        <circle
-          key={particle.id}
-          cx={particle.x}
-          cy={particle.y}
-          r={particle.size / 20} // Scale to viewBox
-          fill={particle.color}
-          opacity={particle.opacity}
-          filter={particle.blur ? 'url(#soft-blur)' : undefined}
-        >
-          {/* Optional: Very subtle opacity animation for 2-3 large particles */}
-          {particle.blur && particle.size > 3.5 && (
-            <animate
-              attributeName="opacity"
-              values={`${particle.opacity};${particle.opacity * 1.3};${particle.opacity}`}
-              dur="7s"
-              repeatCount="indefinite"
-              begin={`${particle.id * 1.2}s`}
-            />
-          )}
-        </circle>
-      ))}
+      {/* Grup normal: tanpa filter */}
+      <g>
+        {groups.normal.map((p) => (
+          <circle
+            key={`n-${p.id}`}
+            cx={p.x}
+            cy={p.y}
+            r={p.size / 20}           // skala ke viewBox 100
+            fill={p.color}
+            opacity={p.opacity}
+          />
+        ))}
+      </g>
+
+      {/* Grup blur: pakai satu filter saja */}
+      <g filter="url(#soft-blur)">
+        {groups.blurred.map((p) => (
+          <circle
+            key={`b-${p.id}`}
+            cx={p.x}
+            cy={p.y}
+            r={p.size / 20}
+            fill={p.color}
+            opacity={p.opacity}
+          >
+            {/* animasi halus hanya untuk sebagian yang cukup besar */}
+            {!reduced && p.size > 3.5 && (
+              <animate
+                attributeName="opacity"
+                values={`${p.opacity};${(p.opacity * 1.3).toFixed(3)};${p.opacity}`}
+                dur="7s"
+                repeatCount="indefinite"
+                begin={`${(p.id * 1.2).toFixed(1)}s`}
+              />
+            )}
+          </circle>
+        ))}
+      </g>
     </svg>
   );
 }

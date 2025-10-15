@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 // tapi kita kurangi whileInView yang terus aktif.
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRevealOnce } from '../hooks/useRefealOnce';
+import { useRevealOnce } from '../hooks/useRevealOnce';
 import '@/styles/reveal.css';
 
 interface InfoSlide {
