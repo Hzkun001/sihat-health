@@ -14,72 +14,78 @@ const menuItems = [
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('hero');
+  // MULAI KOSONG → biar tidak auto-aktif 'hero' saat load
+  const [activeSection, setActiveSection] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Throttle scroll event for better performance
+    // Deteksi section aktif yang robust:
+    // pilih section terakhir yang top-nya sudah melewati offset navbar
     let ticking = false;
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 50);
+    const OFFSET = 120; // tinggi navbar + margin aman
 
-          // Update active section based on scroll position
-          const sections = menuItems.map(item => item.href.replace('#', ''));
-          for (const section of sections) {
-            const element = document.getElementById(section);
-            if (element) {
-              const rect = element.getBoundingClientRect();
-              if (rect.top <= 100 && rect.bottom >= 100) {
-                setActiveSection(section);
-                break;
-              }
-            }
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+
+      window.requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 50);
+
+        const sections = menuItems.map(i => i.href.replace('#', ''));
+        let current = '';
+
+        for (const id of sections) {
+          const el = document.getElementById(id);
+          if (!el) continue;
+          const top = el.getBoundingClientRect().top - OFFSET;
+          // ambil yang sudah lewat offset (<= 0)
+          if (top <= 0) current = id;
+        }
+
+        // kalau masih paling atas (belum ada yg lewat offset), kosongkan
+        setActiveSection(current);
+
+        ticking = false;
+      });
     };
 
+    // set state awal dan pasang listener
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Smooth scroll with offset for navbar
+  // Smooth scroll dengan offset navbar
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
-    
+
     if (element) {
-      const navbarOffset = 100; // Offset for floating navbar
+      const navbarOffset = 120; // samakan dengan OFFSET di atas
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
 
-      // Close mobile menu if open
+      // Tandai aktif saat klik (opsional, membuat responsif saat awal)
+      setActiveSection(targetId);
+
+      // Tutup menu mobile
       setMobileMenuOpen(false);
     }
   };
 
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset';
   }, [mobileMenuOpen]);
 
   return (
     <>
-      {/* CardiaTec-style Floating Navbar */}
+      {/* Floating Navbar */}
       <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -88,9 +94,7 @@ export function Navbar() {
         style={{ willChange: 'transform, opacity' }}
       >
         <motion.nav
-          animate={{
-            height: isScrolled ? '64px' : '80px',
-          }}
+          animate={{ height: isScrolled ? '64px' : '80px' }}
           transition={{ duration: 0.25, ease: [0.25, 0.8, 0.25, 1] }}
           className="w-full max-w-[90%] lg:max-w-[85%] pointer-events-auto"
           style={{
@@ -105,9 +109,7 @@ export function Navbar() {
           <div className="h-full px-6 lg:px-10 flex items-center justify-between">
             {/* Logo */}
             <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center space-x-3 group">
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-              >
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                 <img src="assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
@@ -149,23 +151,19 @@ export function Navbar() {
                     >
                       {item.label}
                     </span>
-                    
+
                     {/* Hover/Active underline with gradient */}
                     {isActive ? (
                       <motion.div
                         layoutId="navbar-underline"
                         className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full"
-                        style={{
-                          background: 'linear-gradient(90deg, #1BA351 0%, #5AC8FA 100%)',
-                        }}
+                        style={{ background: 'linear-gradient(90deg, #1BA351 0%, #5AC8FA 100%)' }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
                       />
                     ) : (
                       <motion.div
                         className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full opacity-0 group-hover:opacity-100"
-                        style={{
-                          backgroundColor: '#1BA351',
-                        }}
+                        style={{ backgroundColor: '#1BA351' }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
                       />
                     )}
