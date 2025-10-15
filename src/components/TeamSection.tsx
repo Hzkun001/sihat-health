@@ -17,7 +17,7 @@ const teamMembers: TeamMember[] = [
     name: 'Akhmad Hafidz Ardianto',
     role: 'Front-end & Back-end',
     description: 'Membangun UI responsif dan backend andal, mencakup UI/UX, API, autentikasi, dan integrasi data',
-    image: '/public/assets/hafizh.jpg',
+    image: 'assets/hafizh.jpg',
     linkedin: 'https://www.linkedin.com/in/akhmad-hafidz-ardianto/',
   },
   {
@@ -25,7 +25,7 @@ const teamMembers: TeamMember[] = [
     name: 'Muhammad Riduwan',
     role: 'Geospatial Engineer & UI/UX Development',
     description: 'Menggabungkan analisis spasial dan desain interaktif untuk menyajikan data kesehatan secara ilmiah.',
-    image: '/public/assets/uway.jpg',
+    image: 'assets/uway.jpg',
     linkedin: 'https://www.linkedin.com/in/muhammad-riduwan-abb636372/',
   },
 ];
