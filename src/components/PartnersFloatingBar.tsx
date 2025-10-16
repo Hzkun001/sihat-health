@@ -16,8 +16,12 @@ export function PartnersFloatingBar() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-      className="fixed bottom-6 left-6 z-50 pointer-events-none hidden md:block"
+      // HAPUS: className="fixed bottom-6 left-6 z-50 pointer-events-none hidden md:block"
+      className="fixed bottom-6 z-50 pointer-events-none hidden md:block"
       style={{
+        // samakan kiri dengan container navbar (mis. max-w-7xl = 80rem)
+        // 1.5rem = padding kiri (px-6) agar pas dengan navbar
+        left: 'calc((100vw - 80rem) / 2 + 1.5rem)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -27,7 +31,7 @@ export function PartnersFloatingBar() {
           boxShadow: '0 6px 20px rgba(0, 0, 0, 0.14)',
         }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="relative rounded-2xl overflow-hidden pointer-events-auto group w-[540px] lg:w-[600px]"
+        className="relative rounded-2xl overflow-hidden pointer-events-auto group w-[600px] lg:w-[600px]"
         style={{
           backgroundColor: 'rgba(255, 255, 255, 0.78)',
           backdropFilter: 'blur(20px)',
@@ -61,7 +65,7 @@ export function PartnersFloatingBar() {
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.3 }}
             >
-              25+
+              10+
             </motion.div>
             <div className="border-l border-ink-900/10 pl-3">
               <p 
