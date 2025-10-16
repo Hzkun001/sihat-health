@@ -6,6 +6,7 @@ const menuItems = [
   { label: 'Beranda', href: '#hero' },
   { label: 'Tentang', href: '#tentang' },
   { label: 'Peta', href: '#peta' },
+  { label: 'Lapor', href: '#laporan' },
   { label: 'Statistik', href: '#statistik' },
   { label: 'Berita', href: '#berita' },
   { label: 'Tim', href: '#tim' },
