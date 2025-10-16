@@ -204,7 +204,7 @@ export function MapLayerFilter({
         <p className="text-ink-500 leading-relaxed" style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5 }}>
           <span style={{ fontWeight: 600 }}>Sumber Data:</span>
           <br />
-          Dinas Kesehatan Banjarbaru, BPS Kota Banjarbaru 2024, Geoportal Kota Banjarbaru
+          Dinas Kesehatan Banjarbaru, BPS Kota Banjarbaru, Geoportal Kota Banjarbaru
         </p>
       </div>
     </div>
