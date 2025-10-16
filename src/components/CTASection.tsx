@@ -21,7 +21,7 @@ export function CTASection() {
         }}
       />
 
-          <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
+      <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
         <img
           src="/assets/banjarbaru-monument.avif"
           alt=""
@@ -74,7 +74,6 @@ export function CTASection() {
 
               <motion.a
                 href="#tentang"
-                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: [1, 0.98, 1] }}
                 transition={{ 
                   scale: { duration: 0.12 },
@@ -87,34 +86,8 @@ export function CTASection() {
               </motion.a>
             </div>
           </div>
-        </div>
-
-        {/* Floating Stats — jadikan list semantik + reveal sekali jalan */}
-        <div
-          ref={statsRev.ref as any}
-          className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 reveal ${statsRev.visible ? 'is-visible' : ''}`}
-          style={{ transitionDuration: '.6s', transitionDelay: '.08s' }}
-        >
-          <ul className="contents" role="list">
-            {[
-              { value: '200K+', label: 'Penduduk Terlayani' },
-              { value: '15+', label: 'Indikator SDG' },
-              { value: '100%', label: 'Data Terbuka' },
-              { value: '24/7', label: 'Akses Platform' },
-            ].map((stat) => (
-              <li
-                key={stat.label}
-                className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 transition-transform duration-150 hover:-translate-y-1"
-              >
-                <div className="text-white mb-2" style={{ fontSize: '32px', fontWeight: 700 }}>
-                  {stat.value}
-                </div>
-                <div className="text-white/80 text-sm">{stat.label}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </SectionReveal>
       </div>
-</section>
+    </section>
   );
 }
