@@ -31,6 +31,7 @@
             "@radix-ui/react-toggle-group": "^1.1.2",
             "@radix-ui/react-tooltip": "^1.1.8",
             "@splinetool/react-spline": "^4.1.0",
+            "@splinetool/viewer": "^1.10.80",
             "@terraformer/arcgis": "^2.1.2",
             "@turf/clean-coords": "^7.2.0",
             "@turf/dissolve": "^7.2.0",
