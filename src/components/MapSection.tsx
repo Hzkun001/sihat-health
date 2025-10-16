@@ -2,7 +2,7 @@
 import { SectionReveal } from './SectionReveal';
 import { MapPin, Filter, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, m } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
 import { parseArcgisToGeoJSON } from '@/utils/parseArcgisToGeoJSON';
 
@@ -14,13 +14,10 @@ import maplibregl, { Map as MLMap } from 'maplibre-gl';
 const LAYER_CONFIG = {
   hospitals: {
     url: '/data/rumah_sakit.json',
-    type: 'circle' as const,
-    paint: {
-      'circle-radius': 8,
-      'circle-color': '#E74C3C',
-      'circle-stroke-width': 1.5,
-      'circle-stroke-color': '#ffffff',
-    },
+    render: 'symbol' as const,
+    iconName: 'hospital-icon',          
+    iconURL: '/assets/hospital.png',       
+    iconSize: 0.85,                    
     minzoom: 8,
   },
   puskesmas: {
@@ -56,18 +53,68 @@ const LAYER_CONFIG = {
     },
     minzoom: 10,
   },
-  ambulances: {
-    url: '/data/home_care_lansia.json',
+  population: {
+    url: '/data/kepadatan_penduduk.json',
     type: 'circle' as const,
     paint: {
       'circle-radius': 4.5,
-      'circle-color': '#E67E22',
+      'circle-color': '#2d2d2dff',
       'circle-stroke-width': 1,
       'circle-stroke-color': '#ffffff',
     },
     minzoom: 9,
   },
-} as const;
+  children: {
+    url: '/data/sebaran_balita.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 4.5,
+      'circle-color': '#e856b7ff',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 9,
+  },
+  homecare: {
+    url: '/data/home_care_lansia.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 4.5,
+      'circle-color': '#f2c193ff',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 9,
+  },
+  elderly: {
+        url: '/data/sebaran_lansia.json',   // EsriJSON → dikonversi runtime
+        render: 'heatmap' as const,
+        minzoom: 0,
+        maxzoom: 22,
+        heatmap: {
+          'heatmap-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            5, 12,
+            12, 28
+          ],
+          'heatmap-intensity': [
+            'interpolate', ['linear'], ['zoom'],
+            5, 0.6,
+            12, 1.6
+          ],
+          'heatmap-opacity': 0.9,
+          'heatmap-color': [
+            'interpolate', ['linear'], ['heatmap-density'],
+            0, 'rgba(0,0,0,0)',
+            0.2, '#9BE7FF',
+            0.4, '#5AC8FA',
+            0.6, '#34C759',
+            0.8, '#FFC107',
+            1, '#FF3B30'
+          ]
+        },
+      },
+ } as const;
 
 type LayerId = keyof typeof LAYER_CONFIG;
 
@@ -84,10 +131,6 @@ export function MapSection() {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<MLMap | null>(null);
   const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
-
-  /** ============================
-   * Helpers
-   * ============================ */
 
   // Pastikan source+layer ada; kalau belum, buat (default hidden).
   const ensureSourceAndLayer = useCallback((layerId: LayerId, data?: GeoJSON.FeatureCollection) => {
@@ -106,17 +149,33 @@ export function MapSection() {
     }
 
     if (!map.getLayer(layerName)) {
-      map.addLayer(
-        {
-          id: layerName,
-          type: cfg.type,
-          source: srcId,
-          paint: cfg.paint as any,
-          layout: { visibility: 'none' },
-          minzoom: cfg.minzoom,
-        },
-        undefined // beforeId opsional
-      );
+      // Handle special case for heatmap layer (elderly)
+      if ('render' in cfg && cfg.render === 'heatmap') {
+        map.addLayer(
+          {
+            id: layerName,
+            type: 'heatmap',
+            source: srcId,
+            paint: cfg.heatmap as any,
+            layout: { visibility: 'none' },
+            minzoom: cfg.minzoom,
+            maxzoom: cfg.maxzoom,
+          },
+          undefined // beforeId opsional
+        );
+      } else {
+        map.addLayer(
+          {
+            id: layerName,
+            type: cfg.type,
+            source: srcId,
+            paint: cfg.paint as any,
+            layout: { visibility: 'none' },
+            minzoom: cfg.minzoom,
+          },
+          undefined // beforeId opsional
+        );
+      }
     }
   }, []);
 
@@ -295,18 +354,18 @@ if (fc) {
     map.on('zoomend', () => setZoomLevel(map.getZoom()));
 
     map.on('load', () => {
+      
       setMapLoaded(true);
       setZoomLevel(map.getZoom());
         (window as any).map = map;
         console.info("[Map Debug] window.map tersedia di console");
       (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
       // tampilkan default
-      void loadAndShowLayer('hospitals', false);
+      // void loadAndShowLayer('hospitals', false);
 
-      // tandai siap
       if (map.isStyleLoaded()) map.once('idle', () => setMapLoaded(true));
       else map.once('load', () => map.once('idle', () => setMapLoaded(true)));
-
+      
       // jaga-jaga: resize setelah style siap
       setTimeout(() => map.resize(), 0);
     });
@@ -320,10 +379,6 @@ if (fc) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // init sekali
-
-  /** ============================
-   * Render
-   * ============================ */
 
   return (
     <section id="peta" className="relative py-24 overflow-hidden">
