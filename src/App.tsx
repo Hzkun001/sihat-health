@@ -60,7 +60,7 @@ export default function App() {
             <Suspense fallback={<div className="min-h-screen" />}>
               <AboutSection />
               <MapSection />
-              <ReportSection />
+               <ReportSection />
               <StatsCardsSection />
               <StatsIndicatorsSection />
               <NewsSection />
