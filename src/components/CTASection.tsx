@@ -1,25 +1,27 @@
-// src/components/CTASection.tsx
-import { useRevealOnce } from '../hooks/useRevealOnce';
-import '@/styles/reveal.css';
+import { SectionReveal } from './SectionReveal';
+import { motion } from 'motion/react';
 import { Mail, ArrowRight } from 'lucide-react';
 
 export function CTASection() {
-  // sekali jalan: setiap blok besar punya hook sendiri biar isolasi
-  const iconRev = useRevealOnce();
-  const textRev = useRevealOnce();
-  const statsRev = useRevealOnce();
-
   return (
     <section id="kontak" className="relative py-32 overflow-hidden">
-      {/* Background gradient (non-interaktif, tanpa JS) */}
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)' }}
-        aria-hidden="true"
+        style={{
+          background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
+        }}
       />
 
-      {/* Decorative image — lazy + anti-CLS */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
+      {/* Decorative Elements */}
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          background:
+            'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.3) 0%, transparent 50%)',
+        }}
+      />
+
+          <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
         <img
           src="/assets/banjarbaru-monument.avif"
           alt=""
@@ -31,22 +33,17 @@ export function CTASection() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto">
-          {/* Icon chip */}
-          <div
-            ref={iconRev.ref as any}
-            className={`w-20 h-20 mx-auto mb-8 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center reveal ${iconRev.visible ? 'is-visible' : ''}`}
-            style={{ transitionDuration: '.6s', transitionDelay: '.12s' }}
-          >
-            <Mail size={40} className="text-white" aria-hidden="true" />
-          </div>
+        <SectionReveal>
+          <div className="text-center max-w-3xl mx-auto">
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+            >
+              <Mail size={40} className="text-white" />
+            </motion.div>
 
-          {/* Heading + paragraph */}
-          <div
-            ref={textRev.ref as any}
-            className={`reveal ${textRev.visible ? 'is-visible' : ''}`}
-            style={{ transitionDuration: '.6s' }}
-          >
             <h2
               className="text-white mb-6 tracking-tight"
               style={{ fontSize: 'clamp(32px, 4vw, 56px)', fontWeight: 700, lineHeight: 1.2 }}
@@ -58,37 +55,47 @@ export function CTASection() {
               className="text-white/90 mb-12 leading-relaxed"
               style={{ fontSize: 'clamp(16px, 1.5vw, 20px)' }}
             >
-              Bergabunglah dengan kami dalam mewujudkan masyarakat Banjarbaru yang lebih sehat.
+              Bergabunglah dengan kami dalam mewujudkan masyarakat Banjarbaru yang lebih sehat. 
               Mari bersama-sama mengoptimalkan data kesehatan untuk pengambilan keputusan yang lebih baik.
             </p>
 
-            {/* CTA buttons — hover via CSS, bukan Framer (lebih hemat INP) */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
+              <motion.a
                 href="mailto:sihat@banjarbaru.go.id"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-2xl group"
-                style={{ fontSize: '16px', fontWeight: 600, willChange: 'transform' }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: [1, 0.98, 1] }}
+                transition={{ 
+                  scale: { duration: 0.12 },
+                  y: { duration: 0.2 }
+                }}
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl hover:shadow-2xl transition-all duration-300 group"
+                style={{ fontSize: '16px', fontWeight: 600 }}
               >
                 <span>Hubungi Kami</span>
                 <ArrowRight
                   size={20}
-                  className="ml-2 transition-transform duration-150 group-hover:translate-x-1"
-                  aria-hidden="true"
+                  className="ml-2 group-hover:translate-x-1 transition-transform"
                 />
-              </a>
+              </motion.a>
 
-              <a
+              <motion.a
                 href="#tentang"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white border-2 border-white/30 rounded-xl transition-all duration-150 hover:-translate-y-0.5 hover:bg-white/20 backdrop-blur-sm"
-                style={{ fontSize: '16px', fontWeight: 600, willChange: 'transform' }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: [1, 0.98, 1] }}
+                transition={{ 
+                  scale: { duration: 0.12 },
+                  y: { duration: 0.2 }
+                }}
+                className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white border-2 border-white/30 rounded-xl hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+                style={{ fontSize: '16px', fontWeight: 600 }}
               >
                 Pelajari Lebih Lanjut
-              </a>
+              </motion.a>
             </div>
           </div>
-        </div>
+        </SectionReveal>
 
-        {/* Floating Stats — jadikan list semantik + reveal sekali jalan */}
+        {/* Floating Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
           {[
             { value: '200K+', label: 'Penduduk Terlayani' },
@@ -107,10 +114,9 @@ export function CTASection() {
                 <div className="text-white/80 text-sm">{stat.label}</div>
               </motion.div>
             </SectionReveal>
-            ))}
+          ))}
         </div>
       </div>
     </section>
   );
 }
-
