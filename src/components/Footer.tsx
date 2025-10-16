@@ -166,7 +166,7 @@ export function Footer() {
         <div className="pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 gap-8">
             <p className="text-white/50 text-sm text-right w-full">
-              © {currentYear} sihat.health — All Rights Reserved
+              © {currentYear} SIHAT. All Rights Reserved
             </p>
             <div className="flex items-center space-x-6">
               <a
