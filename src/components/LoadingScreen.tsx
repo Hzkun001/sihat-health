@@ -64,8 +64,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           exit={{ opacity: 0, y: -15, scale: 0.95 }}
           transition={{ 
             duration: 0.5, 
-            delay: 0.1,
-            exit: { duration: 0.4, ease: [0.43, 0.13, 0.23, 0.96] }
+            delay: 0.1
           }}
           className="text-white tracking-tight"
           style={{ 
@@ -85,8 +84,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           exit={{ opacity: 0, y: -10 }}
           transition={{ 
             duration: 0.5, 
-            delay: 0.3,
-            exit: { duration: 0.35, delay: 0.05, ease: [0.43, 0.13, 0.23, 0.96] }
+            delay: 0.3
           }}
           className="text-white/90"
           style={{ 
@@ -107,7 +105,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           transition={{ 
             duration: 0.4, 
             delay: 0.5,
-            exit: { duration: 0.3, delay: 0.1, ease: [0.43, 0.13, 0.23, 0.96] }
+            opacity: { duration: 0.4 },
           }}
           className="relative"
           style={{ width: 'clamp(160px, 20vw, 220px)', height: '2px' }}

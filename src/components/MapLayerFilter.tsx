@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import { ChevronDown, Filter, X } from 'lucide-react';
 import { Checkbox } from './ui/checkbox';
+
 
 interface LayerItem {
   id: string;
@@ -21,13 +22,14 @@ const layerCategories: LayerCategory[] = [
     id: 'health-facilities',
     title: 'Fasilitas Kesehatan',
     items: [
-      { id: 'hospitals', label: 'Rumah Sakit', color: '#E74C3C' },
-      { id: 'puskesmas', label: 'Puskesmas', color: '#3498DB' },
-      { id: 'clinics', label: 'Klinik', color: '#9B59B6' },
-      { id: 'pharmacies', label: 'Apotek', color: '#1BA351' },
-      { id: 'ambulances', label: 'Ambulans', color: '#E67E22' },
-      { id: 'posyandu', label: 'Posyandu', color: '#F39C12' },
-      { id: 'homecare', label: 'Home Care Lansia', color: '#16A085' },
+      { id: 'hospitals',   label: 'Rumah Sakit',  color: '#E74C3C' },
+      { id: 'puskesmas',   label: 'Puskesmas',    color: '#3498DB' },
+      { id: 'clinics',     label: 'Klinik',       color: '#9B59B6' },
+      { id: 'pharmacies',  label: 'Apotek',       color: '#1BA351' },
+      { id: 'ambulances',  label: 'Ambulans',     color: '#E67E22' },
+      // kalau belum punya datanya, biarkan off saja:
+      // { id: 'posyandu',    label: 'Posyandu',     color: '#F39C12' },
+      // { id: 'homecare',    label: 'Home Care Lansia', color: '#16A085' },
     ],
   },
   {
@@ -44,37 +46,65 @@ const layerCategories: LayerCategory[] = [
     title: 'Data Demografis',
     items: [
       { id: 'population', label: 'Kepadatan Penduduk', color: '#34495E' },
-      { id: 'children', label: 'Sebaran Balita', color: '#FF6B9D' },
-      { id: 'elderly', label: 'Sebaran Lansia', color: '#8E44AD' },
+      { id: 'children',   label: 'Sebaran Balita',      color: '#FF6B9D' },
+      { id: 'elderly',    label: 'Sebaran Lansia',      color: '#8E44AD' },
       { id: 'disability', label: 'Sebaran Disabilitas', color: '#00AEEF' },
     ],
   },
 ];
 
-interface MapLayerFilterProps {
+export interface MapLayerFilterProps {
   isOpen?: boolean;
   onClose?: () => void;
   isMobile?: boolean;
+  /** dipanggil ketika user toggle layer */
+  onToggle?: (layerId: string, enabled: boolean) => void;
+  /** set default pilihan awal (optional) */
+  defaultSelections?: Record<string, boolean>;
 }
 
-export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: MapLayerFilterProps) {
+export function MapLayerFilter({
+  isOpen = true,
+  onClose,
+  isMobile = false,
+  onToggle,
+  defaultSelections = {},
+}: MapLayerFilterProps) {
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
     isMobile ? [] : ['health-facilities']
   );
-  const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
+  const [selectedLayers, setSelectedLayers] = useState<string[]>(() =>
+    Object.entries(defaultSelections)
+      .filter(([, v]) => !!v)
+      .map(([k]) => k)
+  );
+
+  // apply default selections dari parent saat mount
+  useEffect(() => {
+    const preselected = Object.entries(defaultSelections)
+      .filter(([, v]) => !!v)
+      .map(([k]) => k);
+    setSelectedLayers((prev) => {
+      const nextSet = new Set(preselected);
+      const isSameSelection =
+        prev.length === nextSet.size && prev.every((id) => nextSet.has(id));
+      return isSameSelection ? prev : preselected;
+    });
+  }, [defaultSelections]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
+      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]
     );
   };
 
   const toggleLayer = (layerId: string) => {
-    setSelectedLayers((prev) =>
-      prev.includes(layerId) ? prev.filter((id) => id !== layerId) : [...prev, layerId]
-    );
+    setSelectedLayers((prev) => {
+      const enabled = !prev.includes(layerId);
+      const next = enabled ? [...prev, layerId] : prev.filter((id) => id !== layerId);
+      onToggle?.(layerId, enabled); // ← kirim event ke parent
+      return next;
+    });
   };
 
   const content = (
@@ -88,10 +118,7 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
           >
             <Filter size={20} className="text-brand-green" strokeWidth={2.5} />
           </div>
-          <h3
-            className="text-ink-900"
-            style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.01em' }}
-          >
+          <h3 className="text-ink-900" style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.01em' }}>
             Filter Layer
           </h3>
         </div>
@@ -118,16 +145,10 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
                 onClick={() => toggleCategory(category.id)}
                 className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors group"
               >
-                <span
-                  className="text-ink-900 group-hover:text-brand-green transition-colors"
-                  style={{ fontSize: '15px', fontWeight: 600 }}
-                >
+                <span className="text-ink-900 group-hover:text-brand-green transition-colors" style={{ fontSize: '15px', fontWeight: 600 }}>
                   {category.title}
                 </span>
-                <motion.div
-                  animate={{ rotate: isExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                >
+                <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
                   <ChevronDown size={18} className="text-ink-500" strokeWidth={2.5} />
                 </motion.div>
               </button>
@@ -145,34 +166,24 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
                     <div className="space-y-1.5 mt-2 ml-3">
                       {category.items.map((item) => {
                         const isSelected = selectedLayers.includes(item.id);
-
                         return (
-                          <label
-                            key={item.id}
-                            className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group"
-                          >
+                          <label key={item.id} className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={() => toggleLayer(item.id)}
                               className="border-2 data-[state=checked]:bg-brand-green data-[state=checked]:border-brand-green flex-shrink-0"
                             />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {item.emoji && <span className="flex-shrink-0" style={{ fontSize: '16px' }}>{item.emoji}</span>}
                               {item.color && (
                                 <div
                                   className="w-3 h-3 rounded-full flex-shrink-0"
                                   style={{
                                     backgroundColor: item.color,
-                                    boxShadow: isSelected
-                                      ? `0 0 8px ${item.color}40`
-                                      : 'none',
+                                    boxShadow: isSelected ? `0 0 8px ${item.color}40` : 'none',
                                   }}
                                 />
                               )}
-                              <span
-                                className="text-ink-700 group-hover:text-ink-900 transition-colors truncate"
-                                style={{ fontSize: '14px', fontWeight: 500 }}
-                              >
+                              <span className="text-ink-700 group-hover:text-ink-900 transition-colors truncate" style={{ fontSize: '14px', fontWeight: 500 }}>
                                 {item.label}
                               </span>
                             </div>
@@ -190,10 +201,7 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
 
       {/* Footer - Data Source */}
       <div className="mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
-        <p
-          className="text-ink-500 leading-relaxed"
-          style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5 }}
-        >
+        <p className="text-ink-500 leading-relaxed" style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5 }}>
           <span style={{ fontWeight: 600 }}>Sumber Data:</span>
           <br />
           Dinas Kesehatan Banjarbaru, BPS Kalimantan Selatan 2024
@@ -202,7 +210,7 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
     </div>
   );
 
-  // Desktop version - static panel (only when not mobile and not using drawer)
+  // Desktop panel
   if (!isMobile && !onClose) {
     return (
       <motion.div
@@ -210,50 +218,34 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className="bg-white rounded-[20px] p-6 h-full overflow-hidden flex flex-col"
-        style={{
-          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-          border: '1px solid rgba(0,0,0,0.05)',
-        }}
+        style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}
       >
         {content}
       </motion.div>
     );
   }
 
-  // Mobile/Tablet version - drawer only
+  // Mobile drawer
   if (isMobile && onClose) {
     return (
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               onClick={onClose}
             />
-
-            {/* Drawer */}
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ duration: 0.3, ease: [0.25, 0.8, 0.25, 1] }}
               className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-[20px] flex flex-col"
-              style={{
-                boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
-                maxHeight: 'min(80vh, 600px)',
-              }}
+              style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', maxHeight: 'min(80vh, 600px)' }}
             >
-              {/* Drag indicator */}
               <div className="flex justify-center py-3 flex-shrink-0">
                 <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
               </div>
-
-              {/* Content wrapper with proper scrolling */}
               <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-6">
                 {content}
               </div>
@@ -263,7 +255,5 @@ export function MapLayerFilter({ isOpen = true, onClose, isMobile = false }: Map
       </AnimatePresence>
     );
   }
-
-  // Fallback: return null if conditions don't match
   return null;
 }

@@ -223,9 +223,9 @@ export function HeroVisual3D() {
 
         {/* Central glow */}
         <motion.circle
-          cx="300"
-          cy="300"
-          r="150"
+          cx={300}
+          cy={300}
+          r={150}
           fill="url(#glowGradient)"
           animate={{ opacity: [0.4, 0.6, 0.4] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -246,9 +246,9 @@ export function HeroVisual3D() {
 
           {/* Head */}
           <motion.circle
-            cx="0"
-            cy="-95"
-            r="18"
+            cx={0}
+            cy={-95}
+            r={18}
             fill="rgba(90, 200, 250, 0.2)"
             stroke="url(#mainGradient)"
             strokeWidth="1.5"
@@ -257,10 +257,10 @@ export function HeroVisual3D() {
 
           {/* Lungs/Chest area - highlighted */}
           <motion.ellipse
-            cx="0"
-            cy="-20"
-            rx="18"
-            ry="25"
+            cx={0}
+            cy={-20}
+            rx={18}
+            ry={25}
             fill="rgba(216, 243, 220, 0.7)"
             stroke="#1BA351"
             strokeWidth="1.5"
@@ -279,9 +279,9 @@ export function HeroVisual3D() {
 
           {/* Breathing indicator - central ripple */}
           <motion.circle
-            cx="0"
-            cy="-20"
-            r="10"
+            cx={0}
+            cy={-20}
+            r={10}
             fill="none"
             stroke="#1BA351"
             strokeWidth="1.5"

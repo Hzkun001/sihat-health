@@ -1,63 +1,343 @@
+// MapSection.tsx
 import { SectionReveal } from './SectionReveal';
 import { MapPin, Filter, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
+import { parseArcgisToGeoJSON } from '@/utils/parseArcgisToGeoJSON';
+
+import maplibregl, { Map as MLMap } from 'maplibre-gl';
+
+/** ============================
+ *  Konfigurasi layer titik (ID harus sama dg MapLayerFilter)
+ * ============================ */
+const LAYER_CONFIG = {
+  hospitals: {
+    url: '/data/rumah_sakit.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 8,
+      'circle-color': '#E74C3C',
+      'circle-stroke-width': 1.5,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 8,
+  },
+  puskesmas: {
+    url: '/data/puskesmas.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 5,
+      'circle-color': '#3498DB',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 8,
+  },
+  clinics: {
+    url: '/data/klinik.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 4.5,
+      'circle-color': '#9B59B6',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 9,
+  },
+  pharmacies: {
+    url: '/data/apotek.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 4,
+      'circle-color': '#1BA351',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 10,
+  },
+  ambulances: {
+    url: '/data/home_care_lansia.json',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 4.5,
+      'circle-color': '#E67E22',
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+    minzoom: 9,
+  },
+} as const;
+
+type LayerId = keyof typeof LAYER_CONFIG;
 
 export function MapSection() {
+  // UI state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [prefersReducedMotion, setPRM] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(12);
 
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+  // Map refs & cache
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstance = useRef<MLMap | null>(null);
+  const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
+
+  /** ============================
+   * Helpers
+   * ============================ */
+
+  // Pastikan source+layer ada; kalau belum, buat (default hidden).
+  const ensureSourceAndLayer = useCallback((layerId: LayerId, data?: GeoJSON.FeatureCollection) => {
+    const map = mapInstance.current!;
+    const srcId = `${layerId}-src`;
+    const layerName = `${layerId}-layer`;
+    const cfg = LAYER_CONFIG[layerId];
+
+    if (!map.getSource(srcId)) {
+      map.addSource(srcId, {
+        type: 'geojson',
+        data: data || { type: 'FeatureCollection', features: [] },
+      });
+    } else if (data) {
+      (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data);
+    }
+
+    if (!map.getLayer(layerName)) {
+      map.addLayer(
+        {
+          id: layerName,
+          type: cfg.type,
+          source: srcId,
+          paint: cfg.paint as any,
+          layout: { visibility: 'none' },
+          minzoom: cfg.minzoom,
+        },
+        undefined // beforeId opsional
+      );
+    }
   }, []);
 
-  // Handle fullscreen
-  useEffect(() => {
-    if (isFullscreen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+  const setLayerVisibility = useCallback((layerId: LayerId, visible: boolean) => {
+    const map = mapInstance.current!;
+    const name = `${layerId}-layer`;
+    if (!map.getLayer(name)) return;
+    map.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
+  }, []);
+
+  const fitFC = useCallback((fc: GeoJSON.FeatureCollection) => {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const visit = (c: any) =>
+      Array.isArray(c[0])
+        ? c.forEach(visit)
+        : ([minX, minY, maxX, maxY] = [
+            Math.min(minX, c[0]),
+            Math.min(minY, c[1]),
+            Math.max(maxX, c[0]),
+            Math.max(maxY, c[1]),
+          ]);
+    for (const f of fc.features) {
+      if (!f.geometry) continue;
+      visit((f.geometry as any).coordinates);
     }
+    if (!isFinite(minX)) return;
+    mapInstance.current!.fitBounds([[minX, minY], [maxX, maxY]], { padding: 40, duration: 400 });
+  }, []);
+
+  // Fetch + cache → ensure source/layer → show
+  // Fetch + cache → ensure source/layer → show  (VERSI ROBUST)
+const loadAndShowLayer = useCallback(
+  async (layerId: LayerId, fit = false) => {
+    const map = mapInstance.current!;
+    const { url, minzoom } = LAYER_CONFIG[layerId];
+
+    // 1) Buat source+layer kalau belum ada (isi kosong dulu), lalu tampilkan
+    ensureSourceAndLayer(layerId);
+    setLayerVisibility(layerId, true);
+
+    // Hint kalau zoom < minzoom (biar nggak terasa "kosong")
+    const z = map.getZoom();
+    if (typeof minzoom === 'number' && z < minzoom) {
+      console.info(
+        `[Map] Layer "${layerId}" aktif, tapi zoom (${z.toFixed(1)}) < minzoom (${minzoom}). Zoom in untuk melihat titik.`
+      );
+    }
+
+    // 2) Ambil & cache data bila belum ada
+   // 2) Ambil & cache data bila belum ada
+if (!dataCache.current[url]) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`[Map] Gagal fetch ${url}: HTTP ${res.status}`);
+    } else {
+      const raw: unknown = await res.json();
+
+      // KONVERSI ArcGIS → GeoJSON
+      const fc = parseArcgisToGeoJSON(raw);
+
+      // DIAGNOSTIK: hitung fitur & tampilkan contoh properti
+      const n = fc.features?.length ?? 0;
+      console.info(`[Map] ${layerId}: converted features = ${n}`);
+      if (n > 0) {
+        // Tampilkan sample untuk cek field apa yang ada (status/namobj/dll)
+        console.info(`[Map] ${layerId}: sample properties =`, fc.features[0].properties);
+        // Cek koordinat pertama
+        const g = fc.features[0].geometry;
+        console.info(`[Map] ${layerId}: sample geometry =`, g);
+      }
+
+      dataCache.current[url] = fc;
+    }
+  } catch (err) {
+    console.warn(`[Map] Error fetch ${url}:`, err);
+  }
+}
+
+// 3) Jika sudah ada data, set ke source + optional fitBounds
+const fc = dataCache.current[url];
+const src = map.getSource(`${layerId}-src`) as maplibregl.GeoJSONSource | undefined;
+if (fc) {
+  if (src) {
+    // DIAGNOSTIK: sebelum setData, log lagi
+        console.info(`[Map] ${layerId}: setData with ${fc.features.length} features`);
+        src.setData(fc);
+      }
+      if (fit && fc.features.length) {
+        fitFC(fc);
+      }
+    } else {
+      console.warn(`[Map] ${layerId}: no data in cache after fetch/parse`);
+    }
+
+    // 4) Update state zoom
+        setZoomLevel(map.getZoom());
+      },
+      [ensureSourceAndLayer, setLayerVisibility, fitFC]
+  );
+
+  const hideLayer = useCallback(
+    (layerId: LayerId) => {
+      setLayerVisibility(layerId, false);
+    },
+    [setLayerVisibility]
+  );
+
+  /** ============================
+   * Effects
+   * ============================ */
+
+  // Responsif & prefers-reduced-motion
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPRM(mql.matches);
+    const onPRM = (e: MediaQueryListEvent) => setPRM(e.matches);
+    mql.addEventListener?.('change', onPRM);
+
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+
+    const onResize = () => {
+      window.requestAnimationFrame(() => {
+        checkMobile();
+        mapInstance.current?.resize();
+      });
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      mql.removeEventListener?.('change', onPRM);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  // Fullscreen (pakai wrapper fixed)
+  useEffect(() => {
+    document.body.style.overflow = isFullscreen ? 'hidden' : 'unset';
+    const id = setTimeout(() => mapInstance.current?.resize(), 0);
+    return () => clearTimeout(id);
   }, [isFullscreen]);
 
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.2, 2));
-  };
+  const toggleFullscreen = useCallback(() => setIsFullscreen((v) => !v), []);
 
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 0.2, 0.6));
-  };
+  const handleZoomIn = useCallback(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const next = Math.min(map.getZoom() + 0.5, 18);
+    map.easeTo({ zoom: next, duration: 300 });
+    setZoomLevel(next);
+  }, []);
 
-  const toggleFullscreen = () => {
-    setIsFullscreen((prev) => !prev);
-  };
+  const handleZoomOut = useCallback(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const next = Math.max(map.getZoom() - 0.5, 3);
+    map.easeTo({ zoom: next, duration: 300 });
+    setZoomLevel(next);
+  }, []);
+
+  // Init Map — sekali saja
+  useEffect(() => {
+    if (!mapRef.current || mapInstance.current) return;
+
+    const map = new maplibregl.Map({
+      container: mapRef.current,
+      style: 'https://api.maptiler.com/maps/streets-v2/style.json?key=2gdBMkelnNTDj6FyZkyv', // TODO: pindah ke env
+      center: [114.833, -3.442], // Banjarbaru
+      zoom: 12,
+      attributionControl: false,
+      hash: false,
+    });
+
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+    map.on('zoomend', () => setZoomLevel(map.getZoom()));
+
+    map.on('load', () => {
+      setMapLoaded(true);
+      setZoomLevel(map.getZoom());
+        (window as any).map = map;
+        console.info("[Map Debug] window.map tersedia di console");
+      (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
+      // tampilkan default
+      void loadAndShowLayer('hospitals', false);
+
+      // tandai siap
+      if (map.isStyleLoaded()) map.once('idle', () => setMapLoaded(true));
+      else map.once('load', () => map.once('idle', () => setMapLoaded(true)));
+
+      // jaga-jaga: resize setelah style siap
+      setTimeout(() => map.resize(), 0);
+    });
+
+    mapInstance.current = map;
+
+    return () => {
+      map.remove();
+      mapInstance.current = null;
+      setMapLoaded(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // init sekali
+
+  /** ============================
+   * Render
+   * ============================ */
 
   return (
     <section id="peta" className="relative py-24 overflow-hidden">
+      {/* Background */}
       <div
         className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)',
-        }}
+        style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
       />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         <SectionReveal>
           <div className="text-center mb-12">
             <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-4">
-              <span className="text-brand-green" style={{ fontSize: '14px', fontWeight: 600 }}>
-                Peta Kesehatan
-              </span>
+              <span className="text-brand-green text-[14px] font-semibold">Peta Kesehatan</span>
             </div>
             <h2
               className="text-ink-900 tracking-tight mb-4"
@@ -65,7 +345,7 @@ export function MapSection() {
             >
               Peta Interaktif Kesehatan
             </h2>
-            <p className="text-ink-700 max-w-3xl mx-auto" style={{ fontSize: '18px' }}>
+            <p className="text-ink-700 max-w-3xl mx-auto text-[18px]">
               Visualisasi distribusi fasilitas kesehatan dan indikator kesehatan masyarakat Banjarbaru
             </p>
           </div>
@@ -73,39 +353,44 @@ export function MapSection() {
 
         <SectionReveal delay={0.2}>
           <div className="relative">
-            {/* Layout Container */}
             <div className="flex gap-6 lg:gap-8">
-              {/* Filter Panel - Desktop Only */}
+              {/* Panel filter kiri (desktop) */}
               <div className="hidden lg:block w-80 flex-shrink-0">
                 <div className="sticky top-32">
-                  <MapLayerFilter />
+                  <MapLayerFilter
+                     isMobile={false}                     // atau pakai {isMobile} tapi pastikan false di desktop
+                      defaultSelections={{ hospitals: true }}
+                      onToggle={async (layerId, enabled) => {
+                        if (!(layerId in LAYER_CONFIG)) return;
+                        const id = layerId as LayerId;
+                        if (enabled) await loadAndShowLayer(id, false);
+                        else hideLayer(id);
+                    }}
+                  />
                 </div>
               </div>
 
-              {/* Map Container */}
+              {/* Map wrapper */}
               <div className="flex-1">
                 <motion.div
                   whileHover={{ scale: 1.005 }}
                   transition={{ duration: 0.3 }}
-                  className="relative rounded-3xl overflow-hidden bg-white"
+                  className={`relative rounded-3xl overflow-hidden bg-white ${
+                    isFullscreen ? 'fixed inset-0 z-[100]' : ''
+                  }`}
                   style={{
                     boxShadow: '0 6px 24px rgba(0,0,0,0.05)',
-                    height: 'clamp(480px, 60vh, 760px)',
+                    height: isFullscreen ? '100vh' : 'clamp(480px, 60vh, 760px)',
                   }}
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  {/* Map Placeholder */}
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{
-                      background: 'linear-gradient(135deg, #E8FFF9 0%, #EAF7FF 100%)',
-                      scale: zoomLevel,
-                    }}
-                    animate={{ scale: zoomLevel }}
-                    transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center">
+                  {/* Container MapLibre */}
+                  <div ref={mapRef} className="absolute inset-0" />
+
+                  {/* Placeholder animasi: hilang setelah map idle */}
+                  {!prefersReducedMotion && !isFullscreen && !mapLoaded && (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-4">
                         <motion.div
                           className="w-20 h-20 mx-auto rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center"
@@ -115,352 +400,76 @@ export function MapSection() {
                           <MapPin size={36} className="text-brand-green" />
                         </motion.div>
                         <div>
-                          <h3 className="text-ink-900 mb-2" style={{ fontSize: '24px', fontWeight: 700 }}>
+                          <h3 className="text-ink-900 mb-2 text-[24px] font-bold">
                             Peta Kesehatan Banjarbaru
                           </h3>
-                          <p className="text-ink-700" style={{ fontSize: '16px' }}>
-                            Integrasi data geospasial kesehatan
-                          </p>
+                          <p className="text-ink-700 text-[16px]">Integrasi data geospasial kesehatan</p>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  )}
 
-                  {/* Filter Button - Mobile & Tablet */}
-                  <motion.button
-                    onClick={() => setIsFilterOpen(true)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="lg:hidden absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
-                    style={{ 
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    }}
-                    aria-label="Open filter"
-                  >
-                    <Filter size={20} className="text-brand-green md:w-[22px] md:h-[22px]" strokeWidth={2.5} />
-                  </motion.button>
+                  {/* Tombol Filter (mobile) */}
+                  {!isFullscreen && (
+                    <motion.button
+                      onClick={() => setIsFilterOpen(true)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="lg:hidden absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
+                      style={{
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                      }}
+                      aria-label="Open filter"
+                    >
+                      <Filter size={20} className="text-brand-green md:w-[22px] md:h-[22px]" strokeWidth={2.5} />
+                    </motion.button>
+                  )}
 
-                  {/* Map Controls - Desktop & Tablet */}
+                  {/* Kontrol zoom & fullscreen (desktop/tablet) */}
                   <div className="hidden md:block absolute bottom-6 right-6 z-10">
                     <div className="flex flex-col gap-3">
-                      {/* Zoom In */}
-                      <motion.button
-                        onClick={handleZoomIn}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-                        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                        aria-label="Zoom in"
-                      >
-                        <ZoomIn
-                          size={20}
-                          className="text-ink-700 group-hover:text-white transition-colors"
-                          strokeWidth={2.5}
-                        />
-                        <div
-                          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          style={{
-                            background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                          }}
-                        />
-                        <ZoomIn
-                          size={20}
-                          className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          strokeWidth={2.5}
-                        />
-                      </motion.button>
-
-                      {/* Zoom Out */}
-                      <motion.button
-                        onClick={handleZoomOut}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-                        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                        aria-label="Zoom out"
-                      >
-                        <ZoomOut
-                          size={20}
-                          className="text-ink-700 group-hover:text-white transition-colors"
-                          strokeWidth={2.5}
-                        />
-                        <div
-                          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          style={{
-                            background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                          }}
-                        />
-                        <ZoomOut
-                          size={20}
-                          className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          strokeWidth={2.5}
-                        />
-                      </motion.button>
-
-                      {/* Fullscreen */}
-                      <motion.button
-                        onClick={toggleFullscreen}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-                        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                        aria-label="Toggle fullscreen"
-                      >
-                        <Maximize2
-                          size={20}
-                          className="text-ink-700 group-hover:text-white transition-colors"
-                          strokeWidth={2.5}
-                        />
-                        <div
-                          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          style={{
-                            background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                          }}
-                        />
-                        <Maximize2
-                          size={20}
-                          className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          strokeWidth={2.5}
-                        />
-                      </motion.button>
+                      <IconButton label="Zoom in" onClick={handleZoomIn}>
+                        <ZoomIn size={20} />
+                      </IconButton>
+                      <IconButton label="Zoom out" onClick={handleZoomOut}>
+                        <ZoomOut size={20} />
+                      </IconButton>
+                      <IconButton label="Toggle fullscreen" onClick={toggleFullscreen}>
+                        <Maximize2 size={20} />
+                      </IconButton>
                     </div>
                   </div>
-                </motion.div>
 
-                {/* Map Controls - Mobile Only (Horizontal below map) */}
-                <div className="md:hidden mt-4 flex justify-center gap-2.5 px-4">
-                  {/* Zoom In */}
-                  <motion.button
-                    onClick={handleZoomIn}
-                    whileTap={{ scale: 0.96 }}
-                    className="relative flex-1 h-12 rounded-xl bg-white flex items-center justify-center overflow-hidden active:shadow-lg transition-shadow duration-200"
-                    style={{ 
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      maxWidth: '80px',
-                    }}
-                    aria-label="Zoom in map"
-                  >
-                    <ZoomIn
-                      size={20}
-                      className="relative z-10 text-ink-700 transition-colors"
-                      strokeWidth={2.5}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                        opacity: 0,
-                      }}
-                      whileTap={{ opacity: 1 }}
-                      transition={{ duration: 0.15 }}
-                    />
-                  </motion.button>
-
-                  {/* Fullscreen */}
-                  <motion.button
-                    onClick={toggleFullscreen}
-                    whileTap={{ scale: 0.96 }}
-                    className="relative flex-1 h-12 rounded-xl bg-white flex items-center justify-center gap-2 overflow-hidden active:shadow-lg transition-shadow duration-200"
-                    style={{ 
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    }}
-                    aria-label="Toggle fullscreen"
-                  >
-                    <Maximize2
-                      size={18}
-                      className="relative z-10 text-ink-700 transition-colors flex-shrink-0"
-                      strokeWidth={2.5}
-                    />
-                    <span
-                      className="relative z-10 text-ink-700 transition-colors text-sm font-semibold"
-                    >
-                      Layar Penuh
-                    </span>
-                    <motion.div
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                        opacity: 0,
-                      }}
-                      whileTap={{ opacity: 1 }}
-                      transition={{ duration: 0.15 }}
-                    />
-                  </motion.button>
-
-                  {/* Zoom Out */}
-                  <motion.button
-                    onClick={handleZoomOut}
-                    whileTap={{ scale: 0.96 }}
-                    className="relative flex-1 h-12 rounded-xl bg-white flex items-center justify-center overflow-hidden active:shadow-lg transition-shadow duration-200"
-                    style={{ 
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      maxWidth: '80px',
-                    }}
-                    aria-label="Zoom out map"
-                  >
-                    <ZoomOut
-                      size={20}
-                      className="relative z-10 text-ink-700 transition-colors"
-                      strokeWidth={2.5}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                        opacity: 0,
-                      }}
-                      whileTap={{ opacity: 1 }}
-                      transition={{ duration: 0.15 }}
-                    />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile/Tablet Filter Drawer */}
-            <MapLayerFilter
-              isOpen={isFilterOpen}
-              onClose={() => setIsFilterOpen(false)}
-              isMobile={isMobile}
-            />
-          </div>
-        </SectionReveal>
-      </div>
-
-      {/* Fullscreen Modal */}
-      <AnimatePresence>
-        {isFullscreen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm"
-            onClick={toggleFullscreen}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-              className="w-full h-full p-2 sm:p-4 md:p-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden bg-white">
-                {/* Map Content - Fullscreen */}
-                <motion.div
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #E8FFF9 0%, #EAF7FF 100%)',
-                    scale: zoomLevel,
-                  }}
-                  animate={{ scale: zoomLevel }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center px-4">
-                    <div className="text-center space-y-4 sm:space-y-6">
-                      <motion.div
-                        className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mx-auto rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-sm flex items-center justify-center"
-                        animate={{ y: [0, -12, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                      >
-                        <MapPin size={36} className="text-brand-green sm:w-10 sm:h-10 md:w-12 md:h-12" />
-                      </motion.div>
-                      <div>
-                        <h3 className="text-ink-900 mb-2 sm:mb-3 px-4" style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 700 }}>
-                          Peta Kesehatan Banjarbaru
-                        </h3>
-                        <p className="text-ink-700 px-4" style={{ fontSize: 'clamp(16px, 3vw, 20px)' }}>
-                          Integrasi data geospasial kesehatan dalam pengembangan
-                        </p>
-                      </div>
+                  {/* Kontrol mobile bawah */}
+                  {!isFullscreen && (
+                    <div className="md:hidden absolute bottom-3 left-0 right-0 flex justify-center gap-2.5 px-4">
+                      <SmallButton aria="Zoom in map" onClick={handleZoomIn}>
+                        <ZoomIn size={20} />
+                      </SmallButton>
+                      <SmallButton aria="Toggle fullscreen" onClick={toggleFullscreen}>
+                        <Maximize2 size={18} />
+                        <span className="text-ink-700 text-sm font-semibold">Layar Penuh</span>
+                      </SmallButton>
+                      <SmallButton aria="Zoom out map" onClick={handleZoomOut}>
+                        <ZoomOut size={20} />
+                      </SmallButton>
                     </div>
-                  </div>
-                </motion.div>
+                  )}
 
-                {/* Fullscreen Controls - Desktop & Tablet */}
-                <div className="hidden sm:block absolute bottom-4 sm:bottom-6 right-4 sm:right-6 z-10">
-                  <div className="flex flex-col gap-2.5 sm:gap-3">
-                    {/* Zoom In */}
-                    <motion.button
-                      onClick={handleZoomIn}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                      aria-label="Zoom in"
-                    >
-                      <ZoomIn
-                        size={22}
-                        className="text-ink-700 group-hover:text-white transition-colors sm:w-6 sm:h-6"
-                        strokeWidth={2.5}
-                      />
-                      <div
-                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        style={{
-                          background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                        }}
-                      />
-                      <ZoomIn
-                        size={22}
-                        className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 sm:w-6 sm:h-6"
-                        strokeWidth={2.5}
-                      />
-                    </motion.button>
-
-                    {/* Zoom Out */}
-                    <motion.button
-                      onClick={handleZoomOut}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                      aria-label="Zoom out"
-                    >
-                      <ZoomOut
-                        size={22}
-                        className="text-ink-700 group-hover:text-white transition-colors sm:w-6 sm:h-6"
-                        strokeWidth={2.5}
-                      />
-                      <div
-                        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        style={{
-                          background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                        }}
-                      />
-                      <ZoomOut
-                        size={22}
-                        className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 sm:w-6 sm:h-6"
-                        strokeWidth={2.5}
-                      />
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Fullscreen Controls - Mobile Bottom Bar */}
-                <div className="sm:hidden absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-black/40 to-transparent">
-                  <div className="flex items-center justify-center gap-3">
-                    {/* Zoom Out */}
-                    <motion.button
-                      onClick={handleZoomOut}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg active:shadow-xl transition-shadow"
-                      aria-label="Zoom out"
-                    >
-                      <ZoomOut size={20} className="text-ink-700" strokeWidth={2.5} />
-                    </motion.button>
-
-                    {/* Close */}
+                  {/* Close fullscreen */}
+                  {isFullscreen && (
                     <motion.button
                       onClick={toggleFullscreen}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-6 h-12 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center gap-2 shadow-lg active:shadow-xl transition-shadow"
+                      className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center z-[101]"
+                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                       aria-label="Close fullscreen"
                     >
                       <svg
-                        width="18"
-                        height="18"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -472,50 +481,100 @@ export function MapSection() {
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                       </svg>
-                      <span className="text-ink-900 font-semibold text-sm">Tutup</span>
                     </motion.button>
-
-                    {/* Zoom In */}
-                    <motion.button
-                      onClick={handleZoomIn}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg active:shadow-xl transition-shadow"
-                      aria-label="Zoom in"
-                    >
-                      <ZoomIn size={20} className="text-ink-700" strokeWidth={2.5} />
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Close Fullscreen Button - Desktop & Tablet Top Right */}
-                <motion.button
-                  onClick={toggleFullscreen}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="hidden sm:flex absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm items-center justify-center transition-all duration-200"
-                  style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                  aria-label="Close fullscreen"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-ink-700 sm:w-6 sm:h-6"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </motion.button>
+                  )}
+                </motion.div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+
+            {/* Drawer filter (mobile) */}
+            <MapLayerFilter
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              isMobile={isMobile}
+              onToggle={async (layerId: string, enabled: boolean) => {
+                if (!(layerId in LAYER_CONFIG)) return;
+                const id = layerId as LayerId;
+                if (enabled) await loadAndShowLayer(id, false);
+                else hideLayer(id);
+                setIsFilterOpen(false);
+              }}
+            />
+          </div>
+        </SectionReveal>
+      </div>
+
+      {/* Overlay shading saat fullscreen (kosmetik) */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 pointer-events-none z-[90]"
+          />
         )}
       </AnimatePresence>
     </section>
+  );
+}
+
+/* ====== Tombol kecil DRY ====== */
+function IconButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="group relative w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-200"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+      aria-label={label}
+    >
+      <div className="text-ink-700 group-hover:text-white transition-colors">{children}</div>
+      <div
+        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)' }}
+      />
+      <div className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {children}
+      </div>
+    </motion.button>
+  );
+}
+
+function SmallButton({
+  aria,
+  onClick,
+  children,
+}: {
+  aria: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.96 }}
+      className="relative flex-1 h-12 rounded-xl bg-white flex items-center justify-center gap-2 overflow-hidden active:shadow-lg transition-shadow duration-200 max-w-[120px]"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+      aria-label={aria}
+    >
+      {children}
+      <motion.div
+        className="absolute inset-0 rounded-xl"
+        style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)', opacity: 0 }}
+        whileTap={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
+      />
+    </motion.button>
   );
 }

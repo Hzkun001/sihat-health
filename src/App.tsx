@@ -6,6 +6,7 @@ import { HeroSection } from './components/HeroSection';
 import { CustomCursor } from './components/CustomCursor';
 import { PartnersFloatingBar } from './components/PartnersFloatingBar';
 
+
 // Lazy load below-the-fold components for better initial load performance
 const AboutSection = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
 const MapSection = lazy(() => import('./components/MapSection').then(m => ({ default: m.MapSection })));

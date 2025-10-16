@@ -66,7 +66,7 @@ export function CTASection() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="mailto:sihat@banjarbaru.go.id"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-2xl group"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-md group"
                 style={{ fontSize: '16px', fontWeight: 600, willChange: 'transform' }}
               >
                 <span>Hubungi Kami</span>
@@ -87,34 +87,8 @@ export function CTASection() {
             </div>
           </div>
         </div>
-
-        {/* Floating Stats — jadikan list semantik + reveal sekali jalan */}
-        <div
-          ref={statsRev.ref as any}
-          className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 reveal ${statsRev.visible ? 'is-visible' : ''}`}
-          style={{ transitionDuration: '.6s', transitionDelay: '.08s' }}
-        >
-          <ul className="contents" role="list">
-            {[
-              { value: '200K+', label: 'Penduduk Terlayani' },
-              { value: '15+', label: 'Indikator SDG' },
-              { value: '100%', label: 'Data Terbuka' },
-              { value: '24/7', label: 'Akses Platform' },
-            ].map((stat) => (
-              <li
-                key={stat.label}
-                className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 transition-transform duration-150 hover:-translate-y-1"
-              >
-                <div className="text-white mb-2" style={{ fontSize: '32px', fontWeight: 700 }}>
-                  {stat.value}
-                </div>
-                <div className="text-white/80 text-sm">{stat.label}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
-    </section>
+</section>
   );
 }
 
