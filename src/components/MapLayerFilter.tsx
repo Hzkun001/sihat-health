@@ -27,16 +27,15 @@ const layerCategories: LayerCategory[] = [
       { id: 'clinics',     label: 'Klinik',       color: '#9B59B6' },
       { id: 'pharmacies',  label: 'Apotek',       color: '#1BA351' },
       { id: 'ambulances',  label: 'Ambulans',     color: '#E67E22' },
-      // kalau belum punya datanya, biarkan off saja:
-      // { id: 'posyandu',    label: 'Posyandu',     color: '#F39C12' },
-      // { id: 'homecare',    label: 'Home Care Lansia', color: '#16A085' },
+      { id: 'posyandu',    label: 'Posyandu',     color: '#F39C12' },
+      { id: 'homecare',    label: 'Home Care Lansia', color: '#16A085' },
     ],
   },
   {
     id: 'environment-health',
     title: ' Lingkungan dan Penyakit',
     items: [
-      { id: 'air-quality', label: 'Kualitas Udara', color: '#95A5A6' },
+      { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6' },
       { id: 'heat-island', label: 'Panas Perkotaan', color: '#F39C12' },
       { id: 'dengue-zone', label: 'Daerah Rawan DBD', color: '#E38BCF' },
     ],

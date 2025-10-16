@@ -2,22 +2,19 @@
 import { SectionReveal } from './SectionReveal';
 import { MapPin, Filter, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, m } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
 import { parseArcgisToGeoJSON } from '@/utils/parseArcgisToGeoJSON';
 
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 
-/** ============================
- *  Konfigurasi layer titik (ID harus sama dg MapLayerFilter)
- * ============================ */
 const LAYER_CONFIG = {
   hospitals: {
     url: '/data/rumah_sakit.json',
     render: 'symbol' as const,
     iconName: 'hospital-icon',          
     iconURL: '/assets/hospital.png',       
-    iconSize: 0.85,                    
+    iconSize: 0.25,                    
     minzoom: 8,
   },
   puskesmas: {
@@ -88,31 +85,29 @@ const LAYER_CONFIG = {
   },
   elderly: {
         url: '/data/sebaran_lansia.json',   // EsriJSON → dikonversi runtime
-        render: 'heatmap' as const,
+        render: 'fill' as const,
         minzoom: 0,
         maxzoom: 22,
-        heatmap: {
-          'heatmap-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            5, 12,
-            12, 28
+        fill: {
+          'fill-color': [
+            'interpolate', ['linear'],
+            // proporsi = (60-64 + 65-69 + 70-74 + >75) / total semua kelompok
+            ['/', 
+              ['+', ['get','60__64'], ['get','65__69'], ['get','70__74'], ['get','>75']],
+              ['+', ['get','00__04'], ['get','05__09'], ['get','10__14'], ['get','15__19'],
+                    ['get','20__24'], ['get','25__29'], ['get','30__34'], ['get','35__39'],
+                    ['get','40__44'], ['get','45__49'], ['get','50__54'], ['get','55__59'],
+                    ['get','60__64'], ['get','65__69'], ['get','70__74'], ['get','>75']]
+            ],
+            0.05, '#E8F5E9',
+            0.10, '#C8E6C9',
+            0.15, '#81C784',
+            0.20, '#4CAF50',
+            0.30, '#2E7D32'
           ],
-          'heatmap-intensity': [
-            'interpolate', ['linear'], ['zoom'],
-            5, 0.6,
-            12, 1.6
-          ],
-          'heatmap-opacity': 0.9,
-          'heatmap-color': [
-            'interpolate', ['linear'], ['heatmap-density'],
-            0, 'rgba(0,0,0,0)',
-            0.2, '#9BE7FF',
-            0.4, '#5AC8FA',
-            0.6, '#34C759',
-            0.8, '#FFC107',
-            1, '#FF3B30'
-          ]
-        },
+          'fill-opacity': 0.6,
+          'fill-outline-color': '#2E7D32'
+        }
       },
  } as const;
 
@@ -137,7 +132,7 @@ export function MapSection() {
     const map = mapInstance.current!;
     const srcId = `${layerId}-src`;
     const layerName = `${layerId}-layer`;
-    const cfg = LAYER_CONFIG[layerId];
+    const cfg = LAYER_CONFIG[layerId] as any;
 
     if (!map.getSource(srcId)) {
       map.addSource(srcId, {
@@ -149,34 +144,78 @@ export function MapSection() {
     }
 
     if (!map.getLayer(layerName)) {
-      // Handle special case for heatmap layer (elderly)
-      if ('render' in cfg && cfg.render === 'heatmap') {
-        map.addLayer(
-          {
-            id: layerName,
-            type: 'heatmap',
-            source: srcId,
-            paint: cfg.heatmap as any,
-            layout: { visibility: 'none' },
-            minzoom: cfg.minzoom,
-            maxzoom: cfg.maxzoom,
+      // === Symbol layer (ikon rumah sakit, puskesmas, dll) ===
+      if ('render' in cfg && cfg.render === 'symbol') {
+        const symbolLayer: maplibregl.SymbolLayerSpecification = {
+          id: layerName,
+          type: 'symbol',
+          source: srcId,
+          layout: {
+            'icon-image': cfg.iconName,
+            'icon-size': cfg.iconSize ?? 0.85,
+            'icon-allow-overlap': true,
+            visibility: 'none',
           },
-          undefined // beforeId opsional
-        );
-      } else {
-        map.addLayer(
-          {
-            id: layerName,
-            type: cfg.type,
-            source: srcId,
-            paint: cfg.paint as any,
-            layout: { visibility: 'none' },
-            minzoom: cfg.minzoom,
-          },
-          undefined // beforeId opsional
-        );
+        };
+
+        if (cfg.paint) symbolLayer.paint = cfg.paint as any;
+        if (typeof cfg.minzoom === 'number') symbolLayer.minzoom = cfg.minzoom;
+        if (typeof cfg.maxzoom === 'number') symbolLayer.maxzoom = cfg.maxzoom;
+
+        map.addLayer(symbolLayer);
+      }
+      // === Heatmap layer (sebaran lansia, dll) ===
+      else if ('render' in cfg && cfg.render === 'heatmap') {
+        const heatmapLayer: maplibregl.HeatmapLayerSpecification = {
+          id: layerName,
+          type: 'heatmap',
+          source: srcId,
+          paint: cfg.heatmap as any,
+          layout: { visibility: 'none' },
+        };
+
+        if (typeof cfg.minzoom === 'number') heatmapLayer.minzoom = cfg.minzoom;
+        if (typeof cfg.maxzoom === 'number') heatmapLayer.maxzoom = cfg.maxzoom;
+
+        map.addLayer(heatmapLayer);
+      }
+      else if ('render' in cfg && cfg.render === 'fill') {
+  map.addLayer(
+    {
+      id: layerName,
+      type: 'fill',
+      source: srcId,
+      paint: cfg.fill as any,
+      layout: { visibility: 'none' },
+      minzoom: cfg.minzoom,
+      maxzoom: cfg.maxzoom,
+      // opsional: hanya render Polygon/MultiPolygon
+      // filter: ['any',
+      //   ['==', ['geometry-type'], 'Polygon'],
+      //   ['==', ['geometry-type'], 'MultiPolygon']
+      // ],
+    },
+    undefined
+  );
+}
+
+      // === Default circle layer (puskesmas, apotek, dll) ===
+      else {
+        const circleLayer: maplibregl.CircleLayerSpecification = {
+          id: layerName,
+          type: cfg.type,
+          source: srcId,
+          paint: cfg.paint as any,
+          layout: { visibility: 'none' },
+        };
+
+        if (typeof cfg.minzoom === 'number') circleLayer.minzoom = cfg.minzoom;
+        if (typeof cfg.maxzoom === 'number') circleLayer.maxzoom = cfg.maxzoom;
+
+        map.addLayer(circleLayer);
       }
     }
+
   }, []);
 
   const setLayerVisibility = useCallback((layerId: LayerId, visible: boolean) => {
@@ -284,10 +323,6 @@ if (fc) {
     [setLayerVisibility]
   );
 
-  /** ============================
-   * Effects
-   * ============================ */
-
   // Responsif & prefers-reduced-motion
   useEffect(() => {
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -349,26 +384,72 @@ if (fc) {
       attributionControl: false,
       hash: false,
     });
-
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
     map.on('zoomend', () => setZoomLevel(map.getZoom()));
 
-    map.on('load', () => {
-      
+    // helper universal: load gambar jadi ImageBitmap
+    async function loadImageBitmap(url: string): Promise<ImageBitmap> {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+      const blob = await res.blob();
+      return await createImageBitmap(blob);
+    }
+
+    map.on('load', async () => {
+    try {
       setMapLoaded(true);
       setZoomLevel(map.getZoom());
-        (window as any).map = map;
-        console.info("[Map Debug] window.map tersedia di console");
+      (window as any).map = map;
+      console.info("[Map Debug] window.map tersedia di console");
+
+      // 1) load ikon dulu (tanpa map.loadImage)
+      if (!map.hasImage('hospital-icon')) {
+        const bmp = await loadImageBitmap('/assets/hospital.png');
+        map.addImage('hospital-icon', bmp /*, { sdf: false }*/);
+        console.info("[Map] Ikon hospital berhasil dimuat");
+      }
+
+      // 2) setelah ikon ada, baru ensure semua layer
       (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
-      // tampilkan default
-      // void loadAndShowLayer('hospitals', false);
+
+      // 3) tampilkan default
+      void loadAndShowLayer('hospitals', false);
 
       if (map.isStyleLoaded()) map.once('idle', () => setMapLoaded(true));
       else map.once('load', () => map.once('idle', () => setMapLoaded(true)));
-      
-      // jaga-jaga: resize setelah style siap
+
       setTimeout(() => map.resize(), 0);
-    });
+    } catch (err) {
+      console.warn("[Map] Gagal inisialisasi ikon/layer:", err);
+    }
+  });
+  
+    map.on('click', 'elderly-layer', (e) => {
+  const p = e.features?.[0]?.properties || {};
+  const lansia = (p['60__64']||0)+(p['65__69']||0)+(p['70__74']||0)+(p['>75']||0);
+  const total  =
+    (p['00__04']||0)+(p['05__09']||0)+(p['10__14']||0)+(p['15__19']||0)+
+    (p['20__24']||0)+(p['25__29']||0)+(p['30__34']||0)+(p['35__39']||0)+
+    (p['40__44']||0)+(p['45__49']||0)+(p['50__54']||0)+(p['55__59']||0)+
+    (p['60__64']||0)+(p['65__69']||0)+(p['70__74']||0)+(p['>75']||0);
+  const ratio = total ? (lansia/total*100).toFixed(1) : '0';
+
+  new maplibregl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(`
+      <div style="min-width:220px">
+        <h3 style="margin:0 0 6px">${p.namobj ?? '-'}</h3>
+        <div><b>Kec.</b> ${p.wadmkc ?? '-'}</div>
+        <div><b>Total penduduk</b> ${total.toLocaleString('id-ID')}</div>
+        <div><b>Total lansia (≥60)</b> ${lansia.toLocaleString('id-ID')} (${ratio}%)</div>
+        <hr/>
+        <div style="font-size:12px;opacity:.8">
+          60–64: ${p['60__64']||0}, 65–69: ${p['65__69']||0}, 70–74: ${p['70__74']||0}, &gt;75: ${p['>75']||0}
+        </div>
+      </div>
+    `)
+    .addTo(map);
+});
 
     mapInstance.current = map;
 
