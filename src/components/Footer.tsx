@@ -62,7 +62,7 @@ export function Footer() {
               PARTNERS
             </h4>
             <ul className="space-y-3">
-              {['Pemkot Banjarbaru', 'Dinkes Banjarbaru', 'BPS Kalsel', 'WHO Indonesia'].map(
+              {['Geoportal Kota Banjarbaru', 'Dinkes Banjarbaru', 'BPS Kalsel', 'WHO Indonesia'].map(
                 (partner) => (
                   <li key={partner}>
                     <a
