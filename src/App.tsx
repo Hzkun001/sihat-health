@@ -10,6 +10,7 @@ import { PartnersFloatingBar } from './components/PartnersFloatingBar';
 // Lazy load below-the-fold components for better initial load performance
 const AboutSection = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
 const MapSection = lazy(() => import('./components/MapSection').then(m => ({ default: m.MapSection })));
+const ReportSection = lazy(() => import('./components/ReportSection').then(m => ({ default: m.ReportSection })));
 const StatsCardsSection = lazy(() => import('./components/StatsCardsSection').then(m => ({ default: m.StatsCardsSection })));
 const StatsIndicatorsSection = lazy(() => import('./components/StatsIndicatorsSection').then(m => ({ default: m.StatsIndicatorsSection })));
 const NewsSection = lazy(() => import('./components/NewsSection').then(m => ({ default: m.NewsSection })));
@@ -59,6 +60,7 @@ export default function App() {
             <Suspense fallback={<div className="min-h-screen" />}>
               <AboutSection />
               <MapSection />
+              <ReportSection />
               <StatsCardsSection />
               <StatsIndicatorsSection />
               <NewsSection />
