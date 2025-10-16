@@ -108,7 +108,6 @@ export function CTASection() {
               </motion.div>
             </SectionReveal>
             ))}
-          </ul>
         </div>
       </div>
     </section>
