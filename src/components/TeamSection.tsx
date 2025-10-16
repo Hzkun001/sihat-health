@@ -15,16 +15,16 @@ const teamMembers: TeamMember[] = [
   {
     id: 1,
     name: 'Akhmad Hafidz Ardianto',
-    role: 'Front-end & Back-end',
-    description: 'Membangun UI responsif dan backend andal, mencakup UI/UX, API, autentikasi, dan integrasi data',
+      role: 'Front-End & Back-End',
+      description: 'Membangun UI responsif dan Back-End efisien, mencakup API, autentikasi, serta integrasi data antar sistem.',
     image: 'assets/hafizh.jpg',
     linkedin: 'https://www.linkedin.com/in/akhmad-hafidz-ardianto/',
   },
   {
     id: 2,
     name: 'Muhammad Riduwan',
-    role: 'Geospatial Engineer & UI/UX Development',
-    description: 'Menggabungkan analisis spasial dan desain interaktif untuk menyajikan data kesehatan secara ilmiah.',
+    role: 'Geospatial Analyst | Front-End | UI/UX',
+    description: 'Memadukan analisis spasial dan pengembangan UI responsif, mencakup pengolahan data serta perancangan UI/UX.',
     image: 'assets/uway.jpg',
     linkedin: 'https://www.linkedin.com/in/muhammad-riduwan-abb636372/',
   },
@@ -187,7 +187,7 @@ export function TeamSection() {
                   <p
                     className="leading-relaxed line-clamp-2"
                     style={{
-                      fontSize: 'clamp(14px, 2vw, 15px)',
+                      fontSize: 'clamp(12px, 2vw, 13.5px)',
                       fontWeight: 400,
                       color: '#64748B',
                     }}
