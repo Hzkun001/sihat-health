@@ -1,33 +1,43 @@
 import { motion } from 'motion/react';
 
 const partners = [
-  { name: 'WHO', image: 'assets/who.png' },
-  { name: 'Dinkes', image: 'assets/dinkes.png' },
-  { name: 'BPS', image: 'assets/BPS.png' },
-   { name: 'Geoportal', image: 'assets/geoportal.png'},
-  { name: 'GEE', image: 'assets/GEE.png'},
-  { name: 'Vercel', image: 'assets/vercel.png'},
-   { name: 'Media', image: 'assets/media.png' },
-  { name: 'Antara', image: 'assets/antara.png'},
-  { name: 'Berita', image: 'assets/berita_banjarbaru.png'},
-  { name: 'Radar', image: 'assets/radar.png'},
+  { name: 'WHO', image: 'assets/who.png', url: 'https://www.who.int/indonesia' },
+  { name: 'Dinkes', image: 'assets/dinkes.png', url: 'https://dinkes.banjarbarukota.go.id/' },
+  { name: 'BPS', image: 'assets/BPS.png', url: 'https://banjarbarukota.bps.go.id/id' },
+  { name: 'GEE', image: 'assets/GEE.png', url: 'https://earthengine.google.com/'},
+  { name: 'Geoportal', image: 'assets/geoportal.png', url: 'http://geoportal.banjarbarukota.go.id/'},
+  { name: 'Vercel',    image: '/assets/vercel.png', url: 'https://vercel.com/' },
+   { name: 'Media', image: 'assets/media.png' , url: 'https://mediacenter.banjarbarukota.go.id/'},
+  { name: 'Antara', image: 'assets/antara.png', url: 'https://kalsel.antaranews.com/'},
+  { name: 'Berita', image: 'assets/berita_banjarbaru.png', url: 'https://beritabanjarbaru.com/'},
+  { name: 'Radar', image: 'assets/radar.png', url: 'https://radarbanjarmasin.jawapos.com/'},
 ];
 
 // Komponen kecil biar tidak duplikasi
-function LogoItem({ partner }: { partner: {name: string; image: string;} }) {
+function LogoItem({ partner }: { partner: {name: string; image: string; url: string} }) {
   return (
-    <div
-      className="w-20 h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover/logo:shadow-lg"
-      style={{ backgroundColor: `${partner}12` }}
-      title={partner.name}
+    <a
+      href={partner.url}
+      target="_blank"                      // buka tab baru (opsional)
+      rel="noopener noreferrer"           // keamanan saat target=_blank
+      aria-label={partner.name}           // aksesibilitas
+      className="inline-flex"
     >
-      <img
-        src={partner.image}
-        alt={partner.name}
-        className="w-8 h-8 object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
-        loading="lazy"
-      />
-    </div>
+      <div
+        className="w-20 h-10 rounded-lg flex items-center justify-center transition-all
+                   duration-300 group-hover/logo:shadow-lg bg-white/40 cursor-pointer
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+        title={partner.name}
+        tabIndex={0}
+      >
+        <img
+          src={partner.image}
+          alt={partner.name}
+          className="w-8 h-8 object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
+          loading="lazy"
+        />
+      </div>
+    </a>
   );
 }
 
