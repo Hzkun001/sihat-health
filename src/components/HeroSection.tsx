@@ -59,13 +59,13 @@ export function HeroSection() {
             className="flex flex-col sm:flex-row gap-4 pt-4"
           >
             <motion.a
-              href="#statistik"
+              href="#laporan"
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
               style={{ fontSize: '16px', fontWeight: 600 }}
             >
-              Lihat Statistik
+              Laporkan Masalah
             </motion.a>
             <motion.a
               href="#peta"
@@ -74,7 +74,7 @@ export function HeroSection() {
               className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white border-2 border-white/30 rounded-xl hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
               style={{ fontSize: '16px', fontWeight: 600 }}
             >
-              Peta Kesehatan
+              Peta Interaktif
             </motion.a>
           </motion.div>
         </motion.div>
