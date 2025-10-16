@@ -89,27 +89,24 @@ export function CTASection() {
         </div>
 
         {/* Floating Stats — jadikan list semantik + reveal sekali jalan */}
-        <div
-          ref={statsRev.ref as any}
-          className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 reveal ${statsRev.visible ? 'is-visible' : ''}`}
-          style={{ transitionDuration: '.6s', transitionDelay: '.08s' }}
-        >
-          <ul className="contents" role="list">
-            {[
-              { value: '200K+', label: 'Penduduk Terlayani' },
-              { value: '15+', label: 'Indikator SDG' },
-              { value: '100%', label: 'Data Terbuka' },
-              { value: '24/7', label: 'Akses Platform' },
-            ].map((stat) => (
-              <li
-                key={stat.label}
-                className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 transition-transform duration-150 hover:-translate-y-1"
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
+          {[
+            { value: '200K+', label: 'Penduduk Terlayani' },
+            { value: '15+', label: 'Indikator SDG' },
+            { value: '100%', label: 'Data Terbuka' },
+            { value: '24/7', label: 'Akses Platform' },
+          ].map((stat, index) => (
+            <SectionReveal key={stat.label} delay={0.4 + index * 0.1}>
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20"
               >
                 <div className="text-white mb-2" style={{ fontSize: '32px', fontWeight: 700 }}>
                   {stat.value}
                 </div>
                 <div className="text-white/80 text-sm">{stat.label}</div>
-              </li>
+              </motion.div>
+            </SectionReveal>
             ))}
           </ul>
         </div>
