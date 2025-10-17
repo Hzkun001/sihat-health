@@ -39,7 +39,7 @@ export function HeroSection() {
             className="text-white tracking-tight leading-tight mb-6"
             style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700 }}
           >
-            Membangun Masyarakat Sehat di Banjarbaru
+            Membangun Masyarakat Sehat <span>di Banjarbaru</span>
           </motion.h1>
 
           <motion.p
