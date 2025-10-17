@@ -11,8 +11,8 @@ export default function HeroVisual3D() {
         camera-controls
         auto-rotate
         style={{
-          width: '100%',
-          height: '100%',
+          width: '80%',
+          height: '80%',
           borderRadius: 20,
           background: 'radial-gradient(circle at center, rgba(125, 191, 224, 0.22) 0%, rgba(0,0,0,0.2) 100%)'
         }}
