@@ -6,7 +6,6 @@ import { HeroSection } from './components/HeroSection';
 import { CustomCursor } from './components/CustomCursor';
 import { PartnersFloatingBar } from './components/PartnersFloatingBar';
 
-
 // Lazy load below-the-fold components for better initial load performance
 const AboutSection = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
 const MapSection = lazy(() => import('./components/MapSection').then(m => ({ default: m.MapSection })));
@@ -36,43 +35,50 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-surface-0">
-      <AnimatePresence mode="wait">
-        {isLoading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
-      </AnimatePresence>
-
-      {!isLoading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ 
-            duration: 1,
-            delay: 0.2,
-            ease: [0.43, 0.13, 0.23, 0.96],
-            opacity: { duration: 0.8 },
-            scale: { duration: 1 }
-          }}
-        >
-          <CustomCursor />
-          <Navbar />
-          <PartnersFloatingBar />
-          <main>
-            <HeroSection />
-            <Suspense fallback={<div className="min-h-screen" />}>
-              <AboutSection />
-              <MapSection />
-               <ReportSection />
-              <StatsCardsSection />
-              <StatsIndicatorsSection />
-              <NewsSection />
-              <TeamSection />
-              <CTASection />
-            </Suspense>
-          </main>
+      {/* Main content - rendered behind loading screen */}
+      <div className="relative z-0">
+        <CustomCursor />
+        <Navbar />
+        <PartnersFloatingBar />
+        <main>
+          {/* Hero section is ready before loading completes */}
+          <HeroSection />
+          
+          {/* Lazy load other sections after loading screen */}
+          {!isLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ 
+                duration: 0.6,
+                delay: 0.3,
+                ease: [0.25, 0.8, 0.25, 1]
+              }}
+            >
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <AboutSection />
+                <MapSection />
+                <ReportSection />
+                <StatsCardsSection />
+                <StatsIndicatorsSection />
+                <NewsSection />
+                <TeamSection />
+                <CTASection />
+              </Suspense>
+            </motion.div>
+          )}
+        </main>
+        {!isLoading && (
           <Suspense fallback={<div className="min-h-[400px]" />}>
             <Footer />
           </Suspense>
-        </motion.div>
-      )}
+        )}
+      </div>
+
+      {/* Loading screen overlay - z-50 ensures it's on top */}
+      <AnimatePresence mode="wait">
+        {isLoading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
+      </AnimatePresence>
     </div>
   );
 }
