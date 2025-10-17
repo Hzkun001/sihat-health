@@ -15,7 +15,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 1,
     name: 'Akhmad Hafidz Ardianto',
-      role: 'Front-End Development',
+      role: 'Front-End | Back-End Development',
       description: 'Membangun struktur proyek, mencakup API, serta integrasi data antar sistem.',
     image: 'assets/hafidz.webp',
     linkedin: 'https://www.linkedin.com/in/akhmad-hafidz-ardianto/',
