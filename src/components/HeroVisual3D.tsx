@@ -13,8 +13,8 @@ export default function HeroVisual3D() {
         style={{
           width: '80%',
           height: '80%',
-          borderRadius: 20,
-          background: 'radial-gradient(circle at center, rgba(125, 191, 224, 0.22) 0%, rgba(0,0,0,0.2) 100%)'
+          borderRadius: 60,
+          background: 'radial-gradient(circle at center, rgba(124, 172, 197, 1) 0%, rgba(41, 57, 46, 0.26) 100%)'
         }}
       />
     </div>
