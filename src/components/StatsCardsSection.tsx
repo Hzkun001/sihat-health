@@ -76,9 +76,9 @@ export function StatsCardsSection() {
                 >
                   {/* ✅ Frosted glass blur overlay */}
                   <div
-                    className="absolute inset-0 rounded-2xl backdrop-blur-md bg-black/20"
+                    className="absolute inset-0 rounded-2xl bg-black/50"
                     style={{
-                      opacity: 0.6,
+                      opacity: 0.2,
                       zIndex: 1,
                     }}
                   />

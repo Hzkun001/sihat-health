@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
-import { CustomCursor } from './components/CustomCursor';
 import { PartnersFloatingBar } from './components/PartnersFloatingBar';
 
 // Lazy load below-the-fold components for better initial load performance
@@ -37,7 +36,6 @@ export default function App() {
     <div className="min-h-screen bg-surface-0">
       {/* Main content - rendered behind loading screen */}
       <div className="relative z-0">
-        <CustomCursor />
         <Navbar />
         <PartnersFloatingBar />
         <main>

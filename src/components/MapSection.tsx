@@ -462,7 +462,7 @@ if (fc) {
   }, []); // init sekali
 
   return (
-    <section id="peta" className="relative py-24 overflow-hidden">
+    <section id="peta" className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       {/* Background */}
       <div
         className="absolute inset-0"
@@ -494,7 +494,7 @@ if (fc) {
               <div className="hidden lg:block w-80 flex-shrink-0">
                 <div className="sticky top-32">
                   <MapLayerFilter
-                     isMobile={false}                     // atau pakai {isMobile} tapi pastikan false di desktop
+                     isMobile={false}                     
                       defaultSelections={{ hospitals: true }}
                       onToggle={async (layerId, enabled) => {
                         if (!(layerId in LAYER_CONFIG)) return;
@@ -551,7 +551,7 @@ if (fc) {
                       onClick={() => setIsFilterOpen(true)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="lg:hidden absolute bottom-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
+                      className="lg:hidden absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
                       style={{
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                         backgroundColor: 'rgba(255,255,255,0.95)',
@@ -585,7 +585,7 @@ if (fc) {
                       </SmallButton>
                       <SmallButton aria="Toggle fullscreen" onClick={toggleFullscreen}>
                         <Maximize2 size={18} />
-                        <span className="text-ink-700 text-sm font-semibold">Layar Penuh</span>
+                        <span className="text-ink-740 text-xs font-semibold">Fullscreen</span>
                       </SmallButton>
                       <SmallButton aria="Zoom out map" onClick={handleZoomOut}>
                         <ZoomOut size={20} />

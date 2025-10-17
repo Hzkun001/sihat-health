@@ -33,7 +33,7 @@ function LogoItem({ partner }: { partner: {name: string; image: string; url: str
         <img
           src={partner.image}
           alt={partner.name}
-          className="w-8 h-8 object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
+          className="w-20 h-9 object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
           loading="lazy"
         />
       </div>

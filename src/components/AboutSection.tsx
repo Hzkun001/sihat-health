@@ -134,7 +134,7 @@ export function AboutSection() {
   const diagramMobile = useRevealOnce();
 
   return (
-    <section id="tentang" className="relative py-24 overflow-hidden">
+    <section id="tentang" className="relative pt-14 pb-2 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       {/* Wave Divider (sekali jalan via CSS reveal) */}
       <div className="absolute top-0 left-0 right-0 h-24 -translate-y-full">
         <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
@@ -178,57 +178,24 @@ export function AboutSection() {
               className={`hidden lg:block relative reveal ${diagramDesktop.visible ? 'is-visible' : ''}`}
               style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.8, 0.25, 1)', transitionDuration: '.6s' }}
             >
-              <div className="relative bg-white rounded-2xl p-12 shadow-lg">
+              <div className="relative rounded-2xl p-12 shadow-lg">
                 {/* Pastikan width/height supaya anti-CLS (ganti sesuai ukuran asli) */}
                 <img
-                  src="/assets/sdg3.jpg"
+                  src="/assets/geoportal.png"
                   alt="SDG 3 Diagram"
-                  width="960" height="640"
+                  width="560" height="540"
                   loading="lazy" decoding="async"
                   className="w-full h-auto object-contain"
                 />
               </div>
             </div>
-
-            {/* Mobile/Tablet */}
+            {/* Mobile/Tablet
             <div
               ref={diagramMobile.ref as any}
               className={`lg:hidden relative reveal ${diagramMobile.visible ? 'is-visible' : ''}`}
               style={{ transitionDuration: '.6s' }}
             >
-              <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg mx-auto max-w-[500px]">
-                {/* SVG statis dengan transisi path sekali jalan via CSS reveal.
-                   Jika mau garis "digambar", bisa ganti ke CSS stroke-dashoffset + class is-visible */}
-                <svg className="w-full h-auto" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jaringan data SIHAT">
-                  {/* Connections */}
-                  <line x1="200" y1="150" x2="80"  y2="80"  stroke="#1BA351" strokeWidth="2" strokeDasharray="4 4" opacity="0.3"/>
-                  <line x1="200" y1="150" x2="320" y2="80"  stroke="#5AC8FA" strokeWidth="2" strokeDasharray="4 4" opacity="0.3"/>
-                  <line x1="200" y1="150" x2="80"  y2="220" stroke="#1BA351" strokeWidth="2" strokeDasharray="4 4" opacity="0.3"/>
-                  <line x1="200" y1="150" x2="320" y2="220" stroke="#5AC8FA" strokeWidth="2" strokeDasharray="4 4" opacity="0.3"/>
-
-                  {/* Central Node */}
-                  <circle cx="200" cy="150" r="40" fill="url(#g1)"/>
-                  <text x="200" y="155" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">SIHAT</text>
-
-                  {/* Outer Nodes */}
-                  <circle cx="80"  cy="80"  r="30" fill="#D8F3DC"/>
-                  <text x="80"  y="85"  textAnchor="middle" fill="#1BA351" fontSize="12">Data</text>
-                  <circle cx="320" cy="80"  r="30" fill="#D8F3DC"/>
-                  <text x="320" y="85"  textAnchor="middle" fill="#1BA351" fontSize="12">Analisis</text>
-                  <circle cx="80"  cy="220" r="30" fill="#D8F3DC"/>
-                  <text x="80"  y="225" textAnchor="middle" fill="#1BA351" fontSize="12">Peta</text>
-                  <circle cx="320" cy="220" r="30" fill="#D8F3DC"/>
-                  <text x="320" y="225" textAnchor="middle" fill="#1BA351" fontSize="12">Insight</text>
-
-                  <defs>
-                    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#1BA351" />
-                      <stop offset="100%" stopColor="#5AC8FA" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

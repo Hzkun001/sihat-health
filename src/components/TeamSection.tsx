@@ -15,9 +15,9 @@ const teamMembers: TeamMember[] = [
   {
     id: 1,
     name: 'Akhmad Hafidz Ardianto',
-      role: 'Front-End & Back-End',
-      description: 'Membangun UI responsif dan Back-End efisien, mencakup API, autentikasi, serta integrasi data antar sistem.',
-    image: 'assets/hafizh.jpg',
+      role: 'Front-End Development',
+      description: 'Membangun struktur proyek, mencakup API, serta integrasi data antar sistem.',
+    image: 'assets/hafidz.webp',
     linkedin: 'https://www.linkedin.com/in/akhmad-hafidz-ardianto/',
   },
   {
@@ -25,7 +25,7 @@ const teamMembers: TeamMember[] = [
     name: 'Muhammad Riduwan',
     role: 'Geospatial Analyst | Front-End | UI/UX',
     description: 'Memadukan analisis spasial dan pengembangan UI responsif, mencakup pengolahan data serta perancangan UI/UX.',
-    image: 'assets/uway.jpg',
+    image: 'assets/uway.webp',
     linkedin: 'https://www.linkedin.com/in/muhammad-riduwan-abb636372/',
   },
 ];
@@ -106,23 +106,22 @@ export function TeamSection() {
               >
                 {/* Photo Container */}
                 <div className="relative overflow-hidden aspect-[4/5]">
-                  {/* Photo */}
-                  <motion.img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover transition-all duration-[280ms]"
-                    style={{
-                      filter: 'grayscale(100%)',
-                      opacity: 0.9,
-                    }}
-                    whileHover={{
-                      filter: 'grayscale(0%)',
-                      scale: 1.02,
-                      opacity: 1,
-                    }}
-                    transition={{ duration: 0.28, ease: [0.25, 0.8, 0.25, 1] }}
-                  />
-
+                  <picture>
+                    {/* WebP lebih kecil */}
+                    <source srcSet={member.image.replace('.jpg', '.webp')} type="image/webp" />
+                    <motion.img
+                      src={member.image}
+                      alt={member.name}
+                      loading="lazy"
+                      decoding="async"
+                      width={920}
+                      height={1150}
+                      className="w-full h-full object-cover transition-all duration-[280ms]"
+                      style={{ filter: 'grayscale(100%)', opacity: 0.9 }}
+                      whileHover={{ filter: 'grayscale(0%)', scale: 1.02, opacity: 1 }}
+                      transition={{ duration: 0.28, ease: [0.25, 0.8, 0.25, 1] }}
+                    />
+                  </picture>
                   {/* LinkedIn Button */}
                   <motion.a
                     href={member.linkedin}
