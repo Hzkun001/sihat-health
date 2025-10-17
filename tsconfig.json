@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM"],
     "moduleResolution": "bundler",
     "allowJs": true,
     "isolatedModules": true,
@@ -14,5 +15,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "src/types/model-viewer.d.ts", "src/types/spline-viewer.d.ts"],
 }

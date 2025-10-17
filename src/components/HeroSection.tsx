@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
-import { HeroVisual3D } from './HeroVisual3D';
+import HeroVisual3D from './HeroVisual3D';
 import { StaticParticles } from './StaticParticles';
 
 export function HeroSection() {
@@ -81,7 +81,6 @@ export function HeroSection() {
 
         {/* Right - 3D Scientific Visual */}
         <motion.div
-          
           className="relative z-20 block"
         >  
           <div className="relative w-full h-[600px] rounded-2xl flex items-center justify-center overflow-hidden" >

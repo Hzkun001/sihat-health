@@ -1,58 +1,21 @@
 // src/components/HeroVisual3D.tsx
-import { useEffect, useMemo, useRef, useState } from 'react';
+import ModelViewer from './ModelViewer';
 
-const SCENE_URL =
-  import.meta.env.VITE_SPLINE_SCENE_URL ||
-  'https://prod.spline.design/juR-bsaLXa8fNZCF/scene.splinecode';
-
-export function HeroVisual3D() {
-  const url = useMemo(() => String(SCENE_URL ?? ''), []);
-  const ref = useRef<HTMLElement | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    // pastikan custom element sudah terdaftar
-    if (customElements.get('spline-viewer')) setReady(true);
-    else {
-      // kalau masih belum, tunggu sebentar (shouldn't happen kalau import di main.tsx)
-      const t = setInterval(() => {
-        if (customElements.get('spline-viewer')) {
-          clearInterval(t);
-          setReady(true);
-        }
-      }, 50);
-      return () => clearInterval(t);
-    }
-  }, []);
-
-  useEffect(() => {
-    // tulis atribut url secara eksplisit setelah elemen ada
-    if (ready && ref.current && url) {
-      ref.current.setAttribute('url', url);
-    }
-  }, [ready, url]);
-
-  if (!url) {
-    return (
-      <div className="relative w-full h-[600px] rounded-2xl grid place-items-center border border-dashed border-zinc-300/60 bg-zinc-50/40">
-        <p className="text-sm text-zinc-600">VITE_SPLINE_SCENE_URL belum disetel.</p>
-      </div>
-    );
-  }
-
+export default function HeroVisual3D() {
   return (
-    <div className="relative w-full h-full min-h-[600px] rounded-2xl overflow-hidden">
-      {!ready && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-100 to-zinc-200" />
-      )}
-
-      {/* @ts-expect-error custom element */}
-      <spline-viewer
-        ref={ref}
-        // pakai self-closing & gunakan 'class' agar attribute benar-benar tertulis
-        class="absolute inset-0 w-full h-full block"
-        loading="lazy"
-        ar
+    <div className="relative z-[50] w-full h-full rounded-2xl overflow-hidden">
+      <ModelViewer
+        /* TES DULU DENGAN ASTRONAUT untuk isolasi masalah aset */
+        src="/assets/3d/fresh.glb"
+        alt="Astronaut test"
+        camera-controls
+        auto-rotate
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: 20,
+          background: 'radial-gradient(circle at center, rgba(125, 191, 224, 0.22) 0%, rgba(0,0,0,0.2) 100%)'
+        }}
       />
     </div>
   );
