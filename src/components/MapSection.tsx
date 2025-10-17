@@ -551,7 +551,7 @@ if (fc) {
                       onClick={() => setIsFilterOpen(true)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="lg:hidden absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
+                      className="lg:hidden absolute bottom-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
                       style={{
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                         backgroundColor: 'rgba(255,255,255,0.95)',
