@@ -39,7 +39,7 @@ export function HeroSection() {
             className="text-white tracking-tight leading-tight mb-6"
             style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700 }}
           >
-            Membangun Masyarakat Sehat di Banjarbaru
+            Membangun Masyarakat Sehat <span>di Banjarbaru</span>
           </motion.h1>
 
           <motion.p
@@ -59,13 +59,13 @@ export function HeroSection() {
             className="flex flex-col sm:flex-row gap-4 pt-4"
           >
             <motion.a
-              href="#laporan"
+              href="#statistik"
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-brand-green rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
               style={{ fontSize: '16px', fontWeight: 600 }}
             >
-              Laporkan Masalah
+              Lihat Statistik
             </motion.a>
             <motion.a
               href="#peta"
@@ -74,16 +74,52 @@ export function HeroSection() {
               className="inline-flex items-center justify-center px-8 py-4 bg-white/10 text-white border-2 border-white/30 rounded-xl hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
               style={{ fontSize: '16px', fontWeight: 600 }}
             >
-              Peta Interaktif
+              Peta Kesehatan
             </motion.a>
           </motion.div>
         </motion.div>
 
         {/* Right - 3D Scientific Visual */}
         <motion.div
+<<<<<<< HEAD
           className="relative z-20 block"
         >  
           <div className="relative w-full h-[600px] rounded-2xl flex items-center justify-center overflow-hidden" >
+=======
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.5, ease: [0.25, 0.8, 0.25, 1] }}
+          className="relative z-10 hidden lg:block"
+        >
+          {/* Soft overlay for contrast enhancement */}
+          <div 
+            className="absolute inset-0 rounded-2xl pointer-events-none z-0"
+            style={{
+              background: 'radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.15) 40%, transparent 70%)',
+              mixBlendMode: 'overlay',
+            }}
+          />
+          
+          {/* Subtle vignette for depth */}
+          <div 
+            className="absolute inset-0 rounded-2xl pointer-events-none z-0"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.08) 100%)',
+            }}
+          />
+
+          {/* Depth fog layer */}
+          <div 
+            className="absolute inset-0 rounded-2xl pointer-events-none z-0"
+            style={{
+              background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.12) 100%)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          />
+          
+          <div className="relative w-full h-[600px] rounded-2xl flex items-center justify-center overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
+>>>>>>> 9123b0719a729082aa6e2b4ecb01eaec87a77228
             <HeroVisual3D />
           </div>
         </motion.div>
