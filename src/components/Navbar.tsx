@@ -130,7 +130,7 @@ export function Navbar() {
             </a>
 
             {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center space-x-10">
+            <div className="hidden lg:flex items-center gap-x-5 xl:gap-x-7 2xl:gap-x-9">
               {menuItems.map((item) => {
                 const isActive = activeSection === item.href.replace('#', '');
                 return (
