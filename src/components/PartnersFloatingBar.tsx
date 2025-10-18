@@ -25,7 +25,7 @@ function LogoItem({ partner }: { partner: {name: string; image: string; url: str
     >
       <div
         className="w-20 h-10 rounded-lg flex items-center justify-center transition-all
-                   duration-300 group-hover/logo:shadow-lg bg-white/40 cursor-pointer
+                   duration-300 group-hover/logo:shadow-lg cursor-pointer
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
         title={partner.name}
         tabIndex={0}
