@@ -151,7 +151,7 @@ export function HeroSection() {
                          shadow-lg hover:shadow-xl"
               style={{ fontSize: '15px', fontWeight: 600 }}
             >
-              Lihat Statistik
+              Laporkan Masalah
             </motion.a>
             <motion.a
               href="#peta"
