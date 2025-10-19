@@ -87,6 +87,15 @@ export function LoadingScreen({
     };
   }, [progress, ready, onComplete, prefersReducedMotion]);
 
+  useEffect(() => {
+    const failSafe = setTimeout(() => {
+      if (completedRef.current) return;
+      completedRef.current = true;
+      onComplete();
+    }, prefersReducedMotion ? 2200 : 4200);
+    return () => clearTimeout(failSafe);
+  }, [onComplete, prefersReducedMotion]);
+
   return (
     <motion.div
       initial={{ opacity: 1, y: 0 }}
