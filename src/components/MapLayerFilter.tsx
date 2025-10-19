@@ -23,16 +23,26 @@ const layerCategories: LayerCategory[] = [
     title: 'Fasilitas Kesehatan',
     items: [
       { id: 'rumahsakit',   label: 'Rumah Sakit', color: '#3498DB' },
-      { id: 'puskesmas',   label: 'Puskesmas', color: '#1BA351' },
+      { id: 'puskesmas',   label: 'Puskesmas', color: '#3de770ff' },
       { id: 'klinik',     label: 'Klinik', color: '#d843e8ff' },
       { id: 'apotek',  label: 'Apotek', color: '#090e97ff' },
+      { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
       { id: 'ambulances',  label: 'Ambulan(Next Update)', color: '#ffffffff' },
       { id: 'posyandu',    label: 'Posyandu(Next Update)', color: '#ffffffff' },
-      { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
     ],
   },
   {
-    id: 'environment-health',
+    id: 'demographics',
+    title: 'Data Demografis',
+    items: [
+      { id: 'population', label: 'Kepadatan Penduduk', color: '#137731ff' },
+      { id: 'children',   label: 'Sebaran Balita',      color: '#be336aff' },
+      { id: 'lansia',    label: 'Sebaran Lansia',      color: '#c47f09ff' },
+      { id: 'disabilitas', label: 'Sebaran Disabilitas', color: '#844294ff' },
+    ],
+  },
+   {
+  id: 'environment-health',
     title: ' Lingkungan dan Penyakit (coming soon)',
     items: [
       { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6' },
@@ -42,16 +52,6 @@ const layerCategories: LayerCategory[] = [
       { id: 'tps', label: 'TPS', color: '#1BA360' },
       { id: 'jalan-berlubang', label: 'Jalan Berlubang', color: '#000000' },
       { id: 'genangan air', label: 'Genangan Air', color: '#00AEEF' },
-    ],
-  },
-  {
-    id: 'demographics',
-    title: 'Data Demografis',
-    items: [
-      { id: 'population', label: 'Kepadatan Penduduk', color: '#34495E' },
-      { id: 'children',   label: 'Sebaran Balita',      color: '#FF6B9D' },
-      { id: 'elderly',    label: 'Sebaran Lansia',      color: '#8E44AD' },
-      { id: 'disability', label: 'Sebaran Disabilitas', color: '#00AEEF' },
     ],
   },
 ];

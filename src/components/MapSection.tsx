@@ -20,7 +20,7 @@ const LAYER_CONFIG = {
     iconURL: '/assets/logoForMap/rumahsakit.webp',
     iconBitmapMaxSize: 160,
     iconSize: 0.25,
-    minzoom: 8,
+    minzoom: 11,
   },
   puskesmas: {
     url: '/datageo/puskesmas.json',
@@ -28,19 +28,17 @@ const LAYER_CONFIG = {
     iconName: 'puskesmas-icon',
     iconURL: '/assets/logoForMap/puskesmas.webp',
     iconBitmapMaxSize: 96,
-    iconSize: 0.2,
-    minzoom: 8,
+    iconSize: 0.19,
+    minzoom: 12,
   },
   klinik: {
     url: '/datageo/klinik.json',
-    type: 'circle' as const,
-    paint: {
-      'circle-radius': 4.5,
-      'circle-color': '#d843e8ff',
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#ffffff',
-    },
-    minzoom: 9,
+    render: 'symbol' as const,
+    iconName: 'klinik-icon',
+    iconURL: '/assets/logoForMap/klinik.webp',
+    iconBitmapMaxSize: 96,
+    iconSize: 0.30,
+    minzoom: 12,
   },
   apotek: {
     url: '/datageo/apotek.json',
@@ -48,43 +46,63 @@ const LAYER_CONFIG = {
     iconName: 'apotek-icon',
     iconURL: '/assets/logoForMap/apotek.webp',
     iconBitmapMaxSize: 96,
-    iconSize: 0.2,
-    minzoom: 10,
+    iconSize: 0.20,
+    minzoom: 12,
+  },
+   homecare: {
+    url: '/datageo/homecare.json',
+    render: 'symbol' as const,
+    iconName: 'homecare-icon',
+    iconURL: '/assets/logoForMap/homecare.webp',
+    iconBitmapMaxSize: 96,
+    iconSize: 0.27,
+    minzoom: 12,
   },
   population: {
     url: '/datageo/kepadatan_penduduk.json',
-    type: 'circle' as const,
-    paint: {
-      'circle-radius': 4.5,
-      'circle-color': '#2d2d2dff',
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#ffffff',
-    },
-    minzoom: 9,
+    render: 'fill' as const,
+    minzoom: 0,
+    maxzoom: 22,
+    fill: {
+      'fill-color': [
+        'interpolate',
+        ['linear'],
+        ['get', 'kepadatan'],
+        0, '#F0FDF4',
+        150, '#BBF7D0',
+        250, '#4ADE80',
+        400, '#22C55E',
+        550, '#15803D'
+      ],
+      'fill-opacity': 0.6,
+      'fill-outline-color': '#15803D'
+    }
   },
   children: {
     url: '/datageo/sebaran_balita.json',
-    type: 'circle' as const,
-    paint: {
-      'circle-radius': 4.5,
-      'circle-color': '#e856b7ff',
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#ffffff',
-    },
-    minzoom: 9,
+    render: 'fill' as const,
+    minzoom: 0,
+    maxzoom: 22,
+    fill: {
+      'fill-color': [
+        'interpolate', ['linear'],
+        [
+          '+',
+          ['get', '00__04'],
+          ['get', '05__09'],
+          ['get', '10__14']
+        ],
+        0, '#FFF1F5',
+        2000, '#FBCFE8',
+        4000, '#F472B6',
+        6000, '#DB2777',
+        8000, '#9D174D'
+      ],
+      'fill-opacity': 0.55,
+      'fill-outline-color': '#BE185D'
+    }
   },
-  homecare: {
-    url: '/datageo/homecare.json',
-    type: 'circle' as const,
-    paint: {
-      'circle-radius': 4.5,
-      'circle-color': '#f2c193ff',
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#ffffff',
-    },
-    minzoom: 9,
-  },
-  elderly: {
+  lansia: {
     url: '/datageo/sebaran_lansia.json',
     render: 'fill' as const,
     minzoom: 0,
@@ -99,14 +117,41 @@ const LAYER_CONFIG = {
                 ['get', '40__44'], ['get', '45__49'], ['get', '50__54'], ['get', '55__59'],
                 ['get', '60__64'], ['get', '65__69'], ['get', '70__74'], ['get', '>75']]
         ],
-        0.05, '#f2e8f5ff',
-        0.10, '#dfc8e6ff',
-        0.15, '#be81c7ff',
-        0.20, '#a34cafff',
-        0.30, '#712e7dff'
+        0.05, '#FFF7ED',
+        0.10, '#FFEDD5',
+        0.15, '#FDBA74',
+        0.20, '#d6792eff',
+        0.30, '#c94803ff'
       ],
       'fill-opacity': 0.6,
-      'fill-outline-color': '#2E7D32'
+      'fill-outline-color': '#C2410C'
+    }
+  },
+  disabilitas: {
+    url: '/datageo/sebaran_disabilitas.json',
+    render: 'fill' as const,
+    minzoom: 0,
+    maxzoom: 22,
+    fill: {
+      'fill-color': [
+        'interpolate', ['linear'],
+        [
+          '+',
+          ['get', 'dsb_fisik'],
+          ['get', 'dsb_netra'],
+          ['get', 'dsb_rungu'],
+          ['get', 'dsb_mental'],
+          ['get', 'dsb_lainny'],
+          ['get', 'dsb_fismen']
+        ],
+        0, '#f2e8f5ff',
+        20, '#dfc8e6ff',
+        40, '#be81c7ff',
+        70, '#a34cafff',
+        100, '#712e7dff'
+      ],
+      'fill-opacity': 0.55,
+      'fill-outline-color': '#5B21B6'
     }
   },
 } as const;
@@ -114,6 +159,9 @@ const LAYER_CONFIG = {
 type LayerId = keyof typeof LAYER_CONFIG;
 
 type PopupRow = { label: string; value: unknown; format?: 'number' | 'text' };
+
+const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true };
+const EMPTY_SELECTIONS: Readonly<Record<string, boolean>> = {};
 
 function escapeHTML(value: string): string {
   return value.replace(/[&<>"']/g, (ch) => (
@@ -406,6 +454,14 @@ export function MapSection() {
 
     teardownInteractions();
 
+    const allowHover = (() => {
+      if (typeof window === 'undefined') return true;
+      if (isMobile) return false;
+      const hoverMedia = window.matchMedia?.('(hover: hover)');
+      const pointerFine = window.matchMedia?.('(pointer: fine)');
+      return (hoverMedia?.matches ?? true) && (pointerFine?.matches ?? true);
+    })();
+
     const mapFacilityPopup = (props: any): { title: string; rows: PopupRow[] } => ({
       title: props.namobj ?? props.nama ?? 'Fasilitas Kesehatan',
       rows: [
@@ -419,10 +475,12 @@ export function MapSection() {
     });
 
     const registerFacilityLayer = (layerId: LayerId, summaryRows = 2) => {
-      registerHoverPopup(layerId, (feature) => {
-        const { title, rows } = mapFacilityPopup(feature.properties || {});
-        return buildPopupHTML(title, rows.slice(0, summaryRows));
-      });
+      if (allowHover) {
+        registerHoverPopup(layerId, (feature) => {
+          const { title, rows } = mapFacilityPopup(feature.properties || {});
+          return buildPopupHTML(title, rows.slice(0, summaryRows));
+        });
+      }
       registerClickPopup(layerId, (feature) => {
         const { title, rows } = mapFacilityPopup(feature.properties || {});
         return buildPopupHTML(title, rows);
@@ -435,14 +493,16 @@ export function MapSection() {
     registerFacilityLayer('apotek', 2);
     registerFacilityLayer('homecare', 2);
 
-    registerHoverPopup('population', (feature) => {
-      const props = feature.properties || {};
-      return buildPopupHTML(props.namobj ?? 'Kepadatan Penduduk', [
-        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
-        { label: 'Penduduk', value: props.jlhpendudu, format: 'number' },
-        { label: 'Kepadatan (jiwa/km²)', value: props.kepadatan, format: 'number' },
-      ]);
-    });
+    if (allowHover) {
+      registerHoverPopup('population', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.namobj ?? 'Kepadatan Penduduk', [
+          { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+          { label: 'Penduduk', value: props.jlhpendudu, format: 'number' },
+          { label: 'Kepadatan (jiwa/km²)', value: props.kepadatan, format: 'number' },
+        ]);
+      });
+    }
     registerClickPopup('population', (feature) => {
       const props = feature.properties || {};
       return buildPopupHTML(props.namobj ?? 'Kepadatan Penduduk', [
@@ -457,13 +517,15 @@ export function MapSection() {
     const sumChildren = (props: any) =>
       ['00__04', '05__09', '10__14'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
 
-    registerHoverPopup('children', (feature) => {
-      const props = feature.properties || {};
-      return buildPopupHTML(props.namobj ?? 'Sebaran Penduduk', [
-        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
-        { label: 'Balita (0-4)', value: props['00__04'], format: 'number' },
-      ]);
-    });
+    if (allowHover) {
+      registerHoverPopup('children', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.namobj ?? 'Sebaran Penduduk', [
+          { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+          { label: 'Balita (0-4)', value: props['00__04'], format: 'number' },
+        ]);
+      });
+    }
     registerClickPopup('children', (feature) => {
       const props = feature.properties || {};
       return buildPopupHTML(props.namobj ?? 'Sebaran Penduduk', [
@@ -474,7 +536,34 @@ export function MapSection() {
         { label: 'Total 0-14 Tahun', value: sumChildren(props), format: 'number' },
       ]);
     });
-  }, [registerClickPopup, registerHoverPopup, teardownInteractions]);
+
+    const sumDisability = (props: any) =>
+      ['dsb_fisik', 'dsb_netra', 'dsb_rungu', 'dsb_mental', 'dsb_lainny', 'dsb_fismen']
+        .reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+
+    if (allowHover) {
+      registerHoverPopup('disabilitas', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.namobj ?? 'Sebaran Disabilitas', [
+          { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+          { label: 'Total Disabilitas', value: sumDisability(props), format: 'number' },
+        ]);
+      });
+    }
+    registerClickPopup('disabilitas', (feature) => {
+      const props = feature.properties || {};
+      return buildPopupHTML(props.namobj ?? 'Sebaran Disabilitas', [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Fisik', value: props.dsb_fisik, format: 'number' },
+        { label: 'Netra', value: props.dsb_netra, format: 'number' },
+        { label: 'Rungu/Wicara', value: props.dsb_rungu, format: 'number' },
+        { label: 'Mental', value: props.dsb_mental, format: 'number' },
+        { label: 'Lainnya', value: props.dsb_lainny, format: 'number' },
+        { label: 'Fisik & Mental', value: props.dsb_fismen, format: 'number' },
+        { label: 'Total', value: sumDisability(props), format: 'number' },
+      ]);
+    });
+  }, [registerClickPopup, registerHoverPopup, teardownInteractions, isMobile]);
 
   /* --------------------------- responsif & PRM --------------------------- */
   useEffect(() => {
@@ -640,7 +729,7 @@ export function MapSection() {
       }
     });
 
-    map.on('click', 'elderly-layer', (event) => {
+    map.on('click', 'lansia-layer', (event) => {
       const props = event.features?.[0]?.properties || {};
       const lansia = ['60__64', '65__69', '70__74', '>75'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
       const total = [
@@ -705,7 +794,7 @@ export function MapSection() {
                 <div className="sticky top-32">
                   <MapLayerFilter
                     isMobile={false}
-                    defaultSelections={{ rumahsakit: true }}
+                    defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
                     onToggle={async (layerId, enabled) => {
                       if (!(layerId in LAYER_CONFIG)) return;
                       const id = layerId as LayerId;
@@ -818,6 +907,7 @@ export function MapSection() {
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
               isMobile={isMobile}
+              defaultSelections={EMPTY_SELECTIONS}
               onToggle={async (layerId: string, enabled: boolean) => {
                 if (!(layerId in LAYER_CONFIG)) return;
                 const id = layerId as LayerId;

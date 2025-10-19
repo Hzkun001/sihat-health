@@ -1,1 +1,1005 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","id":0,"geometry":{"type":"Point","coordinates":[114.8030278,-3.444694444]},"properties":{"FID":0,"objectid":1,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LOKTABAT UTARA","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8030278,"koordy":-3.444694444}},{"type":"Feature","id":1,"geometry":{"type":"Point","coordinates":[114.7997778,-3.4412777779999999]},"properties":{"FID":1,"objectid":2,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LOKTABAT UTARA","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7997778,"koordy":-3.4412777779999999}},{"type":"Feature","id":2,"geometry":{"type":"Point","coordinates":[114.83697220000001,-3.4281111110000002]},"properties":{"FID":2,"objectid":3,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"MENTAOS","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.83697220000001,"koordy":-3.4281111110000002}},{"type":"Feature","id":3,"geometry":{"type":"Point","coordinates":[114.8975556,-3.4595555560000002]},"properties":{"FID":3,"objectid":4,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI ULIN","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8975556,"koordy":-3.4595555560000002}},{"type":"Feature","id":4,"geometry":{"type":"Point","coordinates":[114.875905,-3.4515579999999999]},"properties":{"FID":4,"objectid":5,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI ULIN","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.875905,"koordy":-3.4515579999999999}},{"type":"Feature","id":5,"geometry":{"type":"Point","coordinates":[114.8993538,-3.4577495823342201]},"properties":{"FID":5,"objectid":6,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI ULIN","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8993538,"koordy":-3.4577495823342201}},{"type":"Feature","id":6,"geometry":{"type":"Point","coordinates":[114.8354444,-3.4513611110000002]},"properties":{"FID":6,"objectid":7,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG PAIKAT","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8354444,"koordy":-3.4513611110000002}},{"type":"Feature","id":7,"geometry":{"type":"Point","coordinates":[114.8350556,-3.4504999999999999]},"properties":{"FID":7,"objectid":8,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG PAIKAT","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8350556,"koordy":-3.4504999999999999}},{"type":"Feature","id":8,"geometry":{"type":"Point","coordinates":[114.83080560000001,-3.4470277779999998]},"properties":{"FID":8,"objectid":9,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG PAIKAT","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.83080560000001,"koordy":-3.4470277779999998}},{"type":"Feature","id":9,"geometry":{"type":"Point","coordinates":[114.8278889,-3.4484444440000002]},"properties":{"FID":9,"objectid":10,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"KEMUNING","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8278889,"koordy":-3.4484444440000002}},{"type":"Feature","id":10,"geometry":{"type":"Point","coordinates":[114.8107222,-3.4508333329999998]},"properties":{"FID":10,"objectid":11,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LOKTABAT SELATAN","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8107222,"koordy":-3.4508333329999998}},{"type":"Feature","id":11,"geometry":{"type":"Point","coordinates":[114.8433333,-3.4505277780000001]},"properties":{"FID":11,"objectid":12,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI BESAR","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8433333,"koordy":-3.4505277780000001}},{"type":"Feature","id":12,"geometry":{"type":"Point","coordinates":[114.8540833,-3.4521666670000002]},"properties":{"FID":12,"objectid":13,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI BESAR","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8540833,"koordy":-3.4521666670000002}},{"type":"Feature","id":13,"geometry":{"type":"Point","coordinates":[114.82838889999999,-3.4487222219999998]},"properties":{"FID":13,"objectid":14,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI ULIN","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU UTARA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.82838889999999,"koordy":-3.4487222219999998}},{"type":"Feature","id":14,"geometry":{"type":"Point","coordinates":[114.84763890000001,-3.4539166670000001]},"properties":{"FID":14,"objectid":15,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI BESAR","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.84763890000001,"koordy":-3.4539166670000001}},{"type":"Feature","id":15,"geometry":{"type":"Point","coordinates":[114.8491111,-3.4499444440000002]},"properties":{"FID":15,"objectid":16,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI BESAR","wadmkk":"KOTA BANJARBARU","wadmkc":"BANJARBARU SELATAN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8491111,"koordy":-3.4499444440000002}},{"type":"Feature","id":16,"geometry":{"type":"Point","coordinates":[114.85238889999999,-3.4943888890000001]},"properties":{"FID":16,"objectid":17,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"CEMPAKA","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.85238889999999,"koordy":-3.4943888890000001}},{"type":"Feature","id":17,"geometry":{"type":"Point","coordinates":[114.81647220000001,-3.5144722220000002]},"properties":{"FID":17,"objectid":18,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"BANGKAL","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.81647220000001,"koordy":-3.5144722220000002}},{"type":"Feature","id":18,"geometry":{"type":"Point","coordinates":[114.85133329999999,-3.4944166669999999]},"properties":{"FID":18,"objectid":19,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI TIUNG","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.85133329999999,"koordy":-3.4944166669999999}},{"type":"Feature","id":19,"geometry":{"type":"Point","coordinates":[114.8427222,-3.5028333329999999]},"properties":{"FID":19,"objectid":20,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"SUNGAI TIUNG","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8427222,"koordy":-3.5028333329999999}},{"type":"Feature","id":20,"geometry":{"type":"Point","coordinates":[114.8183611,-3.44875]},"properties":{"FID":20,"objectid":21,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"PALAM","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8183611,"koordy":-3.44875}},{"type":"Feature","id":21,"geometry":{"type":"Point","coordinates":[114.8683333,-3.485833333]},"properties":{"FID":21,"objectid":22,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"CEMPAKA","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8683333,"koordy":-3.485833333}},{"type":"Feature","id":22,"geometry":{"type":"Point","coordinates":[114.8701111,-3.4896111109999999]},"properties":{"FID":22,"objectid":23,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"CEMPAKA","wadmkk":"KOTA BANJARBARU","wadmkc":"CEMPAKA","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.8701111,"koordy":-3.4896111109999999}},{"type":"Feature","id":23,"geometry":{"type":"Point","coordinates":[114.7343611,-3.4106666670000001]},"properties":{"FID":23,"objectid":24,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN UTARA","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7343611,"koordy":-3.4106666670000001}},{"type":"Feature","id":24,"geometry":{"type":"Point","coordinates":[114.7233056,-3.4146666670000001]},"properties":{"FID":24,"objectid":25,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN UTARA","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7233056,"koordy":-3.4146666670000001}},{"type":"Feature","id":25,"geometry":{"type":"Point","coordinates":[114.71197220000001,-3.5070000000000001]},"properties":{"FID":25,"objectid":26,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN SELATAN","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.71197220000001,"koordy":-3.5070000000000001}},{"type":"Feature","id":26,"geometry":{"type":"Point","coordinates":[114.73475000000001,-3.4424999999999999]},"properties":{"FID":26,"objectid":27,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN TENGAH","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.73475000000001,"koordy":-3.4424999999999999}},{"type":"Feature","id":27,"geometry":{"type":"Point","coordinates":[114.6988056,-3.4489166670000002]},"properties":{"FID":27,"objectid":28,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN BARAT","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.6988056,"koordy":-3.4489166670000002}},{"type":"Feature","id":28,"geometry":{"type":"Point","coordinates":[114.70813889999999,-3.42475]},"properties":{"FID":28,"objectid":29,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN BARAT","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.70813889999999,"koordy":-3.42475}},{"type":"Feature","id":29,"geometry":{"type":"Point","coordinates":[114.7003333,-3.4466111110000002]},"properties":{"FID":29,"objectid":30,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN BARAT","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7003333,"koordy":-3.4466111110000002}},{"type":"Feature","id":30,"geometry":{"type":"Point","coordinates":[114.80094440000001,-3.4480277780000002]},"properties":{"FID":30,"objectid":31,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG PAYUNG","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.80094440000001,"koordy":-3.4480277780000002}},{"type":"Feature","id":31,"geometry":{"type":"Point","coordinates":[114.77372219999999,-3.4291111110000001]},"properties":{"FID":31,"objectid":32,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG PAYUNG","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.77372219999999,"koordy":-3.4291111110000001}},{"type":"Feature","id":32,"geometry":{"type":"Point","coordinates":[114.7381389,-3.4538333329999999]},"properties":{"FID":32,"objectid":33,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN TIMUR","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7381389,"koordy":-3.4538333329999999}},{"type":"Feature","id":33,"geometry":{"type":"Point","coordinates":[114.7746111,-3.4525555560000001]},"properties":{"FID":33,"objectid":34,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7746111,"koordy":-3.4525555560000001}},{"type":"Feature","id":34,"geometry":{"type":"Point","coordinates":[114.7891389,-3.4377222220000001]},"properties":{"FID":34,"objectid":35,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7891389,"koordy":-3.4377222220000001}},{"type":"Feature","id":35,"geometry":{"type":"Point","coordinates":[114.7822778,-3.4759722219999998]},"properties":{"FID":35,"objectid":36,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7822778,"koordy":-3.4759722219999998}},{"type":"Feature","id":36,"geometry":{"type":"Point","coordinates":[114.7723889,-3.463527778]},"properties":{"FID":36,"objectid":37,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7723889,"koordy":-3.463527778}},{"type":"Feature","id":37,"geometry":{"type":"Point","coordinates":[114.76772219999999,-3.4645833330000002]},"properties":{"FID":37,"objectid":38,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.76772219999999,"koordy":-3.4645833330000002}},{"type":"Feature","id":38,"geometry":{"type":"Point","coordinates":[114.76925,-3.4561111109999998]},"properties":{"FID":38,"objectid":39,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"GUNTUNG MANGGIS","wadmkk":"KOTA BANJARBARU","wadmkc":"LANDASAN ULIN","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.76925,"koordy":-3.4561111109999998}},{"type":"Feature","id":39,"geometry":{"type":"Point","coordinates":[114.7356944,-3.420833333]},"properties":{"FID":39,"objectid":40,"namobj":"HOMECARE SIAP SAJI/LANSIA","fcode":" ","srs_id":"WGS 84","wadmkd":"LANDASAN ULIN UTARA","wadmkk":"KOTA BANJARBARU","wadmkc":"LIANG ANGGANG","remark":"HOMECARE PERMAKANAN SIAP SAJI","metadata":" ","koordx":114.7356944,"koordy":-3.420833333}}]}
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": 0,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8030278,
+                    -3.444694444
+                ]
+            },
+            "properties": {
+                "FID": 0,
+                "objectid": 1,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LOKTABAT UTARA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8030278,
+                "koordy": -3.444694444
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 1,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7997778,
+                    -3.4412777779999999
+                ]
+            },
+            "properties": {
+                "FID": 1,
+                "objectid": 2,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LOKTABAT UTARA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7997778,
+                "koordy": -3.4412777779999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 2,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.83697220000001,
+                    -3.4281111110000002
+                ]
+            },
+            "properties": {
+                "FID": 2,
+                "objectid": 3,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "MENTAOS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.83697220000001,
+                "koordy": -3.4281111110000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 3,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8975556,
+                    -3.4595555560000002
+                ]
+            },
+            "properties": {
+                "FID": 3,
+                "objectid": 4,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI ULIN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8975556,
+                "koordy": -3.4595555560000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 4,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.875905,
+                    -3.4515579999999999
+                ]
+            },
+            "properties": {
+                "FID": 4,
+                "objectid": 5,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI ULIN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.875905,
+                "koordy": -3.4515579999999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 5,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8993538,
+                    -3.4577495823342201
+                ]
+            },
+            "properties": {
+                "FID": 5,
+                "objectid": 6,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI ULIN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8993538,
+                "koordy": -3.4577495823342201
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 6,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8354444,
+                    -3.4513611110000002
+                ]
+            },
+            "properties": {
+                "FID": 6,
+                "objectid": 7,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG PAIKAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8354444,
+                "koordy": -3.4513611110000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 7,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8350556,
+                    -3.4504999999999999
+                ]
+            },
+            "properties": {
+                "FID": 7,
+                "objectid": 8,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG PAIKAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8350556,
+                "koordy": -3.4504999999999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 8,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.83080560000001,
+                    -3.4470277779999998
+                ]
+            },
+            "properties": {
+                "FID": 8,
+                "objectid": 9,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG PAIKAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.83080560000001,
+                "koordy": -3.4470277779999998
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 9,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8278889,
+                    -3.4484444440000002
+                ]
+            },
+            "properties": {
+                "FID": 9,
+                "objectid": 10,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "KEMUNING",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8278889,
+                "koordy": -3.4484444440000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 10,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8107222,
+                    -3.4508333329999998
+                ]
+            },
+            "properties": {
+                "FID": 10,
+                "objectid": 11,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LOKTABAT SELATAN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8107222,
+                "koordy": -3.4508333329999998
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 11,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8433333,
+                    -3.4505277780000001
+                ]
+            },
+            "properties": {
+                "FID": 11,
+                "objectid": 12,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI BESAR",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8433333,
+                "koordy": -3.4505277780000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 12,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8540833,
+                    -3.4521666670000002
+                ]
+            },
+            "properties": {
+                "FID": 12,
+                "objectid": 13,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI BESAR",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8540833,
+                "koordy": -3.4521666670000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 13,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.82838889999999,
+                    -3.4487222219999998
+                ]
+            },
+            "properties": {
+                "FID": 13,
+                "objectid": 14,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI ULIN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU UTARA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.82838889999999,
+                "koordy": -3.4487222219999998
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 14,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.84763890000001,
+                    -3.4539166670000001
+                ]
+            },
+            "properties": {
+                "FID": 14,
+                "objectid": 15,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI BESAR",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.84763890000001,
+                "koordy": -3.4539166670000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 15,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8491111,
+                    -3.4499444440000002
+                ]
+            },
+            "properties": {
+                "FID": 15,
+                "objectid": 16,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI BESAR",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "BANJARBARU SELATAN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8491111,
+                "koordy": -3.4499444440000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 16,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.85238889999999,
+                    -3.4943888890000001
+                ]
+            },
+            "properties": {
+                "FID": 16,
+                "objectid": 17,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "CEMPAKA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.85238889999999,
+                "koordy": -3.4943888890000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 17,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.81647220000001,
+                    -3.5144722220000002
+                ]
+            },
+            "properties": {
+                "FID": 17,
+                "objectid": 18,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "BANGKAL",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.81647220000001,
+                "koordy": -3.5144722220000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 18,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.85133329999999,
+                    -3.4944166669999999
+                ]
+            },
+            "properties": {
+                "FID": 18,
+                "objectid": 19,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI TIUNG",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.85133329999999,
+                "koordy": -3.4944166669999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 19,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8427222,
+                    -3.5028333329999999
+                ]
+            },
+            "properties": {
+                "FID": 19,
+                "objectid": 20,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "SUNGAI TIUNG",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8427222,
+                "koordy": -3.5028333329999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 20,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8183611,
+                    -3.44875
+                ]
+            },
+            "properties": {
+                "FID": 20,
+                "objectid": 21,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "PALAM",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8183611,
+                "koordy": -3.44875
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 21,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8683333,
+                    -3.485833333
+                ]
+            },
+            "properties": {
+                "FID": 21,
+                "objectid": 22,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "CEMPAKA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8683333,
+                "koordy": -3.485833333
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 22,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.8701111,
+                    -3.4896111109999999
+                ]
+            },
+            "properties": {
+                "FID": 22,
+                "objectid": 23,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "CEMPAKA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "CEMPAKA",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.8701111,
+                "koordy": -3.4896111109999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 23,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7343611,
+                    -3.4106666670000001
+                ]
+            },
+            "properties": {
+                "FID": 23,
+                "objectid": 24,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN UTARA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7343611,
+                "koordy": -3.4106666670000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 24,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7233056,
+                    -3.4146666670000001
+                ]
+            },
+            "properties": {
+                "FID": 24,
+                "objectid": 25,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN UTARA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7233056,
+                "koordy": -3.4146666670000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 25,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.71197220000001,
+                    -3.5070000000000001
+                ]
+            },
+            "properties": {
+                "FID": 25,
+                "objectid": 26,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN SELATAN",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.71197220000001,
+                "koordy": -3.5070000000000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 26,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.73475000000001,
+                    -3.4424999999999999
+                ]
+            },
+            "properties": {
+                "FID": 26,
+                "objectid": 27,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN TENGAH",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.73475000000001,
+                "koordy": -3.4424999999999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 27,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.6988056,
+                    -3.4489166670000002
+                ]
+            },
+            "properties": {
+                "FID": 27,
+                "objectid": 28,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN BARAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.6988056,
+                "koordy": -3.4489166670000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 28,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.70813889999999,
+                    -3.42475
+                ]
+            },
+            "properties": {
+                "FID": 28,
+                "objectid": 29,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN BARAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.70813889999999,
+                "koordy": -3.42475
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 29,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7003333,
+                    -3.4466111110000002
+                ]
+            },
+            "properties": {
+                "FID": 29,
+                "objectid": 30,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN BARAT",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7003333,
+                "koordy": -3.4466111110000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 30,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.80094440000001,
+                    -3.4480277780000002
+                ]
+            },
+            "properties": {
+                "FID": 30,
+                "objectid": 31,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG PAYUNG",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.80094440000001,
+                "koordy": -3.4480277780000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 31,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.77372219999999,
+                    -3.4291111110000001
+                ]
+            },
+            "properties": {
+                "FID": 31,
+                "objectid": 32,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG PAYUNG",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.77372219999999,
+                "koordy": -3.4291111110000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 32,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7381389,
+                    -3.4538333329999999
+                ]
+            },
+            "properties": {
+                "FID": 32,
+                "objectid": 33,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN TIMUR",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7381389,
+                "koordy": -3.4538333329999999
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 33,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7746111,
+                    -3.4525555560000001
+                ]
+            },
+            "properties": {
+                "FID": 33,
+                "objectid": 34,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7746111,
+                "koordy": -3.4525555560000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 34,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7891389,
+                    -3.4377222220000001
+                ]
+            },
+            "properties": {
+                "FID": 34,
+                "objectid": 35,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7891389,
+                "koordy": -3.4377222220000001
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 35,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7822778,
+                    -3.4759722219999998
+                ]
+            },
+            "properties": {
+                "FID": 35,
+                "objectid": 36,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7822778,
+                "koordy": -3.4759722219999998
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 36,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7723889,
+                    -3.463527778
+                ]
+            },
+            "properties": {
+                "FID": 36,
+                "objectid": 37,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7723889,
+                "koordy": -3.463527778
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 37,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.76772219999999,
+                    -3.4645833330000002
+                ]
+            },
+            "properties": {
+                "FID": 37,
+                "objectid": 38,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.76772219999999,
+                "koordy": -3.4645833330000002
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 38,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.76925,
+                    -3.4561111109999998
+                ]
+            },
+            "properties": {
+                "FID": 38,
+                "objectid": 39,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "GUNTUNG MANGGIS",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LANDASAN ULIN",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.76925,
+                "koordy": -3.4561111109999998
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 39,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    114.7356944,
+                    -3.420833333
+                ]
+            },
+            "properties": {
+                "FID": 39,
+                "objectid": 40,
+                "namobj": "HOMECARE LANSIA",
+                "fcode": " ",
+                "srs_id": "WGS 84",
+                "wadmkd": "LANDASAN ULIN UTARA",
+                "wadmkk": "KOTA BANJARBARU",
+                "wadmkc": "LIANG ANGGANG",
+                "remark": "HOMECARE PERMAKANAN SIAP SAJI",
+                "metadata": " ",
+                "koordx": 114.7356944,
+                "koordy": -3.420833333
+            }
+        }
+    ]
+}
