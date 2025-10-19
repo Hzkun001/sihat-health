@@ -173,7 +173,7 @@ export function HeroSection() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.9, ease: [0.25, 0.8, 0.25, 1] }}
-        className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center space-y-1.5 sm:space-y-2"
+        className="absolute bottom-2 sm:bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center space-y-1.5 sm:space-y-2"
       >
         <motion.span
           className="text-white/70 text-xs sm:text-sm"
