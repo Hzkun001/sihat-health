@@ -143,7 +143,7 @@ export function HeroSection() {
             className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 pt-1"
           >
             <motion.a
-              href="#statistik"
+              href="#laporan"
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-6 sm:px-7 lg:px-8 py-3.5 sm:py-4
@@ -151,7 +151,7 @@ export function HeroSection() {
                          shadow-lg hover:shadow-xl"
               style={{ fontSize: '15px', fontWeight: 600 }}
             >
-              Lihat Statistik
+              Laporkan Masalah
             </motion.a>
             <motion.a
               href="#peta"
