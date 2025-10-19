@@ -18,6 +18,7 @@ export function LoadingScreen({
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
   const lastValueRef = useRef(0);
+  const startRef = useRef(typeof performance !== 'undefined' ? performance.now() : Date.now());
   const completedRef = useRef(false);
   const exitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,10 +37,11 @@ export function LoadingScreen({
   }, []);
 
   useEffect(() => {
-    const duration = prefersReducedMotion ? 800 : 2200;
+    const duration = prefersReducedMotion ? 1400 : 3400;
     let frame = 0;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const start = performance.now();
+    startRef.current = start;
     lastValueRef.current = 0;
 
     const animateProgress = (now: number) => {
@@ -76,9 +78,13 @@ export function LoadingScreen({
     if (progress < 100 || !ready) return;
 
     completedRef.current = true;
+    const minVisible = prefersReducedMotion ? 1600 : 3600;
+    const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startRef.current;
+    const baseDelay = prefersReducedMotion ? 200 : 420;
+    const remaining = Math.max(baseDelay, minVisible - elapsed);
     exitTimeoutRef.current = setTimeout(() => {
       onComplete();
-    }, prefersReducedMotion ? 120 : 280);
+    }, remaining);
 
     return () => {
       if (exitTimeoutRef.current) {
@@ -92,7 +98,7 @@ export function LoadingScreen({
       if (completedRef.current) return;
       completedRef.current = true;
       onComplete();
-    }, prefersReducedMotion ? 2200 : 4200);
+    }, prefersReducedMotion ? 3200 : 6800);
     return () => clearTimeout(failSafe);
   }, [onComplete, prefersReducedMotion]);
 
