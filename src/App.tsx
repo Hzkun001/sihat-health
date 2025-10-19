@@ -18,6 +18,8 @@ const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [heroProgress, setHeroProgress] = useState(0);
+  const [heroReady, setHeroReady] = useState(false);
 
   useEffect(() => {
     // Prevent scroll during loading
@@ -40,7 +42,10 @@ export default function App() {
         <PartnersFloatingBar />
         <main>
           {/* Hero section is ready before loading completes */}
-          <HeroSection />
+          <HeroSection
+            onModelProgress={setHeroProgress}
+            onModelReady={() => setHeroReady(true)}
+          />
           
           {/* Lazy load other sections after loading screen */}
           {!isLoading && (
@@ -75,7 +80,14 @@ export default function App() {
 
       {/* Loading screen overlay - z-50 ensures it's on top */}
       <AnimatePresence mode="wait">
-        {isLoading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
+        {isLoading && (
+          <LoadingScreen
+            key="loading"
+            onComplete={handleLoadingComplete}
+            externalProgress={heroProgress}
+            ready={heroReady}
+          />
+        )}
       </AnimatePresence>
     </div>
   );

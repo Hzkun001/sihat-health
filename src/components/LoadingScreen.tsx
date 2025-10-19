@@ -1,31 +1,91 @@
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface LoadingScreenProps {
   onComplete: () => void;
+  ready?: boolean;
+  externalProgress?: number;
 }
 
-export function LoadingScreen({ onComplete }: LoadingScreenProps) {
+export function LoadingScreen({
+  onComplete,
+  ready = false,
+  externalProgress = 0,
+}: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+  const lastValueRef = useRef(0);
+  const completedRef = useRef(false);
+  const exitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const duration = 2000; // Reduced from 2500ms to 2000ms
-    const interval = 50; // Increased from 20ms to 50ms for better performance
-    const increment = (interval / duration) * 100;
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (event: MediaQueryListEvent) => setPrefersReducedMotion(event.matches);
 
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 400); // Adjusted timing for swipe transition
-          return 100;
-        }
-        return Math.min(prev + increment, 100);
-      });
-    }, interval);
+    if (media.addEventListener) {
+      media.addEventListener('change', handler);
+      return () => media.removeEventListener('change', handler);
+    }
 
-    return () => clearInterval(timer);
-  }, [onComplete]);
+    media.addListener(handler);
+    return () => media.removeListener(handler);
+  }, []);
+
+  useEffect(() => {
+    const duration = prefersReducedMotion ? 800 : 2200;
+    let frame = 0;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const start = performance.now();
+    lastValueRef.current = 0;
+
+    const animateProgress = (now: number) => {
+      const elapsed = now - start;
+      const ratio = Math.min(1, elapsed / duration);
+      const nextValue = Math.round(ratio * 100);
+
+      if (nextValue !== lastValueRef.current) {
+        lastValueRef.current = nextValue;
+        setProgress(nextValue);
+      }
+
+      if (ratio < 1) {
+        frame = requestAnimationFrame(animateProgress);
+      } else {
+        timeoutId = setTimeout(onComplete, prefersReducedMotion ? 120 : 360);
+      }
+    };
+
+    frame = requestAnimationFrame(animateProgress);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [onComplete, prefersReducedMotion]);
+
+  useEffect(() => {
+    setProgress((prev) => Math.max(prev, Math.min(100, Math.round(externalProgress))));
+  }, [externalProgress]);
+
+  useEffect(() => {
+    if (completedRef.current) return;
+    if (progress < 100 || !ready) return;
+
+    completedRef.current = true;
+    exitTimeoutRef.current = setTimeout(() => {
+      onComplete();
+    }, prefersReducedMotion ? 120 : 280);
+
+    return () => {
+      if (exitTimeoutRef.current) {
+        clearTimeout(exitTimeoutRef.current);
+      }
+    };
+  }, [progress, ready, onComplete, prefersReducedMotion]);
 
   return (
     <motion.div
@@ -45,16 +105,32 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
         background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
         willChange: 'transform, opacity',
       }}
+      aria-live="polite"
+      role="status"
     >
-      {/* Radial glow */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.3) 0%, transparent 70%)',
-        }}
-      />
+      {/* Background accents */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute -top-24 -right-24 w-[320px] h-[320px] rounded-full bg-white/10 blur-3xl"
+          animate={{ scale: prefersReducedMotion ? 1 : [1, 1.1, 1] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-[-160px] left-[-120px] w-[360px] h-[360px] rounded-full bg-white/5 blur-3xl"
+          animate={{ scale: prefersReducedMotion ? 1 : [1, 1.15, 1] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+      </div>
 
-      <div className="relative z-10 flex flex-col items-center space-y-8">
+      <div className="relative z-10 flex flex-col items-center gap-8 text-center text-white/90">
         {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
@@ -77,49 +153,66 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
         {/* Tagline */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ 
-            duration: 0.5, 
-            delay: 0.3,
-          }}
-          className="text-white/90 text-center px-6"
-          style={{ 
-            fontSize: 'clamp(18px, 2.5vw, 28px)', 
-            fontWeight: 400, 
-            letterSpacing: '0.02em',
-            willChange: 'opacity, transform',
-            maxWidth: '90vw',
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="px-6 text-white/85"
+          style={{
+            fontSize: 'clamp(18px, 2.5vw, 28px)',
+            fontWeight: 400,
+            letterSpacing: '0.015em',
+            maxWidth: 'min(520px, 90vw)',
           }}
         >
-          <span className="inline md:inline">Membangun masyarakat</span>
-          <br className="block md:hidden" />
-          <span className="inline md:inline"> yang Lebih Sehat</span>
+          Menghubungkan data kesehatan dan lingkungan Banjarbaru ke dalam satu pengembangan interaktif.
         </motion.p>
 
-        {/* Progress bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ 
-            duration: 0.4, 
-            delay: 0.5,
-          }}
-          className="relative"
-          style={{ width: 'clamp(160px, 20vw, 220px)', height: '2px' }}
-        >
-          <div className="absolute inset-0 bg-white/20 rounded-full" />
+        <div className="flex flex-col items-center gap-4">
+          {/* Progress bar */}
           <motion.div
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, #1BA351 0%, #5AC8FA 100%)',
-              width: `${progress}%`,
-              boxShadow: '0 0 20px rgba(255,255,255,0.5)',
-            }}
-          />
-        </motion.div>
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.4 }}
+            className="relative h-[6px] w-[min(260px,70vw)] overflow-hidden rounded-full bg-white/15"
+          >
+            <motion.div
+              className="absolute inset-0 origin-left rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, #FFFFFF 0%, rgba(255,255,255,0.65) 100%)',
+                transformOrigin: '0% 50%',
+              }}
+              animate={{ scaleX: progress / 100 }}
+              transition={{ type: 'spring', stiffness: 120, damping: 24 }}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.45 }}
+            className="flex items-center gap-3 text-sm tracking-wide text-white/80"
+          >
+            <span>Menyiapkan data spasial…</span>
+            <motion.span
+              key={progress}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="rounded-full border border-white/30 px-3 py-1 font-semibold text-white"
+            >
+              {progress}%
+            </motion.span>
+          </motion.div>
+        </div>
+
+        <motion.small
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.85 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="text-xs uppercase tracking-[0.35em] text-white/60"
+        >
+          Banjarbaru Smart Health Platform
+        </motion.small>
       </div>
     </motion.div>
   );

@@ -6,7 +6,12 @@ import HeroVisual3D from './HeroVisual3D';
 import { StaticParticles } from './StaticParticles';
 import Waves from './waves';
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onModelReady?: () => void;
+  onModelProgress?: (progress: number) => void;
+}
+
+export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps = {}) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [showWaves, setShowWaves] = useState(false);
 
@@ -97,7 +102,7 @@ export function HeroSection() {
             bg-white/5
           "
         >
-          <HeroVisual3D />
+          <HeroVisual3D onReady={onModelReady} onProgress={onModelProgress} />
         </motion.div>
 
         {/* --- TEKS BLOCK (Mobile di bawah) --- */}
