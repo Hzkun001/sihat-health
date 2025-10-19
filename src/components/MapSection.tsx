@@ -150,6 +150,15 @@ function buildPopupHTML(title: string, rows: PopupRow[]): string {
   `;
 }
 
+function normalizeSpriteSource(image: ImageBitmap | HTMLCanvasElement | HTMLImageElement): ImageBitmap | HTMLImageElement | ImageData {
+  if (image instanceof HTMLCanvasElement) {
+    const ctx = image.getContext('2d');
+    if (!ctx) throw new Error('Tidak bisa membaca canvas untuk ikon peta');
+    return ctx.getImageData(0, 0, image.width, image.height);
+  }
+  return image;
+}
+
 function normalizeToFC(raw: any): GeoJSON.FeatureCollection {
   if (raw && raw.type === 'FeatureCollection' && Array.isArray(raw.features)) return raw;
   if (raw && raw.type === 'Feature' && raw.geometry) return { type: 'FeatureCollection', features: [raw] };
@@ -610,7 +619,7 @@ export function MapSection() {
           if (map.hasImage(cfg.iconName)) continue;
           try {
             const bitmap = await loadIconImage(cfg.iconURL, cfg.iconBitmapMaxSize ?? 256);
-            map.addImage(cfg.iconName, bitmap);
+            map.addImage(cfg.iconName, normalizeSpriteSource(bitmap));
             console.info(`[Map] Ikon ${layerId} berhasil dimuat`);
           } catch (iconErr) {
             console.warn(`[Map] Gagal memuat ikon ${layerId}:`, iconErr);
