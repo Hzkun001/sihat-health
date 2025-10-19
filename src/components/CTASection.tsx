@@ -23,7 +23,7 @@ export function CTASection() {
 
       <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
         <img
-          src="/assets/banjarbaru-monument.avif"
+          src="/assets/banjarbaru-monument.jpg"
           alt=""
           width={1920} height={1080}
           loading="lazy"
