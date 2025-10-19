@@ -1,4 +1,4 @@
-import { NewsSlider } from './NewsSlider';
+import { NewsSlider } from './Berita';
 
 export function NewsSection() {
   return (

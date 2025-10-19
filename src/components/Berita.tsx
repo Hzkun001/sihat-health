@@ -40,45 +40,32 @@ const slidesData: NewsSlide[] = [
         title: 'Gerakan Hidup Sehat di Sekolah Dasar',
         excerpt: 'Kampanye edukasi kebersihan dan pola makan sehat bagi siswa sekolah dasar di Banjarbaru.',
       },
-      {
-        id: 4,
-        date: '1 Oktober 2025',
-        category: 'Pencegahan',
-        title: 'Integrasi Data Kesehatan Kota Banjarbaru',
-        excerpt: 'SIHAT meluncurkan dashboard analisis data terpadu untuk pemantauan indikator SDG 3.',
-      },
+
     ],
   },
   {
     id: 2,
     cards: [
       {
-        id: 5,
+        id: 4,
         date: '28 September 2025',
         category: 'Vaksinasi',
         title: 'Cakupan Imunisasi Dasar Capai 94%',
         excerpt: 'Kolaborasi puskesmas & kader meningkatkan kunjungan balita untuk imunisasi.',
       },
       {
-        id: 6,
+        id: 5,
         date: '25 September 2025',
         category: 'Lingkungan',
         title: 'Pemantauan Kualitas Udara Terintegrasi',
         excerpt: 'Integrasi sensor PM2.5 dengan pelaporan batuk/ISPA di seluruh wilayah.',
       },
       {
-        id: 7,
+        id: 6,
         date: '22 September 2025',
         category: 'Ibu & Anak',
         title: 'Kelas Ibu Hamil: Nutrisi & ANC',
         excerpt: 'Konseling gizi, pemeriksaan HB, dan jadwal K4 untuk ibu hamil.',
-      },
-      {
-        id: 8,
-        date: '18 September 2025',
-        category: 'Digital',
-        title: 'Pendaftaran Antrian Online Puskesmas',
-        excerpt: 'Waktu tunggu turun 23% pasca implementasi sistem antrian digital.',
       },
     ],
   },
@@ -86,32 +73,25 @@ const slidesData: NewsSlide[] = [
     id: 3,
     cards: [
       {
-        id: 9,
+        id: 7,
         date: '10 September 2025',
         category: 'Posyandu',
         title: 'Posyandu Aktif 89 Titik',
         excerpt: 'Fokus deteksi dini stunting & edukasi ASI eksklusif untuk ibu muda.',
       },
       {
-        id: 10,
+        id: 8,
         date: '7 September 2025',
         category: 'Kedaruratan',
         title: 'Simulasi Tanggap Bencana Kesehatan',
         excerpt: 'Latihan koordinasi lintas OPD untuk evakuasi cepat saat darurat.',
       },
       {
-        id: 11,
+        id: 9,
         date: '5 September 2025',
         category: 'Kemitraan',
         title: 'Kolaborasi Data SIHAT × BPS Kalsel',
         excerpt: 'Harmonisasi metadata dan frekuensi pembaruan data kesehatan.',
-      },
-      {
-        id: 12,
-        date: '2 September 2025',
-        category: 'Inovasi',
-        title: 'Prediksi DBD Berbasis Curah Hujan',
-        excerpt: 'Model risiko musiman untuk perencanaan fogging yang lebih efektif.',
       },
     ],
   },
@@ -193,7 +173,7 @@ export function NewsSlider() {
               x: { type: 'tween', duration: 0.35, ease: [0.25, 0.8, 0.25, 1] },
               opacity: { duration: 0.3 },
             }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10"
             style={{ willChange: 'transform, opacity' }}
           >
             {slidesData[currentSlide].cards.map((card, index) => (

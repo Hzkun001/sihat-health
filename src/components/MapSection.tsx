@@ -36,7 +36,7 @@ const LAYER_CONFIG = {
     type: 'circle' as const,
     paint: {
       'circle-radius': 4.5,
-      'circle-color': '#43e88d',
+      'circle-color': '#d843e8ff',
       'circle-stroke-width': 1,
       'circle-stroke-color': '#ffffff',
     },
@@ -99,11 +99,11 @@ const LAYER_CONFIG = {
                 ['get', '40__44'], ['get', '45__49'], ['get', '50__54'], ['get', '55__59'],
                 ['get', '60__64'], ['get', '65__69'], ['get', '70__74'], ['get', '>75']]
         ],
-        0.05, '#E8F5E9',
-        0.10, '#C8E6C9',
-        0.15, '#81C784',
-        0.20, '#4CAF50',
-        0.30, '#2E7D32'
+        0.05, '#f2e8f5ff',
+        0.10, '#dfc8e6ff',
+        0.15, '#be81c7ff',
+        0.20, '#a34cafff',
+        0.30, '#712e7dff'
       ],
       'fill-opacity': 0.6,
       'fill-outline-color': '#2E7D32'
@@ -413,7 +413,7 @@ export function MapSection() {
         { label: 'Status', value: props.status, format: 'text' },
         { label: 'Kelas', value: props.kelas, format: 'text' },
         { label: 'Penanggung jawab', value: props.pnjwb ?? props.apjaptk ?? props.pemilik, format: 'text' },
-        { label: 'Jumlah TT', value: props.jumtt, format: 'number' },
+        { label: 'Jumlah kasur', value: props.jumtt, format: 'number' },
         { label: 'SIA/Izin', value: props.nosia ?? props.izin, format: 'text' },
       ],
     });
@@ -800,7 +800,7 @@ export function MapSection() {
                     </motion.button>
                   )}
 
-                  <div className="absolute bottom-3 right-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
+                  <div className="hidden sm:block absolute bottom-3 right-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
                     {mapLoaded && mapInstance.current
                       ? (() => {
                           const map = mapInstance.current!;

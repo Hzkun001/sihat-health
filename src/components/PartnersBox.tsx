@@ -65,7 +65,7 @@ export function PartnersBox() {
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative flex items-center gap-2.5 md:gap-3 p-2.5 md:p-3 rounded-xl md:rounded-2xl transition-all duration-300"
+                className="group relative flex items-center gap-2.5 md:gap-3 p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300"
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.5)',
                   border: '1px solid rgba(27, 163, 81, 0.08)',
@@ -73,14 +73,14 @@ export function PartnersBox() {
               >
                 {/* Icon container */}
                 <div
-                  className="flex-shrink-0 w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl flex items-center justify-center transition-all duration-300 group-hover:shadow-md"
+                  className="flex-shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:shadow-md"
                   style={{
                     backgroundColor: `${partner.color}12`,
                   }}
                 >
                   <partner.icon
-                    size={18}
-                    className="md:w-5 md:h-5 transition-all duration-300"
+                    size={16}
+                    className="md:w-4.5 md:h-4.5 transition-all duration-300"
                     style={{
                       color: partner.color,
                       opacity: 0.8,

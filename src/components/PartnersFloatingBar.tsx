@@ -24,16 +24,18 @@ function LogoItem({ partner }: { partner: {name: string; image: string; url: str
       className="inline-flex"
     >
       <div
-        className="w-20 h-10 rounded-lg flex items-center justify-center transition-all
-                   duration-300 group-hover/logo:shadow-lg cursor-pointer
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+        className="rounded-lg flex items-center justify-center transition-all duration-300 group-hover/logo:shadow-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
         title={partner.name}
         tabIndex={0}
+        style={{
+          width: '72px',
+          height: '36px',
+        }}
       >
         <img
           src={partner.image}
           alt={partner.name}
-          className="w-20 h-9 object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
+          className="w-full h-full object-contain transition-all duration-300 opacity-75 group-hover/logo:opacity-100"
           loading="lazy"
         />
       </div>
@@ -72,7 +74,10 @@ export function PartnersFloatingBar() {
           style={{ background: 'linear-gradient(90deg, #E9FFF3 0%, #EAF9FF 100%)' }}
         />
 
-        <div className="relative flex items-center justify-between gap-4 px-6 py-4">
+        <div
+          className="relative flex items-center justify-between"
+          style={{ gap: '16px', padding: '12px 20px' }}
+        >
           {/* Left - Text Content */}
           <motion.div
             className="flex items-center gap-3 flex-shrink-0"
@@ -82,17 +87,17 @@ export function PartnersFloatingBar() {
           >
             <motion.div
               className="text-brand-green leading-none"
-              style={{ fontSize: '32px', fontWeight: 700 }}
+              style={{ fontSize: '28px', fontWeight: 700 }}
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.3 }}
             >
               10+
             </motion.div>
             <div className="border-l border-ink-900/10 pl-3">
-              <p className="text-ink-900 leading-tight" style={{ fontSize: '14px', fontWeight: 500, letterSpacing: '0.03em' }}>
+              <p className="text-ink-900 leading-tight" style={{ fontSize: '13px', fontWeight: 500, letterSpacing: '0.03em' }}>
                 Partners Data
               </p>
-              <p className="text-ink-700 leading-tight" style={{ fontSize: '14px', fontWeight: 500, letterSpacing: '0.03em' }}>
+              <p className="text-ink-700 leading-tight" style={{ fontSize: '13px', fontWeight: 500, letterSpacing: '0.03em' }}>
                 and Teams
               </p>
             </div>
@@ -100,11 +105,11 @@ export function PartnersFloatingBar() {
 
           {/* Right - Partner Logos with Marquee */}
           <div className="flex-1 overflow-hidden min-w-0">
-            <div className="relative h-12 flex items-center">
+            <div className="relative h-10 flex items-center">
               {/* (opsional) overlay fade di kanan */}
 
               {/* Marquee Container */}
-              <div className="flex gap-3 animate-marquee-bar">
+              <div className="flex gap-2.5 animate-marquee-bar">
                 {/* First set */}
                 {partners.map((partner, index) => (
                   <motion.div
