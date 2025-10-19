@@ -30,7 +30,7 @@ export function HeroSection() {
 
   const wavesProps = useMemo(
     () => ({
-      lineColor: '#ffffff48',
+      lineColor: '#ffffff36',
       backgroundColor: 'rgba(255,255,255,0.18)',
       waveSpeedX: 0.012,
       waveSpeedY: 0.006,
