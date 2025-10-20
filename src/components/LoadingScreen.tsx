@@ -179,7 +179,7 @@ export function LoadingScreen({
             maxWidth: 'min(520px, 90vw)',
           }}
         >
-          Menghubungkan data kesehatan dan lingkungan Banjarbaru ke dalam satu pengembangan interaktif.
+          Masyarakat yang Lebih Sehat.
         </motion.p>
 
         <div className="flex flex-col items-center gap-4">
