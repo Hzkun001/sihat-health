@@ -160,7 +160,7 @@ const LAYER_CONFIG = {
     iconName: 'tps-icon',
     iconURL: '/assets/logoForMap/trash.webp',
     iconBitmapMaxSize: 96,
-    iconSize: 0.5,
+    iconSize: 0.35,
     minzoom: 12,
   },
 } as const;
