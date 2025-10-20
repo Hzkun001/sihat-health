@@ -15,5 +15,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "src/types/model-viewer.d.ts", "src/types/spline-viewer.d.ts"],
+  "include": ["src", "src/types/model-viewer.d.ts"],
 }

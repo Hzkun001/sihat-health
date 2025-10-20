@@ -9,6 +9,7 @@ interface LayerItem {
   label: string;
   color?: string;
   emoji?: string;
+  disabled?: boolean;
 }
 
 interface LayerCategory {
@@ -45,13 +46,13 @@ const layerCategories: LayerCategory[] = [
   id: 'environment-health',
     title: ' Lingkungan dan Penyakit (Coming Soon)',
     items: [
-      { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6' },
-      { id: 'heat-island', label: 'Panas Perkotaan', color: '#F39C12' },
-      { id: 'dengue-zone', label: 'Daerah Rawan DBD', color: '#E38BCF' },
-      { id: 'bank-sampah', label: 'Bank Sampah', color: '#1BA180' },
+      { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6', disabled: true },
+      { id: 'heat-island', label: 'Panas Perkotaan', color: '#F39C12', disabled: true },
+      { id: 'dengue-zone', label: 'Daerah Rawan DBD', color: '#E38BCF', disabled: true },
+      { id: 'bank-sampah', label: 'Bank Sampah', color: '#1BA180', disabled: true },
       { id: 'tps', label: 'TPS', color: '#1BA360' },
-      { id: 'jalan-berlubang', label: 'Jalan Berlubang', color: '#000000' },
-      { id: 'genangan air', label: 'Genangan Air', color: '#00AEEF' },
+      { id: 'jalan-berlubang', label: 'Jalan Berlubang', color: '#000000', disabled: true },
+      { id: 'genangan air', label: 'Genangan Air', color: '#00AEEF', disabled: true },
     ],
   },
 ];
@@ -101,7 +102,8 @@ export function MapLayerFilter({
     );
   };
 
-  const toggleLayer = (layerId: string) => {
+  const toggleLayer = (layerId: string, disabled?: boolean) => {
+    if (disabled) return;
     setSelectedLayers((prev) => {
       const enabled = !prev.includes(layerId);
       const next = enabled ? [...prev, layerId] : prev.filter((id) => id !== layerId);
@@ -170,10 +172,18 @@ export function MapLayerFilter({
                       {category.items.map((item) => {
                         const isSelected = selectedLayers.includes(item.id);
                         return (
-                          <label key={item.id} className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
+                          <label
+                            key={item.id}
+                            className={`flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors group ${
+                              item.disabled
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'hover:bg-gray-50 active:bg-gray-100 cursor-pointer'
+                            }`}
+                          >
                             <Checkbox
                               checked={isSelected}
-                              onCheckedChange={() => toggleLayer(item.id)}
+                              onCheckedChange={() => toggleLayer(item.id, item.disabled)}
+                              disabled={item.disabled}
                               className="border-2 data-[state=checked]:bg-brand-green data-[state=checked]:border-brand-green flex-shrink-0"
                             />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -186,7 +196,10 @@ export function MapLayerFilter({
                                   }}
                                 />
                               )}
-                              <span className="text-ink-700 group-hover:text-ink-900 transition-colors truncate" style={{ fontSize: '14px', fontWeight: 500 }}>
+                              <span
+                                className={`text-ink-700 transition-colors truncate ${item.disabled ? '' : 'group-hover:text-ink-900'}`}
+                                style={{ fontSize: '14px', fontWeight: 500 }}
+                              >
                                 {item.label}
                               </span>
                             </div>

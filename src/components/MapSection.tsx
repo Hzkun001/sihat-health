@@ -160,7 +160,7 @@ const LAYER_CONFIG = {
     iconName: 'tps-icon',
     iconURL: '/assets/logoForMap/trash.webp',
     iconBitmapMaxSize: 96,
-    iconSize: 0.20,
+    iconSize: 0.5,
     minzoom: 12,
   },
 } as const;
@@ -706,8 +706,10 @@ export function MapSection() {
         setMapLoaded(true);
         setZoomLevel(map.getZoom());
 
-        (window as any).map = map;
-        console.info('[Map Debug] window.map tersedia di console');
+        if (typeof window !== 'undefined' && import.meta.env.DEV) {
+          (window as any).map = map;
+          console.info('[Map Debug] window.map tersedia di console');
+        }
 
         const symbolLayers = (Object.entries(LAYER_CONFIG) as [LayerId, any][])
           .filter(([, cfg]) => cfg.render === 'symbol');

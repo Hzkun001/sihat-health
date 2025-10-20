@@ -68,17 +68,25 @@ export function StatsCardsSection() {
                   transition={{ duration: 0.3, ease: [0.25, 0.8, 0.25, 1] }}
                   className="rounded-2xl p-8 border border-white/20 cursor-pointer relative overflow-hidden"
                   style={{
-                    background: stat.image
-                      ? `url(${stat.image}) center/cover no-repeat`
-                      : '#fff',
+                    background: `linear-gradient(135deg, ${stat.color}1f 0%, ${stat.color}33 100%)`,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                   }}
                 >
-                  {/* ✅ Frosted glass blur overlay */}
+                  {stat.image && (
+                    <div className="absolute inset-0">
+                      <img
+                        src={stat.image}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
                   <div
-                    className="absolute inset-0 rounded-2xl bg-black/50"
+                    className="absolute inset-0 rounded-2xl"
                     style={{
-                      opacity: 0.2,
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 100%)',
                       zIndex: 1,
                     }}
                   />

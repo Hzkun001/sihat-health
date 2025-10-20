@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { memo, useEffect, useMemo, useRef, lazy, Suspense, useState } from 'react';
 const ModelViewer = lazy(() => import('./ModelViewer'));
 
 interface HeroVisual3DProps {
@@ -9,6 +9,44 @@ interface HeroVisual3DProps {
 export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mvRef = useRef<HTMLElement | null>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+  const loadTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const host = hostRef.current;
+    if (!host) {
+      setShouldRender(true);
+      return;
+    }
+    if (loadTriggeredRef.current) {
+      setShouldRender(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        if (entry.isIntersecting || entry.intersectionRatio > 0) {
+          loadTriggeredRef.current = true;
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px', threshold: [0, 0.25] }
+    );
+
+    observer.observe(host);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (shouldRender) {
+      onProgress?.(5);
+    }
+  }, [shouldRender, onProgress]);
 
   useEffect(() => {
     const el = mvRef.current;
@@ -54,29 +92,33 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     []
   );
 
+  const placeholder = (
+    <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10">
+      <span className="animate-pulse text-xs text-black/50">Loading 3D…</span>
+    </div>
+  );
+
   return (
     <div ref={hostRef} className="relative h-full w-full overflow-hidden" style={containerStyle}>
       <div className="relative z-[50] flex h-full w-full items-center justify-center">
-        <Suspense
-          fallback={
-            <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10">
-              <span className="animate-pulse text-xs text-black/50">Loading 3D…</span>
-            </div>
-          }
-        >
-          <ModelViewer
-            ref={mvRef as any}
-            src="/assets/3d/fresh.glb"
-            poster="/assets/3d/stethoscope.png"
-            alt="Model"
-            loading="eager"
-            environment-image="neutral"
-            camera-controls
-            auto-rotate
-            rotation-per-second="10deg"
-            style={modelStyle}
-          />
-        </Suspense>
+        {shouldRender ? (
+          <Suspense fallback={placeholder}>
+            <ModelViewer
+              ref={mvRef as any}
+              src="/assets/3d/fresh.glb"
+              poster="/assets/3d/stethoscope.png"
+              alt="Model"
+              loading="lazy"
+              environment-image="neutral"
+              camera-controls
+              auto-rotate
+              rotation-per-second="10deg"
+              style={modelStyle}
+            />
+          </Suspense>
+        ) : (
+          placeholder
+        )}
       </div>
     </div>
   );
