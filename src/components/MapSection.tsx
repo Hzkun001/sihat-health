@@ -902,8 +902,12 @@ export function MapSection() {
                     {mapLoaded && mapInstance.current
                       ? (() => {
                           const map = mapInstance.current!;
-                          const layerIds = (Object.keys(LAYER_CONFIG) as LayerId[]).map((id) => `${id}-layer`);
-                          const rendered = map.queryRenderedFeatures({ layers: layerIds }).length;
+                          const layerIds = (Object.keys(LAYER_CONFIG) as LayerId[])
+                            .map((id) => `${id}-layer`)
+                            .filter((layerId) => Boolean(map.getLayer(layerId)));
+                          const rendered = layerIds.length
+                            ? map.queryRenderedFeatures({ layers: layerIds }).length
+                            : 0;
                           return `Zoom: ${zoomLevel.toFixed(1)} | Rendered: ${rendered}`;
                         })()
                       : 'Loading…'}

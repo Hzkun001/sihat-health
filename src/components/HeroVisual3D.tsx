@@ -11,8 +11,41 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
   const mvRef = useRef<HTMLElement | null>(null);
   const [shouldRender, setShouldRender] = useState(false);
   const loadTriggeredRef = useRef(false);
+  const [preferStatic, setPreferStatic] = useState(false);
+  const [forceRender, setForceRender] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const reducedMedia = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const connection = (navigator as any)?.connection;
+
+    const checkConditions = () => {
+      const reducedMotion = reducedMedia?.matches ?? false;
+      const slowNetwork = Boolean(connection && ['slow-2g', '2g'].includes(connection.effectiveType));
+      setPreferStatic(reducedMotion || slowNetwork);
+    };
+
+    checkConditions();
+
+    reducedMedia?.addEventListener?.('change', checkConditions);
+    connection?.addEventListener?.('change', checkConditions);
+
+    return () => {
+      reducedMedia?.removeEventListener?.('change', checkConditions);
+      connection?.removeEventListener?.('change', checkConditions);
+    };
+  }, []);
+
+  const effectiveStatic = preferStatic && !forceRender;
+
+  useEffect(() => {
+    if (effectiveStatic) {
+      onProgress?.(100);
+      onReady?.();
+      return;
+    }
+
     if (typeof window === 'undefined') return;
     const host = hostRef.current;
     if (!host) {
@@ -40,7 +73,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     observer.observe(host);
 
     return () => observer.disconnect();
-  }, []);
+  }, [effectiveStatic]);
 
   useEffect(() => {
     if (shouldRender) {
@@ -50,7 +83,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
 
   useEffect(() => {
     const el = mvRef.current;
-    if (!el) return;
+    if (!el || effectiveStatic) return;
 
     onProgress?.(5);
 
@@ -78,7 +111,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
       el.removeEventListener('load', handleLoad as EventListener);
       el.removeEventListener('error', handleError as EventListener);
     };
-  }, [onProgress, onReady]);
+  }, [onProgress, onReady, effectiveStatic]);
 
   const containerStyle = useMemo(() => ({ borderRadius: 16 }), []);
   const modelStyle = useMemo(
@@ -101,7 +134,27 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
   return (
     <div ref={hostRef} className="relative h-full w-full overflow-hidden" style={containerStyle}>
       <div className="relative z-[50] flex h-full w-full items-center justify-center">
-        {shouldRender ? (
+        {effectiveStatic ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-6 text-center">
+            <img
+              src="/assets/3d/stethoscope.png"
+              alt="Visual kesehatan"
+              className="h-auto w-full max-w-[360px] object-contain drop-shadow-xl"
+              loading="lazy"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                loadTriggeredRef.current = true;
+                setForceRender(true);
+                setShouldRender(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-5 py-3 text-sm font-semibold text-brand-green shadow-md transition hover:bg-white"
+            >
+              Lihat model 3D
+            </button>
+          </div>
+        ) : shouldRender ? (
           <Suspense fallback={placeholder}>
             <ModelViewer
               ref={mvRef as any}
