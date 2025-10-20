@@ -818,8 +818,6 @@ export function MapSection() {
 
               <div className="flex-1">
                 <motion.div
-                  whileHover={{ scale: 1.005 }}
-                  transition={{ duration: 0.3 }}
                   className={`relative rounded-3xl overflow-hidden bg-white ${isFullscreen ? 'fixed inset-0 z-[100]' : ''}`}
                   style={{
                     boxShadow: '0 6px 24px rgba(0,0,0,0.05)',
