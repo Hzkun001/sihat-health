@@ -154,6 +154,15 @@ const LAYER_CONFIG = {
       'fill-outline-color': '#5B21B6'
     }
   },
+   tps: {
+    url: '/datageo/tps.json',
+    render: 'symbol' as const,
+    iconName: 'tps-icon',
+    iconURL: '/assets/logoForMap/trash.webp',
+    iconBitmapMaxSize: 96,
+    iconSize: 0.20,
+    minzoom: 12,
+  },
 } as const;
 
 type LayerId = keyof typeof LAYER_CONFIG;

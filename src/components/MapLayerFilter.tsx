@@ -43,7 +43,7 @@ const layerCategories: LayerCategory[] = [
   },
    {
   id: 'environment-health',
-    title: ' Lingkungan dan Penyakit (coming soon)',
+    title: ' Lingkungan dan Penyakit (Coming Soon)',
     items: [
       { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6' },
       { id: 'heat-island', label: 'Panas Perkotaan', color: '#F39C12' },
