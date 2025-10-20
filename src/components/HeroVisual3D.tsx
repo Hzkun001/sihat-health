@@ -159,7 +159,6 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
             <ModelViewer
               ref={mvRef as any}
               src="/assets/3d/fresh.glb"
-              poster="/assets/3d/stethoscope.png"
               alt="Model"
               loading="lazy"
               environment-image="neutral"
