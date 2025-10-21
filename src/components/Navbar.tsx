@@ -18,6 +18,31 @@ export function Navbar() {
   // MULAI KOSONG → biar tidak auto-aktif 'hero' saat load
   const [activeSection, setActiveSection] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(max-width: 1023px)');
+
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      setIsMobile(event.matches);
+    };
+
+    handleChange(media);
+    if (media.addEventListener) {
+      media.addEventListener('change', handleChange);
+    } else {
+      media.addListener?.(handleChange);
+    }
+
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener('change', handleChange);
+      } else {
+        media.removeListener?.(handleChange);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Deteksi section aktif yang robust:
@@ -91,13 +116,15 @@ export function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 0.8, 0.25, 1] }}
-        className="fixed top-6 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none"
+        className="fixed top-3 sm:top-5 lg:top-6 left-0 right-0 z-40 flex justify-center px-3 sm:px-4 pointer-events-none"
         style={{ willChange: 'transform, opacity' }}
       >
         <motion.nav
-          animate={{ height: isScrolled ? '64px' : '80px' }}
+          animate={{
+            height: isScrolled ? (isMobile ? '56px' : '64px') : isMobile ? '68px' : '80px',
+          }}
           transition={{ duration: 0.25, ease: [0.25, 0.8, 0.25, 1] }}
-          className="w-full max-w-[90%] lg:max-w-[85%] pointer-events-auto"
+          className="w-full max-w-[95%] sm:max-w-[90%] lg:max-w-[85%] pointer-events-auto"
           style={{
             backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.92)' : 'rgba(255, 255, 255, 0.8)',
             backdropFilter: isScrolled ? 'blur(24px)' : 'blur(16px)',
@@ -107,16 +134,20 @@ export function Navbar() {
             willChange: 'height',
           }}
         >
-          <div className="h-full px-6 lg:px-10 flex items-center justify-between">
+          <div className="h-full px-4 sm:px-6 lg:px-10 flex items-center justify-between">
             {/* Logo */}
             <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center space-x-3 group">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                 <img src="assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span
                   className="text-ink-900 transition-colors duration-300"
-                  style={{ fontSize: '20px', fontWeight: 500, letterSpacing: '0.02em' }}
+                  style={{
+                    fontSize: isMobile ? '16px' : '20px',
+                    fontWeight: 500,
+                    letterSpacing: '0.02em',
+                  }}
                 >
                   SIHAT Banjarbaru
                 </span>
@@ -176,7 +207,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-full transition-all duration-300 hover:bg-brand-green/10"
+              className="lg:hidden p-2 rounded-full transition-all duration-300 hover:bg-brand-green/10"
               aria-label="Toggle menu"
               style={{ color: '#0E1E2B' }}
             >
@@ -194,7 +225,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed top-24 left-4 right-4 z-30 lg:hidden rounded-3xl overflow-hidden"
+            className="fixed top-20 left-4 right-4 z-30 lg:hidden rounded-3xl overflow-hidden"
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(25px)',
@@ -213,9 +244,9 @@ export function Navbar() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                     onClick={(e) => handleNavClick(e, item.href)}
-                    className="px-8 py-4 transition-all duration-300 hover:bg-brand-green/5"
+                    className="px-6 py-3 transition-all duration-300 hover:bg-brand-green/5"
                     style={{
-                      fontSize: '18px',
+                      fontSize: '16px',
                       fontWeight: 500,
                       letterSpacing: '0.02em',
                       color: isActive ? '#1BA351' : '#0E1E2B',

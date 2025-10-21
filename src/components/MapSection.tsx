@@ -818,10 +818,11 @@ export function MapSection() {
 
               <div className="flex-1">
                 <motion.div
-                  className={`relative rounded-3xl overflow-hidden bg-white ${isFullscreen ? 'fixed inset-0 z-[100]' : ''}`}
+                  className={`relative overflow-hidden bg-white ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none shadow-none' : 'rounded-3xl'}`}
                   style={{
-                    boxShadow: '0 6px 24px rgba(0,0,0,0.05)',
-                    height: isFullscreen ? '100vh' : 'clamp(480px, 60vh, 760px)',
+                    boxShadow: isFullscreen ? 'none' : '0 6px 24px rgba(0,0,0,0.05)',
+                    height: isFullscreen ? '100dvh' : 'clamp(480px, 60vh, 760px)',
+                    minHeight: isFullscreen ? '100vh' : undefined,
                   }}
                   role="region"
                   aria-label="Interactive health map"

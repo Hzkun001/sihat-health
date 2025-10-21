@@ -18,21 +18,25 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     if (typeof window === 'undefined') return;
 
     const reducedMedia = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const mobileMedia = window.matchMedia?.('(max-width: 768px)');
     const connection = (navigator as any)?.connection;
 
     const checkConditions = () => {
       const reducedMotion = reducedMedia?.matches ?? false;
       const slowNetwork = Boolean(connection && ['slow-2g', '2g'].includes(connection.effectiveType));
-      setPreferStatic(reducedMotion || slowNetwork);
+      const isMobileViewport = mobileMedia?.matches ?? false;
+      setPreferStatic(reducedMotion || slowNetwork || isMobileViewport);
     };
 
     checkConditions();
 
     reducedMedia?.addEventListener?.('change', checkConditions);
+    mobileMedia?.addEventListener?.('change', checkConditions);
     connection?.addEventListener?.('change', checkConditions);
 
     return () => {
       reducedMedia?.removeEventListener?.('change', checkConditions);
+      mobileMedia?.removeEventListener?.('change', checkConditions);
       connection?.removeEventListener?.('change', checkConditions);
     };
   }, []);
@@ -135,11 +139,11 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     <div ref={hostRef} className="relative h-full w-full overflow-hidden" style={containerStyle}>
       <div className="relative z-[50] flex h-full w-full items-center justify-center">
         {effectiveStatic ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-6 text-center">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-5 py-4 text-center sm:gap-6 sm:p-6">
             <img
-              src="/assets/3d/stethoscope.png"
-              alt="Visual kesehatan"
-              className="h-auto w-full max-w-[360px] object-contain drop-shadow-xl"
+              src="/assets/logo.png"
+              alt="Logo SIHAT Health"
+              className="h-auto w-full max-w-[220px] object-contain drop-shadow-xl sm:max-w-[360px]"
               loading="lazy"
             />
             <button
@@ -149,7 +153,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
                 setForceRender(true);
                 setShouldRender(true);
               }}
-              className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-5 py-3 text-sm font-semibold text-brand-green shadow-md transition hover:bg-white"
+              className="inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-xl bg-white/80 px-4 py-2 text-xs font-semibold text-brand-green shadow-md transition hover:bg-white sm:max-w-none sm:px-5 sm:py-3 sm:text-sm"
             >
               Lihat model 3D
             </button>
