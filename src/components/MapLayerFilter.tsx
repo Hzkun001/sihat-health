@@ -51,6 +51,7 @@ const layerCategories: LayerCategory[] = [
       { id: 'dengue-zone', label: 'Daerah Rawan DBD', color: '#E38BCF', disabled: true },
       { id: 'bank-sampah', label: 'Bank Sampah', color: '#1BA180', disabled: true },
       { id: 'tps', label: 'TPS', color: '#1BA360' },
+      { id: 'jalur-persampahan', label: 'Jalur Persampahan', color: '#525257' },
       { id: 'jalan-berlubang', label: 'Jalan Berlubang', color: '#000000', disabled: true },
       { id: 'genangan air', label: 'Genangan Air', color: '#00AEEF', disabled: true },
     ],
