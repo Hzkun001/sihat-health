@@ -219,15 +219,6 @@ export function LoadingScreen({
             </motion.span>
           </motion.div>
         </div>
-
-        <motion.small
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.85 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="text-xs uppercase tracking-[0.35em] text-white/60"
-        >
-          Banjarbaru Smart Health Platform
-        </motion.small>
       </div>
     </motion.div>
   );
