@@ -14,6 +14,7 @@ interface HeroSectionProps {
 export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps = {}) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [showWaves, setShowWaves] = useState(false);
+  const [allowWaves, setAllowWaves] = useState(false);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -32,6 +33,16 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
       : false),
     []
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia?.('(min-width: 768px)');
+    if (!mql) return;
+    const update = (event?: MediaQueryListEvent) => setAllowWaves(event?.matches ?? mql.matches);
+    update();
+    mql.addEventListener?.('change', update);
+    return () => mql.removeEventListener?.('change', update);
+  }, []);
 
   const wavesProps = useMemo(
     () => ({
@@ -64,7 +75,7 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
       </div>
 
       {/* Layer 2: Waves */}
-      {(showWaves && !prefersReduced) && (
+      {(showWaves && allowWaves && !prefersReduced) && (
         <div className="absolute inset-0 z-10 pointer-events-none">
           <Waves {...wavesProps} />
         </div>
@@ -81,7 +92,7 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
           min-h-[100svh]
           // Padding responsif
           px-4 sm:px-6 lg:px-8
-          pt-[8svh] pb-[10svh] sm:pt-[10svh] sm:pb-[12svh] lg:py-32
+          pt-[13svh] pb-[11svh] sm:pt-[10svh] sm:pb-[12svh] lg:py-32
           gap-6 sm:gap-8 lg:gap-12
           items-center
           max-w-7xl mx-auto
@@ -95,7 +106,8 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
           className="
             order-1 lg:order-2
             relative
-            h-[40svh] sm:h-[48svh] md:h-[54svh] lg:h-[600px]
+            w-full
+            min-h-[280px] xs:min-h-[320px] sm:min-h-[380px] md:min-h-[440px] lg:h-[600px]
             rounded-2xl overflow-hidden
             flex items-center justify-center
             shadow-xl

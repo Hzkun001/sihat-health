@@ -12,7 +12,6 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
   const [shouldRender, setShouldRender] = useState(false);
   const loadTriggeredRef = useRef(false);
   const [preferStatic, setPreferStatic] = useState(false);
-  const [forceRender, setForceRender] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -41,7 +40,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     };
   }, []);
 
-  const effectiveStatic = preferStatic && !forceRender;
+  const effectiveStatic = preferStatic;
 
   useEffect(() => {
     if (effectiveStatic) {
@@ -139,24 +138,32 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     <div ref={hostRef} className="relative h-full w-full overflow-hidden" style={containerStyle}>
       <div className="relative z-[50] flex h-full w-full items-center justify-center">
         {effectiveStatic ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-5 py-4 text-center sm:gap-6 sm:p-6">
+          <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 px-5 py-8 text-center sm:gap-6 sm:px-6 sm:py-10">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute inset-[-14%] rounded-[48px] bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10 blur-3xl" />
+              <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-[40px] bg-white/6 shadow-[0_0_120px_0_rgba(59,230,150,0.35)]" />
+              <span
+                className="absolute left-[22%] top-[26%] h-2.5 w-2.5 rounded-full bg-white/80 blur-[1.5px] animate-pulse"
+                style={{ animationDuration: '6s', animationDelay: '1s' }}
+              />
+              <span
+                className="absolute right-[18%] bottom-[28%] h-2 w-2 rounded-full bg-white/70 blur-[1px] animate-pulse"
+                style={{ animationDuration: '7.5s', animationDelay: '2.6s' }}
+              />
+              <span
+                className="absolute left-1/2 top-[18%] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-white/75 blur-[1px] animate-pulse"
+                style={{ animationDuration: '8s', animationDelay: '3.8s' }}
+              />
+            </div>
             <img
               src="/assets/logo.png"
               alt="Logo SIHAT Health"
-              className="h-auto w-full max-w-[220px] object-contain drop-shadow-xl sm:max-w-[360px]"
+              className="relative z-10 h-auto w-full max-w-[220px] object-contain drop-shadow-[0_0_35px_rgba(34,197,94,0.55)] sm:max-w-[320px]"
               loading="lazy"
             />
-            <button
-              type="button"
-              onClick={() => {
-                loadTriggeredRef.current = true;
-                setForceRender(true);
-                setShouldRender(true);
-              }}
-              className="inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-xl bg-white/80 px-4 py-2 text-xs font-semibold text-brand-green shadow-md transition hover:bg-white sm:max-w-none sm:px-5 sm:py-3 sm:text-sm"
-            >
-              Lihat model 3D
-            </button>
+            <span className="relative z-10 text-xs font-medium text-white/85 sm:text-sm">
+              Eksplorasi model interaktif tersedia di layar yang lebih besar.
+            </span>
           </div>
         ) : shouldRender ? (
           <Suspense fallback={placeholder}>
