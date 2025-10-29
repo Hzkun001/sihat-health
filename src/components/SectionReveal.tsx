@@ -8,13 +8,28 @@ interface SectionRevealProps {
   className?: string;
   delay?: number;
   amount?: number;
+  disableAnimation?: boolean;
 }
 
-export function SectionReveal({ children, className = '', delay = 0, amount = 0.3 }: SectionRevealProps) {
+export function SectionReveal({
+  children,
+  className = '',
+  delay = 0,
+  amount = 0.3,
+  disableAnimation = false,
+}: SectionRevealProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount });
   const shouldReduceMotion = useReducedMotion();
   const { y } = useResponsiveMotion();
+
+  if (disableAnimation) {
+    return (
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+    );
+  }
 
   // Reduced motion: fade only, 300ms
   if (shouldReduceMotion) {

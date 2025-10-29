@@ -237,6 +237,7 @@ export function MapSection() {
 
   // Map refs & cache
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapCardRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<MLMap | null>(null);
   const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
   const interactionCleanups = useRef<(() => void)[]>([]);
@@ -600,20 +601,58 @@ export function MapSection() {
 
   /* --------------------------- fullscreen --------------------------- */
   useEffect(() => {
-    document.body.style.overflow = isFullscreen ? 'hidden' : 'unset';
-    const map = mapInstance.current;
-    if (!map) return;
-    const rafId = requestAnimationFrame(() => map.resize());
-    const timeoutId = window.setTimeout(() => map.resize(), 180);
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(timeoutId);
+    const handleFullscreenChange = () => {
+      const doc: any = document;
+      const fullscreenElement = document.fullscreenElement || doc.webkitFullscreenElement || null;
+      const target = mapCardRef.current;
+      const active = Boolean(target && fullscreenElement === target);
+
+      setIsFullscreen(active);
+      document.body.style.overflow = active ? 'hidden' : 'unset';
+      if (active) setIsFilterOpen(false);
+
+      const resize = () => mapInstance.current?.resize();
+      requestAnimationFrame(resize);
+      window.setTimeout(resize, 180);
     };
-  }, [isFullscreen]);
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange as any);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange as any);
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const toggleFullscreen = useCallback(() => {
+    const target = mapCardRef.current;
+    if (!target) return;
+
+    const doc: any = document;
+    const fullscreenElement = document.fullscreenElement || doc.webkitFullscreenElement;
+
+    // Already fullscreen → exit
+    if (fullscreenElement === target) {
+      const exit = document.exitFullscreen || doc.webkitExitFullscreen;
+      exit?.call(document);
+      return;
+    }
+
+    const request = target.requestFullscreen || (target as any).webkitRequestFullscreen;
+    if (!request) return;
+
     setIsFilterOpen(false);
-    setIsFullscreen((prev) => !prev);
+    try {
+      const result = request.call(target);
+      if (result && typeof result.then === 'function') {
+        // Some browsers return a promise
+        result.catch((err: unknown) => console.warn('[Map] Gagal masuk fullscreen', err));
+      }
+    } catch (err) {
+      console.warn('[Map] Gagal memanggil requestFullscreen', err);
+    }
   }, []);
 
   /* --------------------------- zoom controls --------------------------- */
@@ -647,8 +686,21 @@ export function MapSection() {
     });
     mapInstance.current = map;
 
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-    map.on('zoomend', () => setZoomLevel(map.getZoom()));
+    const ctrl = new maplibregl.NavigationControl({ visualizePitch: true, showZoom: false });
+    map.addControl(ctrl, 'top-left');
+
+    const navMq = window.matchMedia('(max-width: 640px)');
+    const applyNavMargin = () => {
+      const container = map.getContainer().querySelector('.maplibregl-ctrl-top-left') as HTMLElement | null;
+      if (!container) return;
+      container.style.margin = navMq.matches ? '15px 0 0 12px' : '32px 0 0 6px';
+    };
+
+    applyNavMargin();
+    const onMqChange = () => applyNavMargin();
+    if (navMq.addEventListener) navMq.addEventListener('change', onMqChange);
+    else if (navMq.addListener) navMq.addListener(onMqChange);
+
 
     async function loadIconImage(
       url: string,
@@ -773,6 +825,8 @@ export function MapSection() {
     map.on('styledata', onStyleData);
 
     return () => {
+      if (navMq.removeEventListener) navMq.removeEventListener('change', onMqChange);
+      else if (navMq.removeListener) navMq.removeListener(onMqChange);
       map.off('styledata', onStyleData);
       map.remove();
       mapInstance.current = null;
@@ -783,26 +837,13 @@ export function MapSection() {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <section
-      id="peta"
-      className={`relative overflow-hidden ${
-        isFullscreen
-          ? 'pt-0 pb-0 sm:pt-0 sm:pb-0 lg:pt-0 lg:pb-0'
-          : 'pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20'
-      }`}
-    >
-      {!isFullscreen && (
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
-        />
-      )}
-
+    <section id="peta" className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       <div
-        className={`relative mx-auto ${
-          isFullscreen ? 'max-w-none px-0 lg:px-0' : 'max-w-7xl px-6 lg:px-8'
-        }`}
-      >
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {!isFullscreen && (
           <SectionReveal>
             <div className="text-center mb-12">
@@ -822,44 +863,38 @@ export function MapSection() {
           </SectionReveal>
         )}
 
-        <SectionReveal
-          delay={0.2}
-          disableAnimation={isFullscreen}
-          className={isFullscreen ? 'h-full' : undefined}
-        >
-          <div className={`relative ${isFullscreen ? 'h-full' : ''}`}>
-            <div className={`flex min-h-0 gap-6 lg:gap-8 ${isFullscreen ? 'h-full' : ''}`}>
-              {!isFullscreen && (
-                <div className="hidden lg:block w-80 flex-shrink-0">
-                  <div className="sticky top-32">
-                    <MapLayerFilter
-                      isMobile={false}
-                      defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
-                      onToggle={async (layerId, enabled) => {
-                        if (!(layerId in LAYER_CONFIG)) return;
-                        const id = layerId as LayerId;
-                        if (enabled) await loadAndShowLayer(id, false);
-                        else hideLayer(id);
-                      }}
-                    />
-                  </div>
+        <SectionReveal delay={0.2}>
+          <div className="relative">
+            <div className="flex gap-6 lg:gap-8">
+              <div className="hidden lg:block w-80 flex-shrink-0">
+                <div className="sticky top-32">
+                  <MapLayerFilter
+                    isMobile={false}
+                    defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
+                    onToggle={async (layerId, enabled) => {
+                      if (!(layerId in LAYER_CONFIG)) return;
+                      const id = layerId as LayerId;
+                      if (enabled) await loadAndShowLayer(id, false);
+                      else hideLayer(id);
+                    }}
+                  />
                 </div>
-              )}
+              </div>
 
-              <div className="flex-1 min-h-0">
+              <div className="flex-1">
                 <motion.div
-                  className={`relative overflow-hidden bg-white ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none shadow-none' : 'rounded-3xl'}`}
+                  ref={mapCardRef}
+                  className={`relative overflow-hidden bg-white ${isFullscreen ? 'rounded-none shadow-none' : 'rounded-3xl'}`}
                   style={{
                     boxShadow: isFullscreen ? 'none' : '0 6px 24px rgba(0,0,0,0.05)',
-                    height: isFullscreen ? '100dvh' : 'clamp(480px, 60vh, 760px)',
-                    minHeight: isFullscreen ? '100vh' : undefined,
-                    width: isFullscreen ? '100vw' : '100%',
-                    maxWidth: isFullscreen ? '100vw' : undefined,
+                    height: isFullscreen ? '100%' : 'clamp(480px, 60vh, 760px)',
+                    minHeight: isFullscreen ? '100%' : undefined,
+                    width: '100%',
                   }}
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  <div ref={mapRef} className="absolute inset-0 h-full w-full" />
+                  <div ref={mapRef} className="absolute inset-0" />
 
                   {!prefersReducedMotion && !isFullscreen && !mapLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -904,12 +939,13 @@ export function MapSection() {
 
                   {!isFullscreen && (
                     <div className="md:hidden absolute bottom-3 left-0 right-0 flex justify-center gap-2.5 px-4">
-                      <SmallButton aria="Zoom in map" onClick={handleZoomIn}><ZoomIn size={20} /></SmallButton>
+                      <SmallButton aria="Zoom in map" onClick={handleZoomIn}><ZoomIn size={18}/><span className="text-ink-740 text-xs font-semibold">Zoom In</span>
+                        </SmallButton>
                       <SmallButton aria="Toggle fullscreen" onClick={toggleFullscreen}>
-                        <Maximize2 size={18} />
+                        <Maximize2 size={15} />
                         <span className="text-ink-740 text-xs font-semibold">Fullscreen</span>
                       </SmallButton>
-                      <SmallButton aria="Zoom out map" onClick={handleZoomOut}><ZoomOut size={20} /></SmallButton>
+                      <SmallButton aria="Zoom out map" onClick={handleZoomOut}><ZoomOut size={18}/><span className="text-ink-740 text-xs font-semibold">Zoom Out</span></SmallButton>
                     </div>
                   )}
 
@@ -931,7 +967,7 @@ export function MapSection() {
                     </motion.button>
                   )}
 
-                  <div className="hidden sm:block absolute bottom-3 right-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
+                  <div className="hidden sm:block absolute top-2 left-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
                     {mapLoaded && mapInstance.current
                       ? (() => {
                           const map = mapInstance.current!;
@@ -949,21 +985,19 @@ export function MapSection() {
               </div>
             </div>
 
-            {!isFullscreen && (
-              <MapLayerFilter
-                isOpen={isFilterOpen}
-                onClose={() => setIsFilterOpen(false)}
-                isMobile={isMobile}
-                defaultSelections={EMPTY_SELECTIONS}
-                onToggle={async (layerId: string, enabled: boolean) => {
-                  if (!(layerId in LAYER_CONFIG)) return;
-                  const id = layerId as LayerId;
-                  if (enabled) await loadAndShowLayer(id, false);
-                  else hideLayer(id);
-                  setIsFilterOpen(false);
-                }}
-              />
-            )}
+            <MapLayerFilter
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              isMobile={isMobile}
+              defaultSelections={EMPTY_SELECTIONS}
+              onToggle={async (layerId: string, enabled: boolean) => {
+                if (!(layerId in LAYER_CONFIG)) return;
+                const id = layerId as LayerId;
+                if (enabled) await loadAndShowLayer(id, false);
+                else hideLayer(id);
+                setIsFilterOpen(false);
+              }}
+            />
           </div>
         </SectionReveal>
       </div>
