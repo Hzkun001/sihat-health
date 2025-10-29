@@ -127,7 +127,6 @@ export default function App() {
   const handleLoadingComplete = () => {
     setIsLoading(false);
   };
-
   return (
     <div className="min-h-screen bg-surface-0">
       {/* Main content - rendered behind loading screen */}
@@ -140,7 +139,6 @@ export default function App() {
             onModelProgress={setHeroProgress}
             onModelReady={() => setHeroReady(true)}
           />
-          
           {/* Lazy load other sections after loading screen */}
           {!isLoading && (
             <motion.div

@@ -682,7 +682,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: 'https://api.maptiler.com/maps/streets-v2/style.json?key=2gdBMkelnNTDj6FyZkyv',
+      style: 'https://api.maptiler.com/maps/streets-v4/style.json?key=2gdBMkelnNTDj6FyZkyv',
       center: [114.833, -3.442],
       zoom: 12,
       attributionControl: false,
