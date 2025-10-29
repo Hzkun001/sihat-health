@@ -1,10 +1,21 @@
 // src/components/HeroSection.tsx
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
-import HeroVisual3D from './HeroVisual3D';
 import { StaticParticles } from './StaticParticles';
 import Waves from './waves';
+
+const HeroVisual3D = lazy(() => import('./HeroVisual3D'));
+
+function HeroVisual3DFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10 backdrop-blur-sm">
+        <span className="animate-pulse text-xs text-black/50">Memuat visual…</span>
+      </div>
+    </div>
+  );
+}
 
 interface HeroSectionProps {
   onModelReady?: () => void;
@@ -114,7 +125,9 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
             bg-white/5
           "
         >
-          <HeroVisual3D onReady={onModelReady} onProgress={onModelProgress} />
+          <Suspense fallback={<HeroVisual3DFallback />}>
+            <HeroVisual3D onReady={onModelReady} onProgress={onModelProgress} />
+          </Suspense>
         </motion.div>
 
         {/* --- TEKS BLOCK (Mobile di bawah) --- */}

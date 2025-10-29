@@ -223,10 +223,14 @@ function normalizeToFC(raw: any): GeoJSON.FeatureCollection {
   return { type: 'FeatureCollection', features: [] };
 }
 
+interface MapSectionProps {
+  sectionId?: string | null;
+}
+
 /* ======================================================================================
    3) KOMPONEN MAP
    ====================================================================================== */
-export function MapSection() {
+export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   // UI state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -837,7 +841,7 @@ export function MapSection() {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <section id="peta" className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
+    <section id={sectionId ?? undefined} className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
         style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}

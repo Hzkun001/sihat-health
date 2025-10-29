@@ -97,9 +97,6 @@ export function PartnersFloatingBar() {
               <p className="text-ink-900 leading-tight" style={{ fontSize: '13px', fontWeight: 500, letterSpacing: '0.03em' }}>
                 Partners Data
               </p>
-              <p className="text-ink-700 leading-tight" style={{ fontSize: '13px', fontWeight: 500, letterSpacing: '0.03em' }}>
-                and Teams
-              </p>
             </div>
           </motion.div>
 
