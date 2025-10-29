@@ -601,11 +601,20 @@ export function MapSection() {
   /* --------------------------- fullscreen --------------------------- */
   useEffect(() => {
     document.body.style.overflow = isFullscreen ? 'hidden' : 'unset';
-    const id = setTimeout(() => mapInstance.current?.resize(), 0);
-    return () => clearTimeout(id);
+    const map = mapInstance.current;
+    if (!map) return;
+    const rafId = requestAnimationFrame(() => map.resize());
+    const timeoutId = window.setTimeout(() => map.resize(), 180);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+    };
   }, [isFullscreen]);
 
-  const toggleFullscreen = useCallback(() => setIsFullscreen((prev) => !prev), []);
+  const toggleFullscreen = useCallback(() => {
+    setIsFilterOpen(false);
+    setIsFullscreen((prev) => !prev);
+  }, []);
 
   /* --------------------------- zoom controls --------------------------- */
   const handleZoomIn = useCallback(() => {
@@ -774,60 +783,83 @@ export function MapSection() {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <section id="peta" className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
+    <section
+      id="peta"
+      className={`relative overflow-hidden ${
+        isFullscreen
+          ? 'pt-0 pb-0 sm:pt-0 sm:pb-0 lg:pt-0 lg:pb-0'
+          : 'pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20'
+      }`}
+    >
+      {!isFullscreen && (
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
+        />
+      )}
+
       <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
-      />
-
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionReveal>
-          <div className="text-center mb-12">
-            <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-4">
-              <span className="text-brand-green text-[14px] font-semibold">Peta Kesehatan</span>
-            </div>
-            <h2
-              className="text-ink-900 tracking-tight mb-4"
-              style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
-            >
-              Peta Interaktif Kesehatan
-            </h2>
-            <p className="text-ink-700 max-w-3xl mx-auto text-[18px]">
-              Visualisasi distribusi fasilitas kesehatan dan indikator kesehatan masyarakat Banjarbaru
-            </p>
-          </div>
-        </SectionReveal>
-
-        <SectionReveal delay={0.2}>
-          <div className="relative">
-            <div className="flex gap-6 lg:gap-8">
-              <div className="hidden lg:block w-80 flex-shrink-0">
-                <div className="sticky top-32">
-                  <MapLayerFilter
-                    isMobile={false}
-                    defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
-                    onToggle={async (layerId, enabled) => {
-                      if (!(layerId in LAYER_CONFIG)) return;
-                      const id = layerId as LayerId;
-                      if (enabled) await loadAndShowLayer(id, false);
-                      else hideLayer(id);
-                    }}
-                  />
-                </div>
+        className={`relative mx-auto ${
+          isFullscreen ? 'max-w-none px-0 lg:px-0' : 'max-w-7xl px-6 lg:px-8'
+        }`}
+      >
+        {!isFullscreen && (
+          <SectionReveal>
+            <div className="text-center mb-12">
+              <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-4">
+                <span className="text-brand-green text-[14px] font-semibold">Peta Kesehatan</span>
               </div>
+              <h2
+                className="text-ink-900 tracking-tight mb-4"
+                style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
+              >
+                Peta Interaktif Kesehatan
+              </h2>
+              <p className="text-ink-700 max-w-3xl mx-auto text-[18px]">
+                Visualisasi distribusi fasilitas kesehatan dan indikator kesehatan masyarakat Banjarbaru
+              </p>
+            </div>
+          </SectionReveal>
+        )}
 
-              <div className="flex-1">
+        <SectionReveal
+          delay={0.2}
+          disableAnimation={isFullscreen}
+          className={isFullscreen ? 'h-full' : undefined}
+        >
+          <div className={`relative ${isFullscreen ? 'h-full' : ''}`}>
+            <div className={`flex min-h-0 gap-6 lg:gap-8 ${isFullscreen ? 'h-full' : ''}`}>
+              {!isFullscreen && (
+                <div className="hidden lg:block w-80 flex-shrink-0">
+                  <div className="sticky top-32">
+                    <MapLayerFilter
+                      isMobile={false}
+                      defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
+                      onToggle={async (layerId, enabled) => {
+                        if (!(layerId in LAYER_CONFIG)) return;
+                        const id = layerId as LayerId;
+                        if (enabled) await loadAndShowLayer(id, false);
+                        else hideLayer(id);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-1 min-h-0">
                 <motion.div
                   className={`relative overflow-hidden bg-white ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none shadow-none' : 'rounded-3xl'}`}
                   style={{
                     boxShadow: isFullscreen ? 'none' : '0 6px 24px rgba(0,0,0,0.05)',
                     height: isFullscreen ? '100dvh' : 'clamp(480px, 60vh, 760px)',
                     minHeight: isFullscreen ? '100vh' : undefined,
+                    width: isFullscreen ? '100vw' : '100%',
+                    maxWidth: isFullscreen ? '100vw' : undefined,
                   }}
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  <div ref={mapRef} className="absolute inset-0" />
+                  <div ref={mapRef} className="absolute inset-0 h-full w-full" />
 
                   {!prefersReducedMotion && !isFullscreen && !mapLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -917,19 +949,21 @@ export function MapSection() {
               </div>
             </div>
 
-            <MapLayerFilter
-              isOpen={isFilterOpen}
-              onClose={() => setIsFilterOpen(false)}
-              isMobile={isMobile}
-              defaultSelections={EMPTY_SELECTIONS}
-              onToggle={async (layerId: string, enabled: boolean) => {
-                if (!(layerId in LAYER_CONFIG)) return;
-                const id = layerId as LayerId;
-                if (enabled) await loadAndShowLayer(id, false);
-                else hideLayer(id);
-                setIsFilterOpen(false);
-              }}
-            />
+            {!isFullscreen && (
+              <MapLayerFilter
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                isMobile={isMobile}
+                defaultSelections={EMPTY_SELECTIONS}
+                onToggle={async (layerId: string, enabled: boolean) => {
+                  if (!(layerId in LAYER_CONFIG)) return;
+                  const id = layerId as LayerId;
+                  if (enabled) await loadAndShowLayer(id, false);
+                  else hideLayer(id);
+                  setIsFilterOpen(false);
+                }}
+              />
+            )}
           </div>
         </SectionReveal>
       </div>
