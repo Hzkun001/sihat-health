@@ -1,5 +1,5 @@
-import { memo, useEffect, useMemo, useRef, lazy, Suspense, useState } from 'react';
-const ModelViewer = lazy(() => import('./ModelViewer'));
+import { memo, useEffect, useRef, useState } from "react";
+import Lottie from "lottie-react";
 
 interface HeroVisual3DProps {
   onReady?: () => void;
@@ -8,179 +8,147 @@ interface HeroVisual3DProps {
 
 export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const mvRef = useRef<HTMLElement | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const [animData, setAnimData] = useState<any>(null);
   const [shouldRender, setShouldRender] = useState(false);
-  const loadTriggeredRef = useRef(false);
-  const [preferStatic, setPreferStatic] = useState(false);
 
+  // ===== TILT PARAMS =====
+  const MAX_TILT = 12;
+  const DEAD_ZONE = 0.16;
+  const LERP = 0.12;
+  const MAX_SCALE = 1.06;
+
+  const target = useRef({ rx: 0, ry: 0, s: 1 });
+  const current = useRef({ rx: 0, ry: 0, s: 1 });
+  const rafId = useRef<number | null>(null);
+
+  // Lazy render
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const reducedMedia = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const mobileMedia = window.matchMedia?.('(max-width: 768px)');
-    const connection = (navigator as any)?.connection;
-
-    const checkConditions = () => {
-      const reducedMotion = reducedMedia?.matches ?? false;
-      const slowNetwork = Boolean(connection && ['slow-2g', '2g'].includes(connection.effectiveType));
-      const isMobileViewport = mobileMedia?.matches ?? false;
-      setPreferStatic(reducedMotion || slowNetwork || isMobileViewport);
-    };
-
-    checkConditions();
-
-    reducedMedia?.addEventListener?.('change', checkConditions);
-    mobileMedia?.addEventListener?.('change', checkConditions);
-    connection?.addEventListener?.('change', checkConditions);
-
-    return () => {
-      reducedMedia?.removeEventListener?.('change', checkConditions);
-      mobileMedia?.removeEventListener?.('change', checkConditions);
-      connection?.removeEventListener?.('change', checkConditions);
-    };
+    const el = hostRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setShouldRender(true);
+        io.disconnect();
+      }
+    }, { rootMargin: "200px", threshold: [0, 0.25] });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
-  const effectiveStatic = preferStatic;
-
+  // Fetch & bersihkan background layer dari Lottie JSON
   useEffect(() => {
-    if (effectiveStatic) {
-      onProgress?.(100);
-      onReady?.();
-      return;
-    }
-
-    if (typeof window === 'undefined') return;
-    const host = hostRef.current;
-    if (!host) {
-      setShouldRender(true);
-      return;
-    }
-    if (loadTriggeredRef.current) {
-      setShouldRender(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        if (entry.isIntersecting || entry.intersectionRatio > 0) {
-          loadTriggeredRef.current = true;
-          setShouldRender(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px', threshold: [0, 0.25] }
-    );
-
-    observer.observe(host);
-
-    return () => observer.disconnect();
-  }, [effectiveStatic]);
-
-  useEffect(() => {
-    if (shouldRender) {
-      onProgress?.(5);
-    }
-  }, [shouldRender, onProgress]);
-
-  useEffect(() => {
-    const el = mvRef.current;
-    if (!el || effectiveStatic) return;
-
+    if (!shouldRender || animData) return;
     onProgress?.(5);
 
-    const handleProgress = (event: any) => {
-      const total = Math.max(0, Math.min(1, event?.detail?.totalProgress ?? 0));
-      onProgress?.(Math.round(total * 100));
+    fetch("/assets/3d/health.json")
+      .then(r => r.json())
+      .then((data) => {
+        try {
+          // hapus layer background dengan nama umum (tanpa merusak layer lain)
+          const badNames = new Set(["BG", "Bg", "bg", "Background", "background", "Rect", "Rectangle", "Backdrop"]);
+          const cleaned = {
+            ...data,
+            layers: Array.isArray(data.layers)
+              ? data.layers.filter((ly: any) => typeof ly?.nm === "string" ? !badNames.has(ly.nm) : true)
+              : data.layers
+          };
+          setAnimData(cleaned);
+        } catch {
+          setAnimData(data);
+        } finally {
+          onProgress?.(100);
+          onReady?.();
+        }
+      })
+      .catch(() => { onProgress?.(100); onReady?.(); });
+  }, [shouldRender, animData, onProgress, onReady]);
+
+  // RAF tilt
+  useEffect(() => {
+    const tick = () => {
+      const el = cardRef.current;
+      if (el) {
+        current.current.rx += (target.current.rx - current.current.rx) * LERP;
+        current.current.ry += (target.current.ry - current.current.ry) * LERP;
+        current.current.s  += (target.current.s  - current.current.s)  * LERP;
+
+        el.style.transform =
+          `perspective(900px) rotateX(${current.current.rx.toFixed(3)}deg) ` +
+          `rotateY(${current.current.ry.toFixed(3)}deg) scale(${current.current.s.toFixed(3)})`;
+      }
+      rafId.current = requestAnimationFrame(tick);
     };
+    rafId.current = requestAnimationFrame(tick);
+    return () => { if (rafId.current) cancelAnimationFrame(rafId.current); };
+  }, []);
 
-    const handleLoad = () => {
-      onProgress?.(100);
-      setTimeout(() => (mvRef.current as any)?.dismissPoster?.(), 250);
-      onReady?.();
-    };
+  // Hitung tilt dari posisi pointer relatif ke elemen yang diputar (cardRef)
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const r = card.getBoundingClientRect();
 
-    const handleError = () => {
-      onProgress?.(100);
-      onReady?.();
-    };
+    const nx = (e.clientX - r.left) / r.width;
+    const ny = (e.clientY - r.top) / r.height;
 
-    el.addEventListener('progress', handleProgress as EventListener);
-    el.addEventListener('load', handleLoad as EventListener);
-    el.addEventListener('error', handleError as EventListener);
-    return () => {
-      el.removeEventListener('progress', handleProgress as EventListener);
-      el.removeEventListener('load', handleLoad as EventListener);
-      el.removeEventListener('error', handleError as EventListener);
-    };
-  }, [onProgress, onReady, effectiveStatic]);
+    let dx = (nx - 0.5) * 2;
+    let dy = (ny - 0.5) * 2;
 
-  const containerStyle = useMemo(() => ({ borderRadius: 16 }), []);
-  const modelStyle = useMemo(
-    () => ({
-      width: '90%',
-      height: '90%',
-      borderRadius: 20,
-      background:
-        'radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.39) 100%)',
-    }),
-    []
-  );
+    const dist = Math.hypot(dx, dy);
+    if (dist < DEAD_ZONE) {
+      const k = dist / DEAD_ZONE;
+      dx *= k; dy *= k;
+    }
+    dx = Math.max(-1, Math.min(1, dx));
+    dy = Math.max(-1, Math.min(1, dy));
 
-  const placeholder = (
-    <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10">
-      <span className="animate-pulse text-xs text-black/50">Loading 3D…</span>
-    </div>
-  );
+    const ry = dx * MAX_TILT;
+    const rx = -dy * MAX_TILT;
+    const s  = 1 + (1 - Math.min(dist, 1)) * (MAX_SCALE - 1);
+
+    target.current = { rx, ry, s };
+  };
+
+  const handlePointerLeave = () => { target.current = { rx: 0, ry: 0, s: 1 }; };
 
   return (
-    <div ref={hostRef} className="relative h-full w-full overflow-hidden" style={containerStyle}>
-      <div className="relative z-[50] flex h-full w-full items-center justify-center">
-        {effectiveStatic ? (
-          <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 px-5 py-8 text-center sm:gap-6 sm:px-6 sm:py-10">
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute inset-[-14%] rounded-[48px] bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10 blur-3xl" />
-              <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-[40px] bg-white/6 shadow-[0_0_120px_0_rgba(59,230,150,0.35)]" />
-              <span
-                className="absolute left-[22%] top-[26%] h-2.5 w-2.5 rounded-full bg-white/80 blur-[1.5px] animate-pulse"
-                style={{ animationDuration: '6s', animationDelay: '1s' }}
-              />
-              <span
-                className="absolute right-[18%] bottom-[28%] h-2 w-2 rounded-full bg-white/70 blur-[1px] animate-pulse"
-                style={{ animationDuration: '7.5s', animationDelay: '2.6s' }}
-              />
-              <span
-                className="absolute left-1/2 top-[18%] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-white/75 blur-[1px] animate-pulse"
-                style={{ animationDuration: '8s', animationDelay: '3.8s' }}
-              />
-            </div>
-            <img
-              src="/assets/logo.png"
-              alt="Logo SIHAT Health"
-              className="relative z-10 h-auto w-full max-w-[220px] object-contain drop-shadow-[0_0_35px_rgba(34,197,94,0.55)] sm:max-w-[320px]"
-              loading="lazy"
-            />
-            <span className="relative z-10 text-xs font-medium text-white/85 sm:text-sm">
-              Eksplorasi model interaktif tersedia di layar yang lebih besar.
-            </span>
+    <div
+      ref={hostRef}
+      className="relative flex h-full w-full items-center justify-center overflow-hidden"
+    >
+      <div className="flex h-full w-full items-center justify-center">
+        {!shouldRender ? (
+          <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10">
+            <span className="animate-pulse text-xs text-black/50">Loading…</span>
           </div>
-        ) : shouldRender ? (
-          <Suspense fallback={placeholder}>
-            <ModelViewer
-              ref={mvRef as any}
-              src="/assets/3d/fresh.glb"
-              alt="Model"
-              loading="lazy"
-              environment-image="neutral"
-              camera-controls
-              auto-rotate
-              rotation-per-second="10deg"
-              style={modelStyle}
-            />
-          </Suspense>
         ) : (
-          placeholder
+          <div
+            ref={cardRef}
+            onPointerMove={handlePointerMove}
+            onPointerLeave={handlePointerLeave}
+            className="
+              will-change-transform relative
+              aspect-[16/9] w-full max-w-[1120px]
+              flex items-center justify-center
+              bg-transparent shadow-none rounded-none
+            "
+          >
+            {/* Lottie render transparan, tanpa panel */}
+            {animData && (
+              <Lottie
+                animationData={animData}
+                loop
+                autoplay
+                className="w-[72%] max-w-[720px] h-auto"
+                rendererSettings={{
+                  preserveAspectRatio: "xMidYMid meet",
+                  progressiveLoad: true,
+                }}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
