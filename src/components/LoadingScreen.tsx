@@ -103,123 +103,145 @@ export function LoadingScreen({
   }, [onComplete, prefersReducedMotion]);
 
   return (
-    <motion.div
-      initial={{ opacity: 1, y: 0 }}
-      exit={{ 
-        y: '-100%',
-        opacity: 0.8, // Slight fade for smoothness
-      }}
-      transition={{ 
-        duration: 0.9, 
-        ease: [0.25, 0.8, 0.25, 1], // Custom cubic-bezier for smooth swipe
-        y: { duration: 0.9 },
-        opacity: { duration: 0.6, delay: 0.1 },
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+   <motion.div
+  initial={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+  exit={{
+    opacity: 0,
+    scale: 1.05,
+    filter: 'blur(20px)',
+    clipPath: 'circle(0% at 50% 50%)', // efek “iris menutup”
+  }}
+  transition={{
+    duration: 1.3,
+    ease: [0.25, 1, 0.5, 1],
+    opacity: { duration: 0.8 },
+    filter: { duration: 1.1 },
+    clipPath: { duration: 1.2, ease: [0.65, 0, 0.35, 1] },
+  }}
+  className="fixed inset-0 z-50 flex items-center justify-center"
+  style={{
+    background: `
+      radial-gradient(80% 80% at 50% 50%, rgba(255,255,255,0.12), transparent 70%),
+      linear-gradient(135deg, #19b88c 0%, #21c6a4 40%, #0ea5e9 100%)
+    `,
+    backgroundBlendMode: 'screen, normal',
+    willChange: 'transform, opacity, filter, clip-path',
+  }}
+  aria-live="polite"
+  role="status"
+>
+  {/* Ambient glow */}
+  <div
+    className="absolute inset-0 pointer-events-none mix-blend-screen"
+    style={{
+      background:
+        'radial-gradient(60% 60% at 50% 50%, rgba(255,255,255,0.22) 0%, transparent 80%)',
+      filter: 'blur(60px)',
+      opacity: 0.4,
+    }}
+  />
+
+  {/* Floating shimmer */}
+  <motion.div
+    className="absolute inset-0 pointer-events-none"
+    style={{
+      background:
+        'radial-gradient(25% 25% at 60% 30%, rgba(255,255,255,0.15), transparent 60%)',
+      filter: 'blur(80px)',
+    }}
+    animate={{
+      opacity: [0.25, 0.45, 0.25],
+      x: [0, 20, 0],
+      y: [0, -15, 0],
+    }}
+    transition={{
+      duration: 8,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    }}
+  />
+
+  {/* Dotted subtle texture */}
+  <div
+    className="absolute inset-0 opacity-[0.04]"
+    style={{
+      backgroundImage:
+        'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
+      backgroundSize: '32px 32px',
+    }}
+  />
+
+  {/* Center content */}
+  <div className="relative z-10 flex flex-col items-center gap-8 text-center text-white/90">
+    <motion.h1
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="text-white tracking-tight"
       style={{
-        background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-        willChange: 'transform, opacity',
+        fontSize: 'clamp(72px, 10vw, 128px)',
+        fontWeight: 700,
+        lineHeight: 1,
       }}
-      aria-live="polite"
-      role="status"
     >
-      {/* Background accents */}
-      <div className="absolute inset-0 overflow-hidden">
+      SIHAT
+    </motion.h1>
+
+    <motion.p
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.25 }}
+      className="px-6 text-white/85"
+      style={{
+        fontSize: 'clamp(18px, 2.5vw, 28px)',
+        fontWeight: 400,
+        letterSpacing: '0.015em',
+        maxWidth: 'min(520px, 90vw)',
+      }}
+    >
+      Masyarakat yang Lebih Sehat.
+    </motion.p>
+
+    <div className="flex flex-col items-center gap-4">
+      {/* Progress bar */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.45, delay: 0.4 }}
+        className="relative h-[6px] w-[min(260px,70vw)] overflow-hidden rounded-full bg-white/15"
+      >
         <motion.div
-          className="absolute -top-24 -right-24 w-[320px] h-[320px] rounded-full bg-white/10 blur-3xl"
-          animate={{ scale: prefersReducedMotion ? 1 : [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-[-160px] left-[-120px] w-[360px] h-[360px] rounded-full bg-white/5 blur-3xl"
-          animate={{ scale: prefersReducedMotion ? 1 : [1, 1.15, 1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.06]"
+          className="absolute inset-0 origin-left rounded-full"
           style={{
-            backgroundImage:
-              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
-            backgroundSize: '32px 32px',
+            background:
+              'linear-gradient(90deg, #FFFFFF 0%, rgba(255,255,255,0.65) 100%)',
+            transformOrigin: '0% 50%',
           }}
+          animate={{ scaleX: progress / 100 }}
+          transition={{ type: 'spring', stiffness: 120, damping: 24 }}
         />
-      </div>
+      </motion.div>
 
-      <div className="relative z-10 flex flex-col items-center gap-8 text-center text-white/90">
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 15 }}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.45 }}
+        className="flex items-center gap-3 text-sm tracking-wide text-white/80"
+      >
+        <span>Menyiapkan data spasial…</span>
+        <motion.span
+          key={progress}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ 
-            duration: 0.5, 
-            delay: 0.1,
-          }}
-          className="text-white tracking-tight"
-          style={{ 
-            fontSize: 'clamp(72px, 10vw, 128px)', 
-            fontWeight: 700, 
-            lineHeight: 1,
-            willChange: 'opacity, transform',
-          }}
+          transition={{ duration: 0.25 }}
+          className="rounded-full border border-white/30 px-3 py-1 font-semibold text-white"
         >
-          SIHAT
-        </motion.h1>
+          {progress}%
+        </motion.span>
+      </motion.div>
+    </div>
+  </div>
+</motion.div>
 
-        {/* Tagline */}
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="px-6 text-white/85"
-          style={{
-            fontSize: 'clamp(18px, 2.5vw, 28px)',
-            fontWeight: 400,
-            letterSpacing: '0.015em',
-            maxWidth: 'min(520px, 90vw)',
-          }}
-        >
-          Masyarakat yang Lebih Sehat.
-        </motion.p>
-
-        <div className="flex flex-col items-center gap-4">
-          {/* Progress bar */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.45, delay: 0.4 }}
-            className="relative h-[6px] w-[min(260px,70vw)] overflow-hidden rounded-full bg-white/15"
-          >
-            <motion.div
-              className="absolute inset-0 origin-left rounded-full"
-              style={{
-                background: 'linear-gradient(90deg, #FFFFFF 0%, rgba(255,255,255,0.65) 100%)',
-                transformOrigin: '0% 50%',
-              }}
-              animate={{ scaleX: progress / 100 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 24 }}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.45 }}
-            className="flex items-center gap-3 text-sm tracking-wide text-white/80"
-          >
-            <span>Menyiapkan data spasial…</span>
-            <motion.span
-              key={progress}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="rounded-full border border-white/30 px-3 py-1 font-semibold text-white"
-            >
-              {progress}%
-            </motion.span>
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
   );
 }

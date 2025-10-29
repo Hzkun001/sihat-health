@@ -92,6 +92,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [heroProgress, setHeroProgress] = useState(0);
   const [heroReady, setHeroReady] = useState(false);
+  const hasLoadedChatbase = useRef(false);
 
   useEffect(() => {
     // Prevent scroll during loading
@@ -100,6 +101,27 @@ export default function App() {
     } else {
       document.body.style.overflow = 'unset';
     }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (isLoading || hasLoadedChatbase.current) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    const remoteScriptId = 'f_w0Zlu5trRGKUknyahcR';
+    if (document.getElementById(remoteScriptId)) {
+      hasLoadedChatbase.current = true;
+      return;
+    }
+
+    const loaderId = 'chatbase-inline-loader';
+    if (document.getElementById(loaderId)) return;
+
+    const loader = document.createElement('script');
+    loader.id = loaderId;
+    loader.type = 'text/javascript';
+    loader.text = `(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){if(document.getElementById("f_w0Zlu5trRGKUknyahcR")){return;}const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="f_w0Zlu5trRGKUknyahcR";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();`;
+    document.body.appendChild(loader);
+    loader.remove();
+    hasLoadedChatbase.current = true;
   }, [isLoading]);
 
   const handleLoadingComplete = () => {

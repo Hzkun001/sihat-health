@@ -71,16 +71,24 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
     }),
     []
   );
-const heroBackgroundStyle = {
-  backgroundColor: "#0D1715",
-  backgroundImage: `
-  radial-gradient(circle at 50% 60%, rgba(34,197,94,0.12) 0%, transparent 70%);
-    radial-gradient(80% 80% at 10% 80%, rgba(34,197,94,0.08), transparent 70%)
-  `,
-  backgroundBlendMode: "screen",
-  backdropFilter: "blur(24px)",
-};
-
+const heroBackgroundStyle: React.CSSProperties = {
+  backgroundColor: '#14a97a',
+  backgroundImage: [
+    // gradasi dasar (smooth emerald → cyan)
+    'linear-gradient(180deg, #18b68a 0%, #22c6a0 40%, #0ea5e9 100%)',
+    // glow lembut di tengah
+    'radial-gradient(60% 60% at 50% 45%, rgba(255,255,255,0.25), transparent 70%)',
+    // emerald lembut di kiri bawah
+    'radial-gradient(70% 70% at 15% 80%, rgba(29,255,112,0.22), transparent 70%)',
+    // cyan highlight kanan atas
+    'radial-gradient(70% 70% at 85% 20%, rgba(14,165,233,0.18), transparent 65%)',
+    // vignette lembut (agar tidak flat)
+    'radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,0.12) 100%)',
+  ].join(', '),
+  backgroundBlendMode: 'normal, screen, screen, screen, normal',
+  position: 'relative',
+  overflow: 'hidden',
+} as const;
   return (
     <section
       ref={sectionRef}
