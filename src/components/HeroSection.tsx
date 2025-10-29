@@ -71,6 +71,15 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
     }),
     []
   );
+const heroBackgroundStyle = {
+  backgroundColor: "#0D1715",
+  backgroundImage: `
+  radial-gradient(circle at 50% 60%, rgba(34,197,94,0.12) 0%, transparent 70%);
+    radial-gradient(80% 80% at 10% 80%, rgba(34,197,94,0.08), transparent 70%)
+  `,
+  backgroundBlendMode: "screen",
+  backdropFilter: "blur(24px)",
+};
 
   return (
     <section
@@ -78,7 +87,7 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
       id="hero"
       // svh = safe viewport height, lebih akurat di mobile
       className="relative min-h-[100svh] flex items-stretch overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)' }}
+      style={heroBackgroundStyle}
     >
       {/* Layer 1: Particles */}
       <div className="absolute inset-0 z-0 pointer-events-none">
