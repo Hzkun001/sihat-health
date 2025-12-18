@@ -861,7 +861,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                 Peta Interaktif Lingkungan
               </h2>
               <p className="text-ink-700 max-w-3xl mx-auto text-[18px]">
-                Visualisasi distribusi fasilitas kesehatan dan indikator kesehatan masyarakat Banjarbaru
+                Visualisasi Lingkungan di Banjarbaru Berbasis Data Spasial
               </p>
             </div>
           </SectionReveal>
