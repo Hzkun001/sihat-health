@@ -187,8 +187,8 @@ export function ReportSection() {
               className="text-ink-900 tracking-tight mb-4"
               style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
             >
-              Laporan Kesehatan Lingkungan
-            </h2>
+              Laporan Masalah Lingkungan
+            </h2> 
             <p className="text-ink-700 max-w-2xl mx-auto" style={{ fontSize: '18px' }}>
               Laporkan masalah lingkungan dan kesehatan publik seperti sampah ilegal, kerusakan jalan, atau polusi
             </p>
