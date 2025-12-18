@@ -33,7 +33,7 @@ export function Footer() {
               className="text-white/70 leading-relaxed" 
               style={{ fontSize: '16px' }}
             >
-              Platform data kesehatan terpadu untuk mewujudkan Banjarbaru yang lebih sehat dan sejahtera.
+              Platform data lingkungan terpadu untuk mewujudkan Banjarbaru yang lebih sehat dan sejahtera.
             </motion.p>
 
             {/* Logo */}
