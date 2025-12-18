@@ -42,7 +42,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
     if (!shouldRender || animData) return;
     onProgress?.(5);
 
-    fetch("/assets/3d/health.json")
+    fetch("/assets/3d/environment.json")
       .then(r => r.json())
       .then((data) => {
         try {
