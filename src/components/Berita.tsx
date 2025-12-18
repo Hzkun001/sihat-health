@@ -152,7 +152,7 @@ export function NewsSlider() {
           className="text-ink-900 mb-2"
           style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, lineHeight: 1.2 }}
         >
-          Berita Kesehatan Terkini
+          Berita Lingkungan Terkini
         </h3>
         <p className="text-ink-700" style={{ fontSize: '16px' }}>
           Update seputar kesehatan masyarakat dan program kesehatan di Banjarbaru
