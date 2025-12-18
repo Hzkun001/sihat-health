@@ -162,7 +162,7 @@ export function AboutSection() {
               className={`inline-block px-4 py-2 bg-brand-mint rounded-full reveal ${chip.visible ? 'is-visible' : ''}`}
             >
               <span className="text-brand-green" style={{ fontSize: '14px', fontWeight: 600 }}>
-                Good Health & Well-Being
+                Sustainable Cities and Settlements
               </span>
             </div>
 
