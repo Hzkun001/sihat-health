@@ -168,7 +168,7 @@ const heroBackgroundStyle: React.CSSProperties = {
             className="text-white tracking-tight leading-tight mb-4 sm:mb-5 lg:mb-6"
             style={{ fontSize: 'clamp(28px, 5vw, 64px)', fontWeight: 700 }}
           >
-            Membangun Masyarakat Sehat <span>di Banjarbaru</span>
+            Membangun Lingkungan Sehat <span>di Banjarbaru</span>
           </motion.h1>
 
           <motion.p
@@ -178,7 +178,7 @@ const heroBackgroundStyle: React.CSSProperties = {
             className="text-white/90 leading-relaxed mb-5 sm:mb-6"
             style={{ fontSize: 'clamp(15px, 1.4vw, 20px)' }}
           >
-            Platform data kesehatan berbasis SDG 3 untuk mendukung kesehatan dan kesejahteraan yang
+            Platform data kesehatan lingkungan berbasis SDG 11 untuk mendukung lingkungan dan kesejahteraan yang
             baik bagi seluruh masyarakat Banjarbaru.
           </motion.p>
 
@@ -209,7 +209,7 @@ const heroBackgroundStyle: React.CSSProperties = {
                          hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
               style={{ fontSize: '15px', fontWeight: 600 }}
             >
-              Peta Kesehatan
+              Peta Interaktif
             </motion.a>
           </motion.div>
         </motion.div>
