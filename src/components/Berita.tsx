@@ -155,7 +155,7 @@ export function NewsSlider() {
           Berita Lingkungan Terkini
         </h3>
         <p className="text-ink-700" style={{ fontSize: '16px' }}>
-          Update seputar kesehatan masyarakat dan program kesehatan di Banjarbaru
+          Update seputar lingkungan dan program lingkungan di Banjarbaru
         </p>
       </motion.div>
 
