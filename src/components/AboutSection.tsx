@@ -16,7 +16,7 @@ interface InfoSlide {
 const infoSlides: InfoSlide[] = [
 {
   id: 1,
-  title: 'Platform Geospasial Kesehatan Banjarbaru',
+  title: 'Platform Geospasial Banjarbaru',
   content: 'SIHAT adalah platform berbasis geospasial yang mengintegrasikan data lingkungan, dan demografi Kota Banjarbaru dalam satu peta interaktif untuk mendukung pencapaian SDG 11:Kota dan Permukiman yang Berkelanjutan.',
 },
 {
