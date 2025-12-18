@@ -48,7 +48,7 @@ export function Footer() {
                 <div className="text-white" style={{ fontSize: '20px', fontWeight: 700 }}>
                   SIHAT
                 </div>
-                <div className="text-white/60 text-xs">Sistem Informasi Kesehatan Terpadu.</div>
+                <div className="text-white/60 text-xs">Sistem Informasi Lingkungan Terpadu.</div>
               </div>
             </div>
           </div>
