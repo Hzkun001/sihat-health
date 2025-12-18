@@ -178,8 +178,8 @@ const heroBackgroundStyle: React.CSSProperties = {
             className="text-white/90 leading-relaxed mb-5 sm:mb-6"
             style={{ fontSize: 'clamp(15px, 1.4vw, 20px)' }}
           >
-           Platform data lingkungan dan kesejahteraan wilayah berbasis SDG 11 untuk mendukung perencanaan 
-           kota Banjarbaru yang inklusif, aman, dan berkelanjutan bagi seluruh masyarakat.
+           Platform informasi lingkungan dan kesejahteraan wilayah berbasis SDG 11 untuk mendukung perencanaan kota Banjarbaru yang inklusif, 
+            aman, dan berkelanjutan bagi seluruh masyarakat.
           </motion.p>
 
           {/* CTA cards responsif, tidak mendorong tinggi berlebih */}
