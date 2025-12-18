@@ -19,19 +19,19 @@ interface LayerCategory {
 }
 
 const layerCategories: LayerCategory[] = [
-  {
-    id: 'health-facilities',
-    title: 'Fasilitas Kesehatan',
-    items: [
-      { id: 'rumahsakit',   label: 'Rumah Sakit', color: '#3498DB' },
-      { id: 'puskesmas',   label: 'Puskesmas', color: '#3de770ff' },
-      { id: 'klinik',     label: 'Klinik', color: '#d843e8ff' },
-      { id: 'apotek',  label: 'Apotek', color: '#090e97ff' },
-      { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
-      { id: 'ambulances',  label: 'Ambulan(Next Update)', color: '#ffffffff' },
-      { id: 'posyandu',    label: 'Posyandu(Next Update)', color: '#ffffffff' },
-    ],
-  },
+  // {
+  //   id: 'health-facilities',
+  //   title: 'Fasilitas Kesehatan',
+  //   items: [
+  //     { id: 'rumahsakit',   label: 'Rumah Sakit', color: '#3498DB' },
+  //     { id: 'puskesmas',   label: 'Puskesmas', color: '#3de770ff' },
+  //     { id: 'klinik',     label: 'Klinik', color: '#d843e8ff' },
+  //     { id: 'apotek',  label: 'Apotek', color: '#090e97ff' },
+  //     { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
+  //     { id: 'ambulances',  label: 'Ambulan(Next Update)', color: '#ffffffff' },
+  //     { id: 'posyandu',    label: 'Posyandu(Next Update)', color: '#ffffffff' },
+  //   ],
+  // },
   {
     id: 'demographics',
     title: 'Data Demografis',
