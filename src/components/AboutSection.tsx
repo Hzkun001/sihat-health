@@ -17,17 +17,17 @@ const infoSlides: InfoSlide[] = [
 {
   id: 1,
   title: 'Platform Geospasial Kesehatan Banjarbaru',
-  content: 'SIHAT adalah platform berbasis geospasial yang mengintegrasikan data kesehatan, lingkungan, dan demografi Kota Banjarbaru dalam satu peta interaktif untuk mendukung pencapaian SDG 3: Good Health and Well-being.',
+  content: 'SIHAT adalah platform berbasis geospasial yang mengintegrasikan data lingkungan, dan demografi Kota Banjarbaru dalam satu peta interaktif untuk mendukung pencapaian SDG 11:Kota dan Permukiman yang Berkelanjutan.',
 },
 {
   id: 2,
   title: 'Pelaporan Masyarakat dan Transparansi Data',
-  content:'Melalui fitur pelaporan berbasis kamera dan koordinat otomatis, masyarakat dapat berpartisipasi langsung melaporkan isu lingkungan dan kesehatan, seperti sampah ilegal atau jalan rusak. Data laporan tersimpan dan divisualisasikan secara real-time di peta.',
+  content:'Melalui fitur pelaporan berbasis kamera dan koordinat otomatis, masyarakat dapat berpartisipasi langsung melaporkan isu lingkungan, seperti sampah ilegal atau jalan rusak. Data laporan tersimpan dan divisualisasikan secara real-time di peta.',
 },
 {
   id: 3,
   title: 'Kolaborasi dan Integrasi Data Real-time',
-  content:'Platform ini mendukung integrasi data lintas sektor, termasuk Dinas Kesehatan, BPS, dan lembaga lingkungan. Dengan visualisasi interaktif, chatbot SIHAT, dan sinkronisasi data real-time, SIHAT memperkuat kolaborasi pemerintah dan masyarakat menuju kota yang sehat dan berkelanjutan.',
+  content:'Platform ini mendukung integrasi data lintas sektor, termasuk BPS dan lembaga lingkungan. Dengan visualisasi interaktif, chatbot SIHAT, dan sinkronisasi data real-time, SIHAT memperkuat kolaborasi pemerintah dan masyarakat menuju kota yang sehat dan berkelanjutan.',
 }
 ];
 
