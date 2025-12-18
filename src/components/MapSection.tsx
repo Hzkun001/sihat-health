@@ -852,7 +852,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           <SectionReveal>
             <div className="text-center mb-12">
               <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-4">
-                <span className="text-brand-green text-[14px] font-semibold">Peta Kesehatan</span>
+                <span className="text-brand-green text-[14px] font-semibold">Peta Lingkungan</span>
               </div>
               <h2
                 className="text-ink-900 tracking-tight mb-4"
