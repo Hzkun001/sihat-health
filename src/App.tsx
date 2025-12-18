@@ -154,10 +154,8 @@ export default function App() {
                 <AboutSection />
                 <MapSectionLoader />
                 <ReportSection />
-                <StatsCardsSection />
                 <StatsIndicatorsSection />
                 <NewsSection />
-                <TeamSection />
                 <CTASection />
               </Suspense>
             </motion.div>
