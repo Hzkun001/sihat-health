@@ -11,17 +11,64 @@ interface Indicator {
   unit: string;
   status: 'tercapai' | 'hampir' | 'belum';
 }
-
 const indicators: Indicator[] = [
-  { name: 'Rasio Kematian Ibu', target: 70, current: 68, unit: 'per 100.000 kelahiran', status: 'tercapai' },
-  { name: 'Angka Kematian Bayi', target: 12, current: 15, unit: 'per 1.000 kelahiran', status: 'hampir' },
-  { name: 'Angka Kematian Balita', target: 25, current: 18, unit: 'per 1.000 kelahiran', status: 'tercapai' },
-  { name: 'Prevalensi HIV/AIDS', target: 0.1, current: 0.08, unit: '% populasi', status: 'tercapai' },
-  { name: 'Prevalensi Tuberkulosis', target: 60, current: 72, unit: 'per 100.000 penduduk', status: 'hampir' },
-  { name: 'Cakupan Imunisasi DPT-HB-Hib3', target: 95, current: 92, unit: '% bayi', status: 'hampir' },
-  { name: 'Akses Layanan Kesehatan Esensial', target: 80, current: 85, unit: '% penduduk', status: 'tercapai' },
-  { name: 'Rasio Tenaga Kesehatan', target: 4.5, current: 5.2, unit: 'per 1.000 penduduk', status: 'tercapai' },
-];
+  {
+    name: 'Akses Air Minum Layak',
+    target: 100,
+    current: 92,
+    unit: '% rumah tangga',
+    status: 'hampir',
+  },
+  {
+    name: 'Akses Sanitasi Layak',
+    target: 100,
+    current: 88,
+    unit: '% rumah tangga',
+    status: 'hampir',
+  },
+  {
+    name: 'Kawasan Permukiman Kumuh',
+    target: 0,
+    current: 6,
+    unit: '% luas wilayah',
+    status: 'hampir',
+  },
+  {
+    name: 'Akses Transportasi Umum',
+    target: 90,
+    current: 75,
+    unit: '% penduduk',
+    status: 'hampir',
+  },
+  {
+    name: 'Ruang Terbuka Hijau Perkotaan',
+    target: 30,
+    current: 22,
+    unit: '% luas kota',
+    status: 'hampir',
+  },
+  {
+    name: 'Pengelolaan Sampah Terlayani',
+    target: 100,
+    current: 85,
+    unit: '% timbulan sampah',
+    status: 'hampir',
+  },
+  {
+    name: 'Kepadatan Penduduk Terkelola',
+    target: 150,
+    current: 165,
+    unit: 'jiwa per hektar',
+    status: 'belum',
+  },
+  {
+    name: 'Ketersediaan Infrastruktur Dasar',
+    target: 100,
+    current: 90,
+    unit: '% wilayah',
+    status: 'hampir',
+  },
+];;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -123,10 +170,10 @@ export function StatsIndicatorsSection() {
               className="text-ink-900 tracking-tight mb-4"
               style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
             >
-              Indikator SDG 3 Banjarbaru
+              Indikator SDG 11 Banjarbaru
             </h2>
             <p className="text-ink-700 max-w-3xl mx-auto" style={{ fontSize: '18px' }}>
-              Pencapaian target kesehatan berdasarkan Sustainable Development Goals 2024
+              Pencapaian target Lingkungan Sehat berdasarkan Sustainable Development Goals 2024
             </p>
           </div>
         </SectionReveal>
