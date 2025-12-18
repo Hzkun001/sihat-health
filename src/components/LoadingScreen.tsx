@@ -199,7 +199,7 @@ export function LoadingScreen({
         maxWidth: 'min(520px, 90vw)',
       }}
     >
-      Masyarakat yang Lebih Sehat.
+      Lingkungan yang Lebih Sehat.
     </motion.p>
 
     <div className="flex flex-col items-center gap-4">
