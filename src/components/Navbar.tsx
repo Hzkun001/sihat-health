@@ -9,7 +9,6 @@ const menuItems = [
   { label: 'Lapor', href: '#laporan' },
   { label: 'Statistik', href: '#statistik' },
   { label: 'Berita', href: '#berita' },
-  { label: 'Tim', href: '#tim' },
   { label: 'Kontak', href: '#kontak' },
 ];
 
@@ -155,7 +154,7 @@ export function Navbar() {
                   className="text-ink-500 hidden lg:block"
                   style={{ fontSize: '10px', fontWeight: 400, letterSpacing: '0.05em', marginTop: '-2px' }}
                 >
-                  Sistem Informasi Lingkungan dan Kesehatan Terpadu
+                  Sistem Informasi Kesehatan Lingkungan Terpadu
                 </span>
               </div>
             </a>
