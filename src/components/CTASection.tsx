@@ -73,15 +73,15 @@ export function CTASection() {
               className="mb-6 tracking-tight text-white"
               style={{ fontSize: 'clamp(32px, 4vw, 56px)', fontWeight: 700, lineHeight: 1.2 }}
             >
-              Ayo Kolaborasi untuk Kesehatan yang Lebih Baik
+              Ayo Kolaborasi untuk Lingkungan yang Lebih Baik
             </h2>
 
             <p
               className="mb-12 leading-relaxed text-white/90"
               style={{ fontSize: 'clamp(16px, 1.5vw, 20px)' }}
             >
-              Bergabunglah dengan kami dalam mewujudkan masyarakat Banjarbaru yang lebih sehat.
-              Mari bersama-sama mengoptimalkan data kesehatan untuk pengambilan keputusan yang lebih baik.
+              Bergabunglah dengan kami dalam mewujudkan linkungan]a Banjarbaru yang lebih sehat.
+              Mari bersama-sama mengoptimalkan data lingkungan untuk pengambilan keputusan yang lebih baik.
             </p>
 
             {/* CTA buttons */}
