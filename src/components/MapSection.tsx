@@ -794,7 +794,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
         registerAllInteractions();
 
-        void loadAndShowLayer('rumahsakit', false);
+        void loadAndShowLayer('rumahsakit', true);
 
         if (map.isStyleLoaded()) map.once('idle', () => setMapLoaded(true));
         else map.once('load', () => map.once('idle', () => setMapLoaded(true)));
