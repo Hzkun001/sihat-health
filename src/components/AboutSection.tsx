@@ -181,8 +181,8 @@ export function AboutSection() {
               <div className="relative rounded-2xl p-12 shadow-lg">
                 {/* Pastikan width/height supaya anti-CLS (ganti sesuai ukuran asli) */}
                 <img
-                  src="/assets/geoportal.png"
-                  alt="SDG 3 Diagram"
+                  src="/assets/sdg11.jpg"
+                  alt="SDG 11 Diagram"
                   width="560" height="540"
                   loading="lazy" decoding="async"
                   className="w-full h-auto object-contain"
