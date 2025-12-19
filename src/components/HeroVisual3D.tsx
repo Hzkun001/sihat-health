@@ -130,7 +130,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
             onPointerLeave={handlePointerLeave}
             className="
               will-change-transform relative
-              aspect-[16/9] w-full max-w-[1120px]
+              aspect-[16/9] w-full max-w-[1400px]
               flex items-center justify-center
               bg-transparent shadow-none rounded-none
             "
