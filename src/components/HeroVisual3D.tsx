@@ -17,7 +17,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
   const MAX_TILT = 12;
   const DEAD_ZONE = 0.16;
   const LERP = 0.12;
-  const MAX_SCALE = 1.06;
+  const MAX_SCALE = 1.12;
 
   const target = useRef({ rx: 0, ry: 0, s: 1 });
   const current = useRef({ rx: 0, ry: 0, s: 1 });
@@ -141,7 +141,7 @@ export default memo(function HeroVisual3D({ onReady, onProgress }: HeroVisual3DP
                 animationData={animData}
                 loop
                 autoplay
-                className="w-[72%] max-w-[720px] h-auto"
+                className="w-[90%] max-w-[1000px] h-auto"
                 rendererSettings={{
                   preserveAspectRatio: "xMidYMid meet",
                   progressiveLoad: true,
