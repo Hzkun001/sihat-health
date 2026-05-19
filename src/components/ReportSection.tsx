@@ -21,7 +21,6 @@ export function ReportSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Get user's current GPS coordinates on component mount
   useEffect(() => {
     getCurrentLocation();
   }, []);
@@ -68,7 +67,6 @@ export function ReportSection() {
         setLocationError(errorMessage);
         setIsLoadingLocation(false);
         
-        // Set default coordinates for Banjarbaru as fallback
         const defaultCoords = {
           latitude: -3.4543,
           longitude: 114.8419,
@@ -79,7 +77,7 @@ export function ReportSection() {
       {
         enableHighAccuracy: false,
         timeout: 10000,
-        maximumAge: 300000, // Accept cached position up to 5 minutes old
+        maximumAge: 300000,
       }
     );
   };
@@ -105,14 +103,12 @@ export function ReportSection() {
     setCoordinateInput(value);
     setCoordinateError(null);
 
-    // Parse coordinate input (format: "latitude, longitude")
     const parts = value.split(',').map(p => p.trim());
     
     if (parts.length === 2) {
       const lat = parseFloat(parts[0]);
       const lng = parseFloat(parts[1]);
 
-      // Validate latitude and longitude ranges
       if (!isNaN(lat) && !isNaN(lng)) {
         if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
           setCoordinates({ latitude: lat, longitude: lng });
@@ -126,7 +122,6 @@ export function ReportSection() {
         setCoordinates(null);
       }
     } else if (value.trim() === '') {
-      // Allow empty for optional field
       setCoordinates(null);
       setCoordinateError(null);
     } else {
@@ -144,13 +139,11 @@ export function ReportSection() {
 
     setIsSubmitting(true);
 
-    // Simulate API submission
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     setIsSubmitting(false);
     setShowSuccess(true);
 
-    // Reset form after success
     setTimeout(() => {
       setSelectedImage(null);
       setDescription('');
@@ -165,64 +158,51 @@ export function ReportSection() {
   };
 
   return (
-    <section id="laporan" className="relative py-24 overflow-hidden bg-white">
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: '#FFFFFF',
-        }}
-      />
-
+    <section id="laporan" className="relative py-24 sm:py-28 lg:py-32 overflow-hidden" style={{ backgroundColor: 'var(--surface-0)' }}>
       <div className="relative max-w-3xl mx-auto px-6 lg:px-8">
         <SectionReveal>
           {/* Section Header */}
           <div className="text-center mb-12">
-            <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-4">
-              <span className="text-brand-green" style={{ fontSize: '14px', fontWeight: 600 }}>
+            <div className="inline-flex items-center px-3.5 py-1.5 rounded-full mb-4" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--surface-200)' }}>
+              <span style={{ color: 'var(--brand-green)', fontSize: '14px', fontWeight: 600 }}>
                 Partisipasi Warga
               </span>
             </div>
             <h2
-              className="text-ink-900 tracking-tight mb-4"
-              style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
+              className="tracking-tight mb-4"
+              style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}
             >
               Laporan Masalah Lingkungan
             </h2> 
-            <p className="text-ink-700 max-w-2xl mx-auto" style={{ fontSize: '18px' }}>
+            <p className="max-w-2xl mx-auto" style={{ fontSize: '18px', color: 'var(--ink-500)' }}>
               Laporkan masalah lingkungan dan kesehatan publik seperti sampah ilegal, kerusakan jalan, atau polusi
             </p>
           </div>
         </SectionReveal>
 
         <SectionReveal delay={0.2}>
-          {/* Glassmorphism Card */}
+          {/* Form Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{
-              duration: 0.8,
-              ease: [0.25, 0.8, 0.25, 1],
-            }}
-            className="relative rounded-3xl overflow-hidden"
+            transition={{ duration: 0.8, ease: [0.25, 0.8, 0.25, 1] }}
+            className="relative rounded-2xl overflow-hidden"
             style={{
-              background: 'rgba(255, 255, 255, 0.7)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
+              backgroundColor: 'var(--surface-0)',
+              border: '1px solid var(--surface-200)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div className="p-6 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Image Upload Section */}
                 <div className="space-y-4">
-                  <label className="flex items-center gap-2 text-ink-900" style={{ fontSize: '16px', fontWeight: 600 }}>
-                    <Camera className="text-brand-green" size={20} strokeWidth={2.5} />
+                  <label className="flex items-center gap-2" style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink-900)' }}>
+                    <Camera style={{ color: 'var(--brand-green)' }} size={20} strokeWidth={2.5} />
                     Upload Foto
                   </label>
 
-                  {/* Image Preview */}
                   <AnimatePresence mode="wait">
                     {selectedImage ? (
                       <motion.div
@@ -231,10 +211,9 @@ export function ReportSection() {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="relative rounded-2xl overflow-hidden"
+                        className="relative rounded-xl overflow-hidden"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.6)',
-                          border: '2px solid rgba(26, 163, 81, 0.2)',
+                          border: '1px solid var(--surface-200)',
                           aspectRatio: '16/9',
                         }}
                       >
@@ -248,10 +227,11 @@ export function ReportSection() {
                           onClick={handleRemoveImage}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                          className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                           aria-label="Hapus foto"
                         >
-                          <X size={20} className="text-ink-700" strokeWidth={2.5} />
+                          <X size={20} style={{ color: 'var(--ink-700)' }} strokeWidth={2.5} />
                         </motion.button>
                       </motion.div>
                     ) : (
@@ -261,35 +241,33 @@ export function ReportSection() {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="grid grid-cols-2 sm:grid-cols-2 gap-3"
+                        className="grid grid-cols-2 gap-3"
                       >
                         {/* Upload from Files */}
                         <motion.button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(26, 163, 81, 0.15)' }}
+                          whileHover={{ y: -3 }}
                           whileTap={{ scale: 0.98 }}
                           transition={{ duration: 0.2 }}
-                          className="relative rounded-2xl p-8 flex flex-col items-center justify-center gap-3 overflow-hidden"
+                          className="relative rounded-xl p-6 flex flex-col items-center justify-center gap-3 overflow-hidden"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(26, 163, 81, 0.05) 0%, rgba(90, 200, 250, 0.05) 100%)',
-                            border: '2px dashed rgba(26, 163, 81, 0.3)',
-                            minHeight: '160px',
+                            border: '2px dashed var(--surface-200)',
+                            backgroundColor: 'var(--surface-alt)',
+                            minHeight: '140px',
                           }}
                         >
                           <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center"
-                            style={{
-                              background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                            }}
+                            className="w-12 h-12 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: 'var(--brand-mint)' }}
                           >
-                            <Upload size={24} className="text-white" strokeWidth={2.5} />
+                            <Upload size={22} style={{ color: 'var(--brand-green)' }} strokeWidth={2.5} />
                           </div>
                           <div className="text-center">
-                            <p className="text-ink-900 mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink-900)' }}>
                               Upload dari File
                             </p>
-                            <p className="text-ink-500" style={{ fontSize: '14px' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--ink-500)' }}>
                               JPG, PNG, atau HEIC
                             </p>
                           </div>
@@ -299,29 +277,27 @@ export function ReportSection() {
                         <motion.button
                           type="button"
                           onClick={() => cameraInputRef.current?.click()}
-                          whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(90, 200, 250, 0.15)' }}
+                          whileHover={{ y: -3 }}
                           whileTap={{ scale: 0.98 }}
                           transition={{ duration: 0.2 }}
-                          className="relative rounded-2xl p-8 flex flex-col items-center justify-center gap-3 overflow-hidden"
+                          className="relative rounded-xl p-6 flex flex-col items-center justify-center gap-3 overflow-hidden"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(90, 200, 250, 0.05) 0%, rgba(26, 163, 81, 0.05) 100%)',
-                            border: '2px dashed rgba(90, 200, 250, 0.3)',
-                            minHeight: '160px',
+                            border: '2px dashed var(--surface-200)',
+                            backgroundColor: 'var(--surface-alt)',
+                            minHeight: '140px',
                           }}
                         >
                           <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center"
-                            style={{
-                              background: 'linear-gradient(135deg, #5AC8FA 0%, #1BA351 100%)',
-                            }}
+                            className="w-12 h-12 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: 'var(--brand-mint)' }}
                           >
-                            <Camera size={24} className="text-white" strokeWidth={2.5} />
+                            <Camera size={22} style={{ color: 'var(--brand-green)' }} strokeWidth={2.5} />
                           </div>
                           <div className="text-center">
-                            <p className="text-ink-900 mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink-900)' }}>
                               Ambil Foto
                             </p>
-                            <p className="text-ink-500" style={{ fontSize: '14px' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--ink-500)' }}>
                               Gunakan kamera
                             </p>
                           </div>
@@ -352,47 +328,43 @@ export function ReportSection() {
 
                 {/* Description Input */}
                 <div className="space-y-4">
-                  <label className="flex items-center gap-2 text-ink-900" style={{ fontSize: '16px', fontWeight: 600 }}>
-                    <FileText className="text-brand-green" size={20} strokeWidth={2.5} />
+                  <label className="flex items-center gap-2" style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink-900)' }}>
+                    <FileText style={{ color: 'var(--brand-green)' }} size={20} strokeWidth={2.5} />
                     Keterangan
                   </label>
-                  <motion.div
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Deskripsikan masalah yang Anda temukan (contoh: Tumpukan sampah di pinggir jalan, air tergenang, dll)"
-                      rows={4}
-                      className="w-full px-5 py-4 rounded-2xl resize-none focus:outline-none transition-all duration-300"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        border: '2px solid rgba(26, 163, 81, 0.15)',
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = 'rgba(26, 163, 81, 0.4)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(26, 163, 81, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(26, 163, 81, 0.15)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      required
-                    />
-                  </motion.div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Deskripsikan masalah yang Anda temukan (contoh: Tumpukan sampah di pinggir jalan, air tergenang, dll)"
+                    rows={4}
+                    className="w-full px-5 py-4 rounded-xl resize-none transition-all duration-300 outline-none"
+                    style={{
+                      backgroundColor: 'var(--surface-100)',
+                      border: '2px solid transparent',
+                      fontSize: '16px',
+                      lineHeight: '1.6',
+                      color: 'var(--ink-900)',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgba(5, 150, 105, 0.3)';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(5, 150, 105, 0.08)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'transparent';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                    required
+                  />
                 </div>
 
                 {/* GPS Coordinates */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 text-ink-900" style={{ fontSize: '16px', fontWeight: 600 }}>
-                      <MapPin className="text-brand-blue" size={20} strokeWidth={2.5} />
+                    <label className="flex items-center gap-2" style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink-900)' }}>
+                      <MapPin style={{ color: 'var(--brand-blue)' }} size={20} strokeWidth={2.5} />
                       Koordinat Lokasi
                     </label>
-                    <span className="text-ink-500" style={{ fontSize: '13px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--ink-500)' }}>
                       Otomatis / Manual
                     </span>
                   </div>
@@ -405,31 +377,31 @@ export function ReportSection() {
                         onChange={(e) => handleCoordinateChange(e.target.value)}
                         disabled={isLoadingLocation}
                         placeholder="Contoh: -3.454300, 114.841900"
-                        className="w-full px-5 py-4 rounded-2xl transition-all duration-300"
+                        className="w-full px-5 py-4 rounded-xl transition-all duration-300 outline-none"
                         style={{
-                          background: isLoadingLocation ? 'rgba(100, 116, 139, 0.08)' : 'rgba(255, 255, 255, 0.8)',
+                          backgroundColor: isLoadingLocation ? 'var(--surface-200)' : 'var(--surface-100)',
                           border: coordinateError 
                             ? '2px solid rgba(239, 68, 68, 0.4)' 
-                            : '2px solid rgba(90, 200, 250, 0.15)',
-                          color: isLoadingLocation ? '#64748B' : '#0F172A',
+                            : '2px solid transparent',
+                          color: isLoadingLocation ? 'var(--ink-500)' : 'var(--ink-900)',
                           fontSize: '15px',
                           cursor: isLoadingLocation ? 'not-allowed' : 'text',
                         }}
                         onFocus={(e) => {
                           if (!isLoadingLocation && !coordinateError) {
-                            e.target.style.borderColor = 'rgba(90, 200, 250, 0.4)';
-                            e.target.style.boxShadow = '0 4px 12px rgba(90, 200, 250, 0.1)';
+                            e.target.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
                           }
                         }}
                         onBlur={(e) => {
                           if (!coordinateError) {
-                            e.target.style.borderColor = 'rgba(90, 200, 250, 0.15)';
+                            e.target.style.borderColor = 'transparent';
                             e.target.style.boxShadow = 'none';
                           }
                         }}
                       />
                       {!isLoadingLocation && !coordinateError && (
-                        <p className="mt-2 text-ink-500 flex items-center gap-1.5" style={{ fontSize: '12px' }}>
+                        <p className="mt-2 flex items-center gap-1.5" style={{ fontSize: '12px', color: 'var(--ink-500)' }}>
                           <svg
                             width="14"
                             height="14"
@@ -457,11 +429,11 @@ export function ReportSection() {
                       className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
                       style={{
                         background: isLoadingLocation
-                          ? 'rgba(100, 116, 139, 0.2)'
-                          : 'linear-gradient(135deg, #5AC8FA 0%, #1BA351 100%)',
+                          ? 'var(--surface-200)'
+                          : 'var(--brand-blue)',
                         boxShadow: isLoadingLocation 
                           ? 'none' 
-                          : '0 4px 12px rgba(90, 200, 250, 0.3)',
+                          : '0 4px 12px rgba(59, 130, 246, 0.25)',
                         cursor: isLoadingLocation ? 'not-allowed' : 'pointer',
                       }}
                       aria-label="Deteksi lokasi otomatis"
@@ -483,11 +455,11 @@ export function ReportSection() {
                       animate={{ opacity: 1, y: 0 }}
                       className="p-3 rounded-xl"
                       style={{
-                        background: 'rgba(254, 202, 202, 0.3)',
+                        background: 'rgba(254, 202, 202, 0.2)',
                         border: '1px solid rgba(239, 68, 68, 0.2)',
                       }}
                     >
-                      <p className="text-red-700 flex items-start gap-2" style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                      <p className="text-red-600 flex items-start gap-2" style={{ fontSize: '13px', lineHeight: '1.5' }}>
                         <svg
                           width="16"
                           height="16"
@@ -515,7 +487,7 @@ export function ReportSection() {
                       animate={{ opacity: 1, y: 0 }}
                       className="p-3 rounded-xl"
                       style={{
-                        background: 'rgba(254, 243, 199, 0.4)',
+                        background: 'rgba(254, 243, 199, 0.3)',
                         border: '1px solid rgba(245, 158, 11, 0.2)',
                       }}
                     >
@@ -550,27 +522,33 @@ export function ReportSection() {
                   whileHover={
                     !selectedImage || !description || isSubmitting
                       ? {}
-                      : { scale: 1.02, y: -2 }
+                      : { scale: 1.01, y: -1 }
                   }
                   whileTap={
                     !selectedImage || !description || isSubmitting ? {} : { scale: 0.98 }
                   }
                   transition={{ duration: 0.2 }}
-                  className="w-full py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300"
+                  className="w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-300"
                   style={{
-                    background:
+                    backgroundColor:
                       !selectedImage || !description || isSubmitting
-                        ? 'rgba(100, 116, 139, 0.3)'
-                        : 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
+                        ? 'var(--surface-200)'
+                        : 'var(--brand-green)',
+                    color:
+                      !selectedImage || !description || isSubmitting
+                        ? 'var(--ink-500)'
+                        : '#ffffff',
                     boxShadow:
                       !selectedImage || !description || isSubmitting
                         ? 'none'
-                        : '0 8px 24px rgba(26, 163, 81, 0.3)',
+                        : '0 4px 16px rgba(5, 150, 105, 0.25)',
                     cursor:
                       !selectedImage || !description || isSubmitting
                         ? 'not-allowed'
                         : 'pointer',
                     opacity: isSubmitting ? 0.7 : 1,
+                    fontSize: '16px',
+                    fontWeight: 600,
                   }}
                 >
                   {isSubmitting ? (
@@ -580,16 +558,12 @@ export function ReportSection() {
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                         className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                       />
-                      <span className="text-white" style={{ fontSize: '17px', fontWeight: 600 }}>
-                        Mengirim...
-                      </span>
+                      <span>Mengirim...</span>
                     </>
                   ) : (
                     <>
-                      <Send size={20} className="text-white" strokeWidth={2.5} />
-                      <span className="text-white" style={{ fontSize: '17px', fontWeight: 600 }}>
-                        Kirim Laporan
-                      </span>
+                      <Send size={20} strokeWidth={2.5} />
+                      <span>Kirim Laporan</span>
                     </>
                   )}
                 </motion.button>
@@ -608,8 +582,8 @@ export function ReportSection() {
               transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
               className="mt-6 p-6 rounded-2xl flex items-center gap-4"
               style={{
-                background: 'linear-gradient(135deg, rgba(26, 163, 81, 0.15) 0%, rgba(90, 200, 250, 0.15) 100%)',
-                border: '2px solid rgba(26, 163, 81, 0.3)',
+                backgroundColor: 'var(--brand-mint)',
+                border: '1px solid var(--brand-green-light)',
               }}
             >
               <motion.div
@@ -617,9 +591,7 @@ export function ReportSection() {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                 className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)',
-                }}
+                style={{ backgroundColor: 'var(--brand-green)' }}
               >
                 <svg
                   width="24"
@@ -635,10 +607,10 @@ export function ReportSection() {
                 </svg>
               </motion.div>
               <div>
-                <p className="text-ink-900 mb-1" style={{ fontSize: '17px', fontWeight: 600 }}>
+                <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--ink-900)' }}>
                   Laporan Berhasil Dikirim!
                 </p>
-                <p className="text-ink-700" style={{ fontSize: '15px' }}>
+                <p style={{ fontSize: '15px', color: 'var(--ink-700)' }}>
                   Terima kasih atas partisipasi Anda dalam menjaga kesehatan lingkungan Banjarbaru.
                 </p>
               </div>
@@ -653,13 +625,13 @@ export function ReportSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
-            className="mt-8 p-5 rounded-2xl"
+            className="mt-8 p-5 rounded-xl text-center"
             style={{
-              background: 'rgba(255, 255, 255, 0.5)',
-              border: '1px solid rgba(26, 163, 81, 0.1)',
+              backgroundColor: 'var(--surface-alt)',
+              border: '1px solid var(--surface-200)',
             }}
           >
-            <p className="text-ink-700 text-center" style={{ fontSize: '14px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--ink-500)' }}>
               <span style={{ fontWeight: 600 }}>Catatan:</span> Laporan Anda akan diintegrasikan ke dalam peta
               kesehatan real-time SIHAT untuk membantu monitoring dan respon cepat terhadap isu kesehatan lingkungan
               di Banjarbaru. {locationError && 'Koordinat GPS bersifat opsional jika lokasi tidak dapat diakses.'}

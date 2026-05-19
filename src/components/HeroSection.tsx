@@ -10,8 +10,8 @@ const HeroVisual3D = lazy(() => import('./HeroVisual3D'));
 function HeroVisual3DFallback() {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-black/10 backdrop-blur-sm">
-        <span className="animate-pulse text-xs text-black/50">Memuat visual…</span>
+      <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-white/5 backdrop-blur-sm">
+        <span className="animate-pulse text-xs text-white/50">Memuat visual...</span>
       </div>
     </div>
   );
@@ -57,8 +57,8 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
 
   const wavesProps = useMemo(
     () => ({
-      lineColor: '#ffffff36',
-      backgroundColor: 'rgba(255,255,255,0.18)',
+      lineColor: 'rgba(255,255,255,0.12)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
       waveSpeedX: 0.012,
       waveSpeedY: 0.006,
       waveAmpX: 14,
@@ -71,29 +71,21 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
     }),
     []
   );
-const heroBackgroundStyle: React.CSSProperties = {
-  backgroundColor: '#14a97a',
-  backgroundImage: [
-    // gradasi dasar (smooth emerald → cyan)
-    'linear-gradient(180deg, #18b68a 0%, #22c6a0 40%, #0ea5e9 100%)',
-    // glow lembut di tengah
-    'radial-gradient(60% 60% at 50% 45%, rgba(255,255,255,0.25), transparent 70%)',
-    // emerald lembut di kiri bawah
-    'radial-gradient(70% 70% at 15% 80%, rgba(29,255,112,0.22), transparent 70%)',
-    // cyan highlight kanan atas
-    'radial-gradient(70% 70% at 85% 20%, rgba(14,165,233,0.18), transparent 65%)',
-    // vignette lembut (agar tidak flat)
-    'radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,0.12) 100%)',
-  ].join(', '),
-  backgroundBlendMode: 'normal, screen, screen, screen, normal',
-  position: 'relative',
-  overflow: 'hidden',
-} as const;
+
+  const heroBackgroundStyle: React.CSSProperties = {
+    background: [
+      'linear-gradient(180deg, var(--hero-bg-start) 0%, var(--hero-bg-end) 100%)',
+      'radial-gradient(ellipse at 50% 50%, rgba(5, 150, 105, 0.15), transparent 70%)',
+      'radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.08), transparent 60%)',
+    ].join(', '),
+    position: 'relative',
+    overflow: 'hidden',
+  } as const;
+
   return (
     <section
       ref={sectionRef}
       id="hero"
-      // svh = safe viewport height, lebih akurat di mobile
       className="relative min-h-[100svh] flex items-stretch overflow-hidden"
       style={heroBackgroundStyle}
     >
@@ -109,16 +101,13 @@ const heroBackgroundStyle: React.CSSProperties = {
         </div>
       )}
 
-      {/* Layer 3: Konten */}
+      {/* Layer 3: Content */}
       <div
         className="
           relative z-20 w-full
           grid
-          // Mobile: stack, 3D duluan lalu teks; Desktop: 2 kolom
           grid-cols-1 lg:grid-cols-2
-          // Tinggi penuh viewport mobile, relax di desktop
           min-h-[100svh]
-          // Padding responsif
           px-4 sm:px-6 lg:px-8
           pt-[13svh] pb-[11svh] sm:pt-[10svh] sm:pb-[12svh] lg:py-32
           gap-6 sm:gap-8 lg:gap-12
@@ -126,7 +115,7 @@ const heroBackgroundStyle: React.CSSProperties = {
           max-w-7xl mx-auto
         "
       >
-        {/* --- 3D BLOCK (Mobile di atas) --- */}
+        {/* 3D BLOCK (Mobile first) */}
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -138,8 +127,8 @@ const heroBackgroundStyle: React.CSSProperties = {
             min-h-[280px] xs:min-h-[320px] sm:min-h-[380px] md:min-h-[440px] lg:h-[600px]
             rounded-2xl overflow-hidden
             flex items-center justify-center
-            shadow-xl
             bg-white/5
+            border border-white/10
           "
         >
           <Suspense fallback={<HeroVisual3DFallback />}>
@@ -147,7 +136,7 @@ const heroBackgroundStyle: React.CSSProperties = {
           </Suspense>
         </motion.div>
 
-        {/* --- TEKS BLOCK (Mobile di bawah) --- */}
+        {/* TEXT BLOCK (Mobile below) */}
         <motion.div
           initial={{ opacity: 0, y: 32, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -158,31 +147,30 @@ const heroBackgroundStyle: React.CSSProperties = {
             staggerChildren: 0.08,
             delayChildren: 0.2,
           }}
-          // Mobile: order-2 (di bawah), Desktop: kolom kiri
           className="order-2 lg:order-1 relative"
         >
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="text-white tracking-tight leading-tight mb-4 sm:mb-5 lg:mb-6"
-            style={{ fontSize: 'clamp(28px, 5vw, 64px)', fontWeight: 700 }}
+            className="text-white mb-4 sm:mb-5 lg:mb-6"
+            style={{ fontSize: 'clamp(32px, 5.5vw, 72px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.1 }}
           >
-            Membangun Lingkungan Sehat <span>di Banjarbaru</span>
+            Membangun Lingkungan Sehat <span className="text-white/90">di Banjarbaru</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.08 }}
-            className="text-white/90 leading-relaxed mb-5 sm:mb-6"
-            style={{ fontSize: 'clamp(15px, 1.4vw, 20px)' }}
+            className="leading-relaxed mb-5 sm:mb-6"
+            style={{ fontSize: 'clamp(15px, 1.4vw, 20px)', color: 'rgba(255,255,255,0.7)' }}
           >
            Platform informasi lingkungan dan kesejahteraan wilayah berbasis SDG 11 untuk mendukung perencanaan kota Banjarbaru yang inklusif, 
             aman, dan berkelanjutan bagi seluruh masyarakat.
           </motion.p>
 
-          {/* CTA cards responsif, tidak mendorong tinggi berlebih */}
+          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -194,9 +182,14 @@ const heroBackgroundStyle: React.CSSProperties = {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-6 sm:px-7 lg:px-8 py-3.5 sm:py-4
-                         bg-white text-brand-green rounded-xl transition-all duration-300
-                         shadow-lg hover:shadow-xl"
-              style={{ fontSize: '15px', fontWeight: 600 }}
+                         rounded-xl transition-all duration-300"
+              style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                backgroundColor: 'var(--brand-green)',
+                color: '#ffffff',
+                boxShadow: '0 4px 16px rgba(5, 150, 105, 0.3)',
+              }}
             >
               Laporkan Masalah
             </motion.a>
@@ -205,9 +198,16 @@ const heroBackgroundStyle: React.CSSProperties = {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-6 sm:px-7 lg:px-8 py-3.5 sm:py-4
-                         bg-white/10 text-white border-2 border-white/30 rounded-xl
-                         hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
-              style={{ fontSize: '15px', fontWeight: 600 }}
+                         text-white rounded-xl
+                         transition-all duration-300"
+              style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; }}
             >
               Peta Interaktif
             </motion.a>
@@ -223,14 +223,15 @@ const heroBackgroundStyle: React.CSSProperties = {
         className="absolute bottom-2 sm:bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center space-y-1.5 sm:space-y-2"
       >
         <motion.span
-          className="text-white/70 text-xs sm:text-sm"
-          animate={{ opacity: [0.5, 1, 0.5] }}
+          className="text-xs sm:text-sm"
+          style={{ color: 'rgba(255,255,255,0.5)' }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           Scroll to explore
         </motion.span>
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
-          <ChevronDown className="text-white/70" size={22} />
+          <ChevronDown style={{ color: 'rgba(255,255,255,0.5)' }} size={22} />
         </motion.div>
       </motion.div>
     </section>
