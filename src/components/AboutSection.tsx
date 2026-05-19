@@ -1,7 +1,5 @@
 // src/components/aboutsection.tsx
 import { useState, useCallback, useMemo } from 'react';
-// NOTE: kita tetap bisa pakai motion untuk micro-animasi,
-// tapi kita kurangi whileInView yang terus aktif.
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRevealOnce } from '../hooks/useRevealOnce';
@@ -31,7 +29,6 @@ const infoSlides: InfoSlide[] = [
 }
 ];
 
-// ---- Slider Info (tetap ringan, tanpa whileInView berulang) ----
 function AboutInfoSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const totalSlides = infoSlides.length;
@@ -64,14 +61,14 @@ function AboutInfoSlider() {
             aria-label={`${currentSlide + 1} dari ${totalSlides}`}
           >
             <h2
-              className="text-ink-900 mb-4"
-              style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, lineHeight: 1.2 }}
+              className="mb-4"
+              style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--ink-900)' }}
             >
               {slide.title}
             </h2>
             <p
-              className="text-ink-700 leading-relaxed"
-              style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 400, lineHeight: 1.7 }}
+              className="leading-relaxed"
+              style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 400, lineHeight: 1.7, color: 'var(--ink-700)' }}
             >
               {slide.content}
             </p>
@@ -84,20 +81,20 @@ function AboutInfoSlider() {
         <div className="flex items-center gap-2">
           <button
             onClick={prevSlide}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition-all duration-200 hover:bg-brand-mint border border-gray-200"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{ backgroundColor: 'var(--surface-0)', border: '1px solid var(--surface-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             aria-label="Sebelumnya"
           >
-            <ChevronLeft size={20} className="text-ink-700" strokeWidth={2.5} />
+            <ChevronLeft size={20} style={{ color: 'var(--ink-700)' }} strokeWidth={2.5} />
           </button>
 
           <button
             onClick={nextSlide}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition-all duration-200 hover:bg-brand-mint border border-gray-200"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{ backgroundColor: 'var(--surface-0)', border: '1px solid var(--surface-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             aria-label="Berikutnya"
           >
-            <ChevronRight size={20} className="text-ink-700" strokeWidth={2.5} />
+            <ChevronRight size={20} style={{ color: 'var(--ink-700)' }} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -116,7 +113,7 @@ function AboutInfoSlider() {
                 style={{
                   width: active ? '24px' : '8px',
                   height: '8px',
-                  backgroundColor: active ? '#1BA351' : '#D1EDE3',
+                  backgroundColor: active ? 'var(--brand-green)' : 'var(--surface-200)',
                 }}
               />
             );
@@ -128,58 +125,40 @@ function AboutInfoSlider() {
 }
 
 export function AboutSection() {
-  // Reveal sekali jalan untuk chip, diagram, dan container
   const chip = useRevealOnce();
   const diagramDesktop = useRevealOnce();
   const diagramMobile = useRevealOnce();
 
   return (
-    <section id="tentang" className="relative pt-14 pb-2 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
-      {/* Wave Divider (sekali jalan via CSS reveal) */}
-      <div className="absolute top-0 left-0 right-0 h-24 -translate-y-full">
-        <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-          <path
-            d="M0,0 C300,80 600,80 900,0 C1050,40 1150,40 1200,0 L1200,120 L0,120 Z"
-            fill="#D8F3DC" opacity="0.3"
-          />
-        </svg>
-      </div>
-
-      {/* Background gradient (non-interaktif, no motion) */}
-      <div
-        className="absolute inset-0 opacity-50"
-        style={{ background: 'linear-gradient(180deg, #E6F8EF 0%, #F9FCFF 100%)' }}
-        aria-hidden="true"
-      />
-
+    <section id="tentang" className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-24 overflow-hidden" style={{ backgroundColor: 'var(--surface-0)' }}>
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left - Text Content */}
           <div className="space-y-6">
-            {/* Chip: gunakan CSS reveal sekali jalan */}
+            {/* Chip */}
             <div
               ref={chip.ref as any}
-              className={`inline-block px-4 py-2 bg-brand-mint rounded-full reveal ${chip.visible ? 'is-visible' : ''}`}
+              className={`inline-block reveal ${chip.visible ? 'is-visible' : ''}`}
             >
-              <span className="text-brand-green" style={{ fontSize: '14px', fontWeight: 600 }}>
+              <span
+                className="inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-medium"
+                style={{ backgroundColor: 'var(--surface-100)', color: 'var(--brand-green)', border: '1px solid var(--surface-200)' }}
+              >
                 Sustainable Cities and Settlements
               </span>
             </div>
 
-            {/* Slider tetap dengan micro-motion (tidak whileInView terus menerus) */}
             <AboutInfoSlider />
           </div>
 
-          {/* Right - Animated Diagram (gambar statis + micro-animasi sekali jalan) */}
+          {/* Right - Image */}
           <div className="relative">
-            {/* Desktop */}
             <div
               ref={diagramDesktop.ref as any}
               className={`hidden lg:block relative reveal ${diagramDesktop.visible ? 'is-visible' : ''}`}
               style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.8, 0.25, 1)', transitionDuration: '.6s' }}
             >
-              <div className="relative rounded-2xl p-12 shadow-lg">
-                {/* Pastikan width/height supaya anti-CLS (ganti sesuai ukuran asli) */}
+              <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid var(--surface-200)', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                 <img
                   src="/assets/sdg11.jpg"
                   alt="SDG 11 Diagram"
@@ -189,13 +168,6 @@ export function AboutSection() {
                 />
               </div>
             </div>
-            {/* Mobile/Tablet
-            <div
-              ref={diagramMobile.ref as any}
-              className={`lg:hidden relative reveal ${diagramMobile.visible ? 'is-visible' : ''}`}
-              style={{ transitionDuration: '.6s' }}
-            >
-            </div> */}
           </div>
         </div>
       </div>

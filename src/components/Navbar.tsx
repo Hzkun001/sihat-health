@@ -14,7 +14,6 @@ const menuItems = [
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  // MULAI KOSONG → biar tidak auto-aktif 'hero' saat load
   const [activeSection, setActiveSection] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -44,10 +43,8 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    // Deteksi section aktif yang robust:
-    // pilih section terakhir yang top-nya sudah melewati offset navbar
     let ticking = false;
-    const OFFSET = 120; // tinggi navbar + margin aman
+    const OFFSET = 120;
 
     const handleScroll = () => {
       if (ticking) return;
@@ -63,31 +60,26 @@ export function Navbar() {
           const el = document.getElementById(id);
           if (!el) continue;
           const top = el.getBoundingClientRect().top - OFFSET;
-          // ambil yang sudah lewat offset (<= 0)
           if (top <= 0) current = id;
         }
 
-        // kalau masih paling atas (belum ada yg lewat offset), kosongkan
         setActiveSection(current);
-
         ticking = false;
       });
     };
 
-    // set state awal dan pasang listener
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Smooth scroll dengan offset navbar
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
 
     if (element) {
-      const navbarOffset = 120; // samakan dengan OFFSET di atas
+      const navbarOffset = 120;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
 
@@ -96,10 +88,7 @@ export function Navbar() {
         behavior: 'smooth',
       });
 
-      // Tandai aktif saat klik (opsional, membuat responsif saat awal)
       setActiveSection(targetId);
-
-      // Tutup menu mobile
       setMobileMenuOpen(false);
     }
   };
@@ -116,43 +105,45 @@ export function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 0.8, 0.25, 1] }}
         className="fixed top-3 sm:top-5 lg:top-6 left-0 right-0 z-40 flex justify-center px-3 sm:px-4 pointer-events-none"
-        style={{ willChange: 'transform, opacity' }}
       >
         <motion.nav
           animate={{
-            height: isScrolled ? (isMobile ? '56px' : '64px') : isMobile ? '68px' : '80px',
+            height: isScrolled ? (isMobile ? '56px' : '60px') : isMobile ? '64px' : '72px',
           }}
           transition={{ duration: 0.25, ease: [0.25, 0.8, 0.25, 1] }}
           className="w-full max-w-[95%] sm:max-w-[90%] lg:max-w-[85%] pointer-events-auto"
           style={{
-            backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.92)' : 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: isScrolled ? 'blur(24px)' : 'blur(16px)',
-            WebkitBackdropFilter: isScrolled ? 'blur(24px)' : 'blur(16px)',
+            backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.80)',
+            backdropFilter: isScrolled ? 'blur(24px) saturate(180%)' : 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: isScrolled ? 'blur(24px) saturate(180%)' : 'blur(16px) saturate(150%)',
             borderRadius: '999px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+            border: '1px solid rgba(228, 228, 231, 0.6)',
+            boxShadow: isScrolled
+              ? '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
+              : '0 2px 12px rgba(0, 0, 0, 0.04)',
             willChange: 'height',
           }}
         >
           <div className="h-full px-4 sm:px-6 lg:px-10 flex items-center justify-between">
             {/* Logo */}
             <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                 <img src="assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span
-                  className="text-ink-900 transition-colors duration-300"
                   style={{
-                    fontSize: isMobile ? '16px' : '20px',
-                    fontWeight: 500,
-                    letterSpacing: '0.02em',
+                    fontSize: isMobile ? '16px' : '18px',
+                    fontWeight: 600,
+                    letterSpacing: '-0.01em',
+                    color: 'var(--ink-900)',
                   }}
                 >
                   SIHAT Banjarbaru
                 </span>
                 <span
-                  className="text-ink-500 hidden lg:block"
-                  style={{ fontSize: '10px', fontWeight: 400, letterSpacing: '0.05em', marginTop: '-2px' }}
+                  className="hidden lg:block"
+                  style={{ fontSize: '10px', fontWeight: 400, letterSpacing: '0.02em', marginTop: '-1px', color: 'var(--ink-500)' }}
                 >
                   Sistem Informasi Kesehatan Lingkungan Terpadu
                 </span>
@@ -160,7 +151,7 @@ export function Navbar() {
             </a>
 
             {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-x-5 xl:gap-x-7 2xl:gap-x-9">
+            <div className="hidden lg:flex items-center gap-x-1">
               {menuItems.map((item) => {
                 const isActive = activeSection === item.href.replace('#', '');
                 return (
@@ -169,35 +160,40 @@ export function Navbar() {
                     href={item.href}
                     onClick={(e) => handleNavClick(e, item.href)}
                     aria-current={isActive ? 'page' : undefined}
-                    className="relative group"
+                    className="relative px-3 py-1.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 focus-visible:rounded-full"
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      letterSpacing: '-0.01em',
+                      color: isActive ? 'var(--brand-green)' : 'var(--ink-700)',
+                      backgroundColor: isActive ? 'rgba(5, 150, 105, 0.08)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
+                        e.currentTarget.style.color = 'var(--ink-900)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--ink-700)';
+                      }
+                    }}
+                    onFocus={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
+                        e.currentTarget.style.color = 'var(--ink-900)';
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--ink-700)';
+                      }
+                    }}
                   >
-                    <span
-                      className="transition-all duration-250 ease-out"
-                      style={{
-                        fontSize: '15px',
-                        fontWeight: 500,
-                        letterSpacing: '0.02em',
-                        color: isActive ? '#1BA351' : '#0E1E2B',
-                      }}
-                    >
-                      {item.label}
-                    </span>
-
-                    {/* Hover/Active underline with gradient */}
-                    {isActive ? (
-                      <motion.div
-                        layoutId="navbar-underline"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full"
-                        style={{ background: 'linear-gradient(90deg, #1BA351 0%, #5AC8FA 100%)' }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                      />
-                    ) : (
-                      <motion.div
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full opacity-0 group-hover:opacity-100"
-                        style={{ backgroundColor: '#1BA351' }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                      />
-                    )}
+                    {item.label}
                   </a>
                 );
               })}
@@ -206,9 +202,9 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-full transition-all duration-300 hover:bg-brand-green/10"
+              className="lg:hidden p-2 rounded-full transition-all duration-300"
               aria-label="Toggle menu"
-              style={{ color: '#0E1E2B' }}
+              style={{ color: 'var(--ink-900)' }}
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -224,15 +220,16 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed top-20 left-4 right-4 z-30 lg:hidden rounded-3xl overflow-hidden"
+            className="fixed top-20 left-4 right-4 z-30 lg:hidden rounded-2xl overflow-hidden"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(25px)',
-              WebkitBackdropFilter: 'blur(25px)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+              backgroundColor: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid var(--surface-200)',
+              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.12)',
             }}
           >
-            <div className="flex flex-col py-6">
+            <div className="flex flex-col py-4">
               {menuItems.map((item, index) => {
                 const isActive = activeSection === item.href.replace('#', '');
                 return (
@@ -241,15 +238,14 @@ export function Navbar() {
                     href={item.href}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.08, duration: 0.3 }}
+                    transition={{ delay: index * 0.06, duration: 0.3 }}
                     onClick={(e) => handleNavClick(e, item.href)}
-                    className="px-6 py-3 transition-all duration-300 hover:bg-brand-green/5"
+                    className="mx-3 px-4 py-3 rounded-xl transition-all duration-200"
                     style={{
                       fontSize: '16px',
                       fontWeight: 500,
-                      letterSpacing: '0.02em',
-                      color: isActive ? '#1BA351' : '#0E1E2B',
-                      borderLeft: isActive ? '3px solid #1BA351' : '3px solid transparent',
+                      color: isActive ? 'var(--brand-green)' : 'var(--ink-900)',
+                      backgroundColor: isActive ? 'rgba(5, 150, 105, 0.06)' : 'transparent',
                     }}
                   >
                     {item.label}

@@ -1,4 +1,3 @@
-
 import { SectionReveal } from './SectionReveal';
 import { motion } from 'motion/react';
 import { useInView } from 'motion/react';
@@ -68,18 +67,18 @@ const indicators: Indicator[] = [
     unit: '% wilayah',
     status: 'hampir',
   },
-];;
+];
 
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'tercapai':
-      return '#1BA351';
+      return '#059669';
     case 'hampir':
       return '#F59E0B';
     case 'belum':
       return '#EF4444';
     default:
-      return '#1BA351';
+      return '#059669';
   }
 };
 
@@ -114,22 +113,23 @@ function IndicatorBar({ indicator, delay }: { indicator: Indicator; delay: numbe
       {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h4 className="text-ink-900 mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
+          <h4 className="mb-1" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink-900)' }}>
             {indicator.name}
           </h4>
-          <p className="text-ink-500 text-sm">
+          <p style={{ fontSize: '13px', color: 'var(--ink-500)' }}>
             Target: {indicator.target} {indicator.unit} | Data BPS 2024
           </p>
         </div>
         <div className="text-right ml-4">
-          <div className="text-ink-900 mb-1" style={{ fontSize: '20px', fontWeight: 700 }}>
+          <div className="mb-1" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--ink-900)' }}>
             {indicator.current}
           </div>
           <div
-            className="inline-flex items-center px-2 py-1 rounded-full text-xs"
+            className="inline-flex items-center px-2 py-0.5 rounded-full"
             style={{
-              backgroundColor: `${getStatusColor(indicator.status)}15`,
+              backgroundColor: `${getStatusColor(indicator.status)}12`,
               color: getStatusColor(indicator.status),
+              fontSize: '12px',
               fontWeight: 600,
             }}
           >
@@ -139,22 +139,16 @@ function IndicatorBar({ indicator, delay }: { indicator: Indicator; delay: numbe
       </div>
 
       {/* Progress Bar */}
-      <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden group">
+      <div className="relative h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--surface-200)' }}>
         <motion.div
           initial={{ width: 0 }}
           animate={isInView ? { width: `${displayPercentage}%` } : { width: 0 }}
           transition={{ duration: 1, delay: delay + 0.2, ease: [0.25, 0.8, 0.25, 1] }}
           className="absolute inset-y-0 left-0 rounded-full"
           style={{
-            background: `linear-gradient(90deg, ${getStatusColor(indicator.status)} 0%, ${getStatusColor(indicator.status)}dd 100%)`,
+            backgroundColor: getStatusColor(indicator.status),
           }}
         />
-        {/* Tooltip on hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-ink-900 text-white px-3 py-2 rounded-lg text-xs whitespace-nowrap z-10">
-            Target: {indicator.target} {indicator.unit}
-          </div>
-        </div>
       </div>
     </motion.div>
   );
@@ -162,17 +156,17 @@ function IndicatorBar({ indicator, delay }: { indicator: Indicator; delay: numbe
 
 export function StatsIndicatorsSection() {
   return (
-    <section className="relative py-24 bg-white">
+    <section className="relative py-24 sm:py-28 lg:py-32" style={{ backgroundColor: 'var(--surface-0)' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <SectionReveal>
           <div className="text-center mb-16">
             <h2
-              className="text-ink-900 tracking-tight mb-4"
-              style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700 }}
+              className="tracking-tight mb-4"
+              style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}
             >
               Indikator SDG 11 Banjarbaru
             </h2>
-            <p className="text-ink-700 max-w-3xl mx-auto" style={{ fontSize: '18px' }}>
+            <p className="max-w-3xl mx-auto" style={{ fontSize: '18px', color: 'var(--ink-500)' }}>
               Pencapaian target Lingkungan Sehat berdasarkan Sustainable Development Goals 2024
             </p>
           </div>
@@ -186,18 +180,18 @@ export function StatsIndicatorsSection() {
 
         {/* Legend */}
         <SectionReveal delay={0.5}>
-          <div className="flex flex-wrap justify-center items-center gap-6 mt-12 pt-12 border-t border-gray-200">
+          <div className="flex flex-wrap justify-center items-center gap-6 mt-12 pt-12" style={{ borderTop: '1px solid var(--surface-200)' }}>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#1BA351' }} />
-              <span className="text-ink-700 text-sm">Tercapai</span>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#059669' }} />
+              <span style={{ fontSize: '13px', color: 'var(--ink-500)' }}>Tercapai</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
-              <span className="text-ink-700 text-sm">Hampir Tercapai</span>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+              <span style={{ fontSize: '13px', color: 'var(--ink-500)' }}>Hampir Tercapai</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#EF4444' }} />
-              <span className="text-ink-700 text-sm">Belum Tercapai</span>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#EF4444' }} />
+              <span style={{ fontSize: '13px', color: 'var(--ink-500)' }}>Belum Tercapai</span>
             </div>
           </div>
         </SectionReveal>

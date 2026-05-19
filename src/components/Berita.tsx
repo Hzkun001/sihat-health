@@ -90,7 +90,7 @@ const slidesData: NewsSlide[] = [
         id: 9,
         date: '5 September 2025',
         category: 'Kemitraan',
-        title: 'Kolaborasi Data SIHAT × BPS Kalsel',
+        title: 'Kolaborasi Data SIHAT x BPS Kalsel',
         excerpt: 'Harmonisasi metadata dan frekuensi pembaruan data kesehatan.',
       },
     ],
@@ -99,7 +99,7 @@ const slidesData: NewsSlide[] = [
 
 export function NewsSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [direction, setDirection] = useState(0); // -1 for prev, 1 for next
+  const [direction, setDirection] = useState(0);
   const totalSlides = slidesData.length;
 
   const nextSlide = useCallback(() => {
@@ -117,7 +117,6 @@ export function NewsSlider() {
     setCurrentSlide(index);
   }, [currentSlide]);
 
-  // Optimized animation variants
   const slideVariants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 30 : -30,
@@ -143,23 +142,23 @@ export function NewsSlider() {
         viewport={{ once: true, amount: 0.3 }}
         className="text-center mb-8 lg:mb-10"
       >
-        <div className="inline-block px-4 py-2 bg-brand-mint rounded-full mb-3">
-          <span className="text-brand-green" style={{ fontSize: '14px', fontWeight: 600 }}>
+        <div className="inline-flex items-center px-3.5 py-1.5 rounded-full mb-3" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--surface-200)' }}>
+          <span style={{ color: 'var(--brand-green)', fontSize: '14px', fontWeight: 600 }}>
             Berita
           </span>
         </div>
         <h3
-          className="text-ink-900 mb-2"
-          style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, lineHeight: 1.2 }}
+          className="mb-2"
+          style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, lineHeight: 1.2, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}
         >
           Berita Lingkungan Terkini
         </h3>
-        <p className="text-ink-700" style={{ fontSize: '16px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--ink-500)' }}>
           Update seputar lingkungan dan program lingkungan di Banjarbaru
         </p>
       </motion.div>
 
-      {/* Slides Container - Optimized */}
+      {/* Slides Container */}
       <div className="relative overflow-hidden">
         <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
@@ -173,7 +172,7 @@ export function NewsSlider() {
               x: { type: 'tween', duration: 0.35, ease: [0.25, 0.8, 0.25, 1] },
               opacity: { duration: 0.3 },
             }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
             style={{ willChange: 'transform, opacity' }}
           >
             {slidesData[currentSlide].cards.map((card, index) => (
@@ -183,42 +182,40 @@ export function NewsSlider() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
                   duration: 0.4,
-                  delay: index * 0.05, // Reduced from 0.08
+                  delay: index * 0.05,
                   ease: [0.25, 0.8, 0.25, 1],
                 }}
-                className="group bg-white rounded-3xl p-6 md:p-8 cursor-pointer"
+                className="group cursor-pointer rounded-2xl p-6"
                 style={{
-                  boxShadow: '0 6px 24px rgba(0,0,0,0.05)',
-                  maxWidth: '100%',
+                  backgroundColor: 'var(--surface-0)',
+                  border: '1px solid var(--surface-200)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                   transition: 'all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)',
                   willChange: 'transform, box-shadow',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.05)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
                 }}
               >
                 {/* Date & Category */}
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <Calendar size={16} className="text-brand-green" strokeWidth={2.5} />
-                    <span
-                      className="text-ink-500"
-                      style={{ fontSize: '14px', fontWeight: 500 }}
-                    >
+                    <Calendar size={14} style={{ color: 'var(--ink-500)' }} strokeWidth={2.5} />
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink-500)' }}>
                       {card.date}
                     </span>
                   </div>
                   <span
-                    className="px-3 py-1.5 rounded-full"
+                    className="px-2.5 py-0.5 rounded-full"
                     style={{
-                      backgroundColor: '#D1FAE5',
-                      color: '#065F46',
-                      fontSize: '13px',
+                      backgroundColor: 'var(--brand-mint)',
+                      color: 'var(--brand-green-dark)',
+                      fontSize: '12px',
                       fontWeight: 600,
                     }}
                   >
@@ -228,12 +225,13 @@ export function NewsSlider() {
 
                 {/* Title */}
                 <h4
-                  className="text-ink-900 mb-3 group-hover:text-brand-green"
+                  className="mb-3"
                   style={{
-                    fontSize: 'clamp(18px, 3vw, 22px)',
-                    fontWeight: 700,
-                    lineHeight: 1.3,
-                    transition: 'color 0.25s ease-out',
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    lineHeight: 1.35,
+                    color: 'var(--ink-900)',
+                    transition: 'color 0.2s',
                   }}
                 >
                   {card.title}
@@ -243,9 +241,9 @@ export function NewsSlider() {
                 <p
                   className="mb-4 line-clamp-3"
                   style={{
-                    fontSize: 'clamp(14px, 2vw, 16px)',
+                    fontSize: '14px',
                     fontWeight: 400,
-                    color: '#475569',
+                    color: 'var(--ink-500)',
                     lineHeight: 1.6,
                   }}
                 >
@@ -253,25 +251,11 @@ export function NewsSlider() {
                 </p>
 
                 {/* CTA */}
-                <div
-                  className="flex items-center gap-2 mt-4"
-                  style={{
-                    transition: 'transform 0.2s ease-out',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <span
-                    className="text-brand-green group-hover:underline"
-                    style={{ fontSize: '14px', fontWeight: 600 }}
-                  >
+                <div className="flex items-center gap-2 mt-auto">
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--brand-green)' }}>
                     Baca Selengkapnya
                   </span>
-                  <ArrowRight size={16} className="text-brand-green" strokeWidth={2.5} />
+                  <ArrowRight size={14} style={{ color: 'var(--brand-green)' }} strokeWidth={2.5} />
                 </div>
               </motion.article>
             ))}
@@ -291,68 +275,41 @@ export function NewsSlider() {
         <div className="flex items-center gap-4">
           <button
             onClick={prevSlide}
-            className="p-3 rounded-full bg-white border border-gray-200 hover:border-brand-green hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-green"
+            className="p-3 rounded-full transition-all duration-200"
             style={{
-              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-              transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
-              willChange: 'transform',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = 'scale(0.96)';
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
+              backgroundColor: 'var(--surface-0)',
+              border: '1px solid var(--surface-200)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
             aria-label="Previous slide"
           >
-            <ChevronLeft size={20} className="text-ink-700" strokeWidth={2.5} />
+            <ChevronLeft size={18} style={{ color: 'var(--ink-700)' }} strokeWidth={2.5} />
           </button>
 
           {/* Slide Counter */}
           <div className="flex items-center gap-2 px-4">
-            <span
-              className="text-brand-green"
-              style={{ fontSize: '18px', fontWeight: 700 }}
-            >
+            <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--brand-green)' }}>
               {String(currentSlide + 1).padStart(2, '0')}
             </span>
-            <span className="text-ink-500" style={{ fontSize: '16px' }}>
+            <span style={{ fontSize: '14px', color: 'var(--ink-500)' }}>
               /
             </span>
-            <span className="text-ink-500" style={{ fontSize: '16px' }}>
+            <span style={{ fontSize: '14px', color: 'var(--ink-500)' }}>
               {String(totalSlides).padStart(2, '0')}
             </span>
           </div>
 
           <button
             onClick={nextSlide}
-            className="p-3 rounded-full bg-white border border-gray-200 hover:border-brand-green hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-green"
+            className="p-3 rounded-full transition-all duration-200"
             style={{
-              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-              transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
-              willChange: 'transform',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = 'scale(0.96)';
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
+              backgroundColor: 'var(--surface-0)',
+              border: '1px solid var(--surface-200)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
             aria-label="Next slide"
           >
-            <ChevronRight size={20} className="text-ink-700" strokeWidth={2.5} />
+            <ChevronRight size={18} style={{ color: 'var(--ink-700)' }} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -362,27 +319,11 @@ export function NewsSlider() {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className="rounded-full focus:outline-none focus:ring-2 focus:ring-brand-green"
+              className="rounded-full transition-all duration-300"
               style={{
-                width: currentSlide === index ? '28px' : '8px',
+                width: currentSlide === index ? '24px' : '8px',
                 height: '8px',
-                backgroundColor: currentSlide === index ? '#1BA351' : '#D1EDE3',
-                transition: 'all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                willChange: 'width, background-color',
-              }}
-              onMouseEnter={(e) => {
-                if (currentSlide !== index) {
-                  e.currentTarget.style.transform = 'scale(1.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.9)';
-              }}
-              onMouseUp={(e) => {
-                e.currentTarget.style.transform = currentSlide !== index ? 'scale(1.2)' : 'scale(1)';
+                backgroundColor: currentSlide === index ? 'var(--brand-green)' : 'var(--surface-200)',
               }}
               aria-label={`Go to slide ${index + 1}`}
             />
