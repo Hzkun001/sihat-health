@@ -105,7 +105,6 @@ export function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 0.8, 0.25, 1] }}
         className="fixed top-3 sm:top-5 lg:top-6 left-0 right-0 z-40 flex justify-center px-3 sm:px-4 pointer-events-none"
-        style={{ willChange: 'transform, opacity' }}
       >
         <motion.nav
           animate={{
@@ -161,7 +160,7 @@ export function Navbar() {
                     href={item.href}
                     onClick={(e) => handleNavClick(e, item.href)}
                     aria-current={isActive ? 'page' : undefined}
-                    className="relative px-3 py-1.5 rounded-full transition-all duration-200"
+                    className="relative px-3 py-1.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 focus-visible:rounded-full"
                     style={{
                       fontSize: '14px',
                       fontWeight: 500,
@@ -176,6 +175,18 @@ export function Navbar() {
                       }
                     }}
                     onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--ink-700)';
+                      }
+                    }}
+                    onFocus={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
+                        e.currentTarget.style.color = 'var(--ink-900)';
+                      }
+                    }}
+                    onBlur={(e) => {
                       if (!isActive) {
                         e.currentTarget.style.backgroundColor = 'transparent';
                         e.currentTarget.style.color = 'var(--ink-700)';
