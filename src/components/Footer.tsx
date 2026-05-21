@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer
       className="relative overflow-hidden"
-      style={{ background: '#0a0a0b' }}
+      style={{ background: 'linear-gradient(180deg, #065f46 0%, #064e3b 100%)' }}
     >
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-12">

@@ -5,25 +5,22 @@ import { Mail, ArrowRight } from 'lucide-react';
 export function CTASection() {
   return (
     <section id="kontak" className="relative overflow-hidden py-28 sm:py-32">
-      {/* Dark background with subtle glows */}
       <div
         className="absolute inset-0 -z-10"
-        style={{ backgroundColor: 'var(--ink-900)' }}
+        style={{ background: 'linear-gradient(180deg, #059669 0%, #047857 54%, #065f46 100%)' }}
       />
 
-      {/* Subtle radial glow - green at top center */}
       <div
         className="absolute inset-0 -z-10 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 50% 0%, rgba(5, 150, 105, 0.12), transparent 60%)',
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(236, 253, 245, 0.24), transparent 62%)',
         }}
       />
 
-      {/* Subtle radial glow - blue at bottom right */}
       <div
         className="absolute inset-0 -z-10 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 80% 100%, rgba(59, 130, 246, 0.1), transparent 60%)',
+          background: 'radial-gradient(ellipse at 82% 100%, rgba(52, 211, 153, 0.22), transparent 60%)',
         }}
       />
 
