@@ -1,4 +1,4 @@
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import { motion } from 'motion/react';
 import { useInView } from 'motion/react';
 import { useRef } from 'react';
@@ -154,7 +154,7 @@ function IndicatorBar({ indicator, delay }: { indicator: Indicator; delay: numbe
   );
 }
 
-export function StatsIndicatorsSection() {
+export function StatsIndicators() {
   return (
     <section className="relative py-24 sm:py-28 lg:py-32" style={{ backgroundColor: 'var(--surface-0)' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">

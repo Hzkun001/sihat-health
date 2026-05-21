@@ -1,4 +1,4 @@
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import { Camera, MapPin, Send, X, Upload, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';

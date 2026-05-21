@@ -1,21 +1,19 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { LoadingScreen } from './components/LoadingScreen';
-import { Navbar } from './components/Navbar';
-import { HeroSection } from './components/HeroSection';
-import { PartnersFloatingBar } from './components/PartnersFloatingBar';
+import { LoadingScreen } from '@/components/layout/LoadingScreen';
+import { Navbar } from '@/components/layout/Navbar';
+import { PartnersFloatingBar } from '@/components/layout/PartnersFloatingBar';
+import { HeroSection } from '@/sections/hero/HeroSection';
 
-// Lazy load below-the-fold components for better initial load performance
-const BentoFeatures = lazy(() => import('./components/BentoFeatures').then(m => ({ default: m.BentoFeatures })));
-const AboutSection = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
-const MapSection = lazy(() => import('./components/MapSection').then(m => ({ default: m.MapSection })));
-const ReportSection = lazy(() => import('./components/ReportSection').then(m => ({ default: m.ReportSection })));
-const StatsCardsSection = lazy(() => import('./components/StatsCardsSection').then(m => ({ default: m.StatsCardsSection })));
-const StatsIndicatorsSection = lazy(() => import('./components/StatsIndicatorsSection').then(m => ({ default: m.StatsIndicatorsSection })));
-const NewsSection = lazy(() => import('./components/NewsSection').then(m => ({ default: m.NewsSection })));
-const TeamSection = lazy(() => import('./components/TeamSection').then(m => ({ default: m.TeamSection })));
-const CTASection = lazy(() => import('./components/CTASection').then(m => ({ default: m.CTASection })));
-const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
+// Lazy load below-the-fold sections for better initial load performance
+const BentoFeatures = lazy(() => import('@/sections/BentoFeatures').then(m => ({ default: m.BentoFeatures })));
+const AboutSection = lazy(() => import('@/sections/AboutSection').then(m => ({ default: m.AboutSection })));
+const MapSection = lazy(() => import('@/sections/map/MapSection').then(m => ({ default: m.MapSection })));
+const ReportSection = lazy(() => import('@/sections/ReportSection').then(m => ({ default: m.ReportSection })));
+const StatsIndicators = lazy(() => import('@/sections/stats/StatsIndicators').then(m => ({ default: m.StatsIndicators })));
+const NewsSection = lazy(() => import('@/sections/NewsSection').then(m => ({ default: m.NewsSection })));
+const CTASection = lazy(() => import('@/sections/CTASection').then(m => ({ default: m.CTASection })));
+const Footer = lazy(() => import('@/components/layout/Footer').then(m => ({ default: m.Footer })));
 
 function MapSectionLoader() {
   const [shouldRenderMap, setShouldRenderMap] = useState(false);
@@ -145,10 +143,10 @@ export default function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ 
+              transition={{
                 duration: 0.6,
                 delay: 0.3,
-                ease: [0.25, 0.8, 0.25, 1]
+                ease: [0.25, 0.8, 0.25, 1],
               }}
             >
               <Suspense fallback={<div className="min-h-screen" />}>
@@ -156,7 +154,7 @@ export default function App() {
                 <AboutSection />
                 <MapSectionLoader />
                 <ReportSection />
-                <StatsIndicatorsSection />
+                <StatsIndicators />
                 <NewsSection />
                 <CTASection />
               </Suspense>

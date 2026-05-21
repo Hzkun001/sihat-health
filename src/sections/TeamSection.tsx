@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import { AnimatePresence, motion } from 'motion/react';
 import { Linkedin } from 'lucide-react';
 

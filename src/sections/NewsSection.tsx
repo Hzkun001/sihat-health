@@ -40,7 +40,6 @@ const slidesData: NewsSlide[] = [
         title: 'Gerakan Hidup Sehat di Sekolah Dasar',
         excerpt: 'Kampanye edukasi kebersihan dan pola makan sehat bagi siswa sekolah dasar di Banjarbaru.',
       },
-
     ],
   },
   {
@@ -97,7 +96,7 @@ const slidesData: NewsSlide[] = [
   },
 ];
 
-export function NewsSlider() {
+function NewsSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const totalSlides = slidesData.length;
@@ -331,5 +330,21 @@ export function NewsSlider() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export function NewsSection() {
+  return (
+    <section
+      id="berita"
+      className="relative py-16 md:py-20 lg:py-24 overflow-hidden"
+      style={{ backgroundColor: 'var(--surface-alt)' }}
+    >
+      <div className="relative max-w-7xl mx-auto px-6 md:px-12 lg:px-12">
+        <div className="max-w-[1200px] mx-auto">
+          <NewsSlider />
+        </div>
+      </div>
+    </section>
   );
 }
