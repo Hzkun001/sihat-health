@@ -1,5 +1,5 @@
 // src/components/MapSection.tsx
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import { MapPin, Filter, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';

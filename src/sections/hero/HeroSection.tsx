@@ -2,8 +2,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import { StaticParticles } from './StaticParticles';
-import Waves from './waves';
+import { StaticParticles } from '@/components/effects/StaticParticles';
+import Waves from '@/components/effects/Waves';
 
 const HeroVisual3D = lazy(() => import('./HeroVisual3D'));
 

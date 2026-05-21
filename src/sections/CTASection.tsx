@@ -1,4 +1,4 @@
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import { motion } from 'motion/react';
 import { Mail, ArrowRight } from 'lucide-react';
 

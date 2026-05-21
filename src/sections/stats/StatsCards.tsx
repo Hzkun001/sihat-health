@@ -1,4 +1,4 @@
-import { SectionReveal } from './SectionReveal';
+import { SectionReveal } from '@/components/shared/SectionReveal';
 import {
   Activity,
   Building2,
@@ -33,7 +33,7 @@ const statsData: StatItem[] = [
   { icon: Ambulance, label: 'Ambulans', value: '18' },
 ];
 
-export function StatsCardsSection() {
+export function StatsCards() {
   return (
     <section id="statistik" className="relative py-24 sm:py-28 lg:py-32" style={{ backgroundColor: 'var(--surface-0)' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
