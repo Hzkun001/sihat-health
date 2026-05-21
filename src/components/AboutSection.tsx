@@ -52,11 +52,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
   onToggle: () => void;
 }) {
   return (
-    <div
-      style={{
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
+    <div style={{ borderTop: '1px solid var(--surface-200)' }}>
       {/* Header row — always visible */}
       <button
         onClick={onToggle}
@@ -69,7 +65,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
             fontSize: '13px',
             fontWeight: 500,
             letterSpacing: '0.04em',
-            color: isOpen ? 'var(--brand-green)' : 'rgba(255,255,255,0.25)',
+            color: isOpen ? 'var(--brand-green)' : 'var(--ink-500)',
             transition: 'color 0.3s',
             flexShrink: 0,
             marginTop: '4px',
@@ -86,7 +82,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
               fontSize: 'clamp(20px, 2.5vw, 28px)',
               fontWeight: 700,
               letterSpacing: '-0.02em',
-              color: isOpen ? '#ffffff' : 'rgba(255,255,255,0.7)',
+              color: isOpen ? 'var(--ink-900)' : 'var(--ink-700)',
               transition: 'color 0.3s',
               lineHeight: 1.2,
             }}
@@ -96,7 +92,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
           <div
             style={{
               fontSize: '15px',
-              color: 'rgba(255,255,255,0.4)',
+              color: 'var(--ink-500)',
               marginTop: '6px',
               lineHeight: 1.5,
               fontWeight: 400,
@@ -113,15 +109,15 @@ function AccordionRow({ item, isOpen, onToggle }: {
             width: '36px',
             height: '36px',
             borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.12)',
-            backgroundColor: isOpen ? 'var(--brand-green)' : 'transparent',
+            border: '1px solid var(--surface-200)',
+            backgroundColor: isOpen ? 'var(--brand-green)' : 'var(--surface-100)',
             transition: 'all 0.3s',
             marginTop: '2px',
           }}
         >
           {isOpen
             ? <Minus size={16} color="#fff" strokeWidth={2.5} />
-            : <Plus size={16} color="rgba(255,255,255,0.5)" strokeWidth={2.5} />
+            : <Plus size={16} color="var(--ink-500)" strokeWidth={2.5} />
           }
         </div>
       </button>
@@ -145,7 +141,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
                   style={{
                     fontSize: '15px',
                     lineHeight: 1.75,
-                    color: 'rgba(255,255,255,0.55)',
+                    color: 'var(--ink-700)',
                     maxWidth: '560px',
                   }}
                 >
@@ -158,8 +154,8 @@ function AccordionRow({ item, isOpen, onToggle }: {
                   style={{
                     padding: '20px 28px',
                     borderRadius: '16px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid var(--surface-200)',
+                    backgroundColor: 'var(--surface-100)',
                     textAlign: 'center',
                     minWidth: '120px',
                   }}
@@ -169,7 +165,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
                       fontSize: 'clamp(28px, 3vw, 36px)',
                       fontWeight: 800,
                       letterSpacing: '-0.03em',
-                      background: 'linear-gradient(135deg, #34d399, #22d3ee)',
+                      background: 'linear-gradient(135deg, var(--brand-green), #22d3ee)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -181,7 +177,7 @@ function AccordionRow({ item, isOpen, onToggle }: {
                   <div
                     style={{
                       fontSize: '12px',
-                      color: 'rgba(255,255,255,0.35)',
+                      color: 'var(--ink-500)',
                       marginTop: '6px',
                       fontWeight: 500,
                       letterSpacing: '0.04em',
@@ -212,21 +208,21 @@ export function AboutSection() {
       id="tentang"
       className="relative overflow-hidden"
       style={{
-        backgroundColor: '#0a0a0b',
+        backgroundColor: 'var(--surface-0)',
         paddingTop: 'clamp(64px, 8vw, 120px)',
         paddingBottom: 'clamp(64px, 8vw, 120px)',
       }}
     >
-      {/* Subtle radial glow */}
+      {/* Subtle green radial glow top-right */}
       <div
         className="absolute pointer-events-none"
         style={{
-          top: '-20%',
-          right: '-10%',
-          width: '600px',
-          height: '600px',
+          top: '-10%',
+          right: '-5%',
+          width: '500px',
+          height: '500px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(5,150,105,0.07) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(5,150,105,0.05) 0%, transparent 70%)',
         }}
       />
 
@@ -269,12 +265,12 @@ export function AboutSection() {
               fontWeight: 800,
               letterSpacing: '-0.035em',
               lineHeight: 1.1,
-              color: '#ffffff',
+              color: 'var(--ink-900)',
             }}
           >
             Infrastruktur data
             <br />
-            <span style={{ color: 'rgba(255,255,255,0.35)' }}>untuk kota yang lebih baik.</span>
+            <span style={{ color: 'var(--ink-500)' }}>untuk kota yang lebih baik.</span>
           </h2>
         </motion.div>
 
@@ -294,7 +290,7 @@ export function AboutSection() {
             />
           ))}
           {/* Bottom border */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+          <div style={{ borderTop: '1px solid var(--surface-200)' }} />
         </motion.div>
 
       </div>
