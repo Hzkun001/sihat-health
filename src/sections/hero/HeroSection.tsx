@@ -1,9 +1,14 @@
-// src/components/HeroSection.tsx
+// src/sections/hero/HeroSection.tsx
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { StaticParticles } from '@/components/effects/StaticParticles';
 import Waves from '@/components/effects/Waves';
+import {
+  rotatingWords,
+  widestRotatingWord,
+  heroMarqueeItems,
+} from '@/lib/data/hero';
 
 const HeroVisual3D = lazy(() => import('./HeroVisual3D'));
 
@@ -16,23 +21,6 @@ function HeroVisual3DFallback() {
     </div>
   );
 }
-
-// Rotating words for the headline
-const rotatingWords = ['Sehat', 'Hijau', 'Inklusif', 'Berkelanjutan'];
-// Widest word used as invisible spacer to prevent layout shift
-const widestWord = 'Berkelanjutan';
-
-// Marquee data items
-const marqueeItems = [
-  '47 Puskesmas',
-  '200K+ Warga',
-  '15 Indikator SDG',
-  '5 Rumah Sakit',
-  '32 Apotek',
-  '12 Klinik',
-  'Real-time Data',
-  'AI Chatbot',
-];
 
 interface HeroSectionProps {
   onModelReady?: () => void;
@@ -209,7 +197,7 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
                   aria-hidden
                   style={{ display: 'block', visibility: 'hidden', whiteSpace: 'nowrap', lineHeight: 'inherit' }}
                 >
-                  {widestWord}
+                  {widestRotatingWord}
                 </span>
 
                 {/* Animated words — slide over the spacer */}
@@ -349,7 +337,7 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
         style={{ backgroundColor: 'rgba(0,0,0,0.1)', backdropFilter: 'blur(4px)' }}
       >
         <div className="flex animate-marquee whitespace-nowrap py-3 sm:py-4">
-          {[...marqueeItems, ...marqueeItems, ...marqueeItems].map((item, i) => (
+          {[...heroMarqueeItems, ...heroMarqueeItems, ...heroMarqueeItems].map((item, i) => (
             <span
               key={i}
               className="mx-4 sm:mx-6 lg:mx-8 flex items-center gap-2"

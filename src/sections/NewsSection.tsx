@@ -1,105 +1,12 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Calendar, ArrowRight } from 'lucide-react';
-
-interface NewsCard {
-  id: number;
-  date: string;
-  category: string;
-  title: string;
-  excerpt: string;
-}
-
-interface NewsSlide {
-  id: number;
-  cards: NewsCard[];
-}
-
-const slidesData: NewsSlide[] = [
-  {
-    id: 1,
-    cards: [
-      {
-        id: 1,
-        date: '12 Oktober 2025',
-        category: 'Program Kesehatan',
-        title: 'Program Pencegahan DBD Banjarbaru Tahun 2025',
-        excerpt: 'Dinas Kesehatan Banjarbaru meluncurkan program fogging dan edukasi masyarakat untuk mengurangi kasus DBD.',
-      },
-      {
-        id: 2,
-        date: '8 Oktober 2025',
-        category: 'Fasilitas',
-        title: 'Peningkatan Layanan Kesehatan di 12 Puskesmas',
-        excerpt: 'Pemerintah menambah tenaga medis dan fasilitas untuk memperluas akses layanan.',
-      },
-      {
-        id: 3,
-        date: '5 Oktober 2025',
-        category: 'Edukasi',
-        title: 'Gerakan Hidup Sehat di Sekolah Dasar',
-        excerpt: 'Kampanye edukasi kebersihan dan pola makan sehat bagi siswa sekolah dasar di Banjarbaru.',
-      },
-    ],
-  },
-  {
-    id: 2,
-    cards: [
-      {
-        id: 4,
-        date: '28 September 2025',
-        category: 'Vaksinasi',
-        title: 'Cakupan Imunisasi Dasar Capai 94%',
-        excerpt: 'Kolaborasi puskesmas & kader meningkatkan kunjungan balita untuk imunisasi.',
-      },
-      {
-        id: 5,
-        date: '25 September 2025',
-        category: 'Lingkungan',
-        title: 'Pemantauan Kualitas Udara Terintegrasi',
-        excerpt: 'Integrasi sensor PM2.5 dengan pelaporan batuk/ISPA di seluruh wilayah.',
-      },
-      {
-        id: 6,
-        date: '22 September 2025',
-        category: 'Ibu & Anak',
-        title: 'Kelas Ibu Hamil: Nutrisi & ANC',
-        excerpt: 'Konseling gizi, pemeriksaan HB, dan jadwal K4 untuk ibu hamil.',
-      },
-    ],
-  },
-  {
-    id: 3,
-    cards: [
-      {
-        id: 7,
-        date: '10 September 2025',
-        category: 'Posyandu',
-        title: 'Posyandu Aktif 89 Titik',
-        excerpt: 'Fokus deteksi dini stunting & edukasi ASI eksklusif untuk ibu muda.',
-      },
-      {
-        id: 8,
-        date: '7 September 2025',
-        category: 'Kedaruratan',
-        title: 'Simulasi Tanggap Bencana Kesehatan',
-        excerpt: 'Latihan koordinasi lintas OPD untuk evakuasi cepat saat darurat.',
-      },
-      {
-        id: 9,
-        date: '5 September 2025',
-        category: 'Kemitraan',
-        title: 'Kolaborasi Data SIHAT x BPS Kalsel',
-        excerpt: 'Harmonisasi metadata dan frekuensi pembaruan data kesehatan.',
-      },
-    ],
-  },
-];
+import { newsSlides } from '@/lib/data/news';
 
 function NewsSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
-  const totalSlides = slidesData.length;
+  const totalSlides = newsSlides.length;
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -111,10 +18,13 @@ function NewsSlider() {
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
   }, [totalSlides]);
 
-  const goToSlide = useCallback((index: number) => {
-    setDirection(index > currentSlide ? 1 : -1);
-    setCurrentSlide(index);
-  }, [currentSlide]);
+  const goToSlide = useCallback(
+    (index: number) => {
+      setDirection(index > currentSlide ? 1 : -1);
+      setCurrentSlide(index);
+    },
+    [currentSlide]
+  );
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -141,14 +51,26 @@ function NewsSlider() {
         viewport={{ once: true, amount: 0.3 }}
         className="text-center mb-8 lg:mb-10"
       >
-        <div className="inline-flex items-center px-3.5 py-1.5 rounded-full mb-3" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--surface-200)' }}>
+        <div
+          className="inline-flex items-center px-3.5 py-1.5 rounded-full mb-3"
+          style={{
+            backgroundColor: 'var(--surface-100)',
+            border: '1px solid var(--surface-200)',
+          }}
+        >
           <span style={{ color: 'var(--brand-green)', fontSize: '14px', fontWeight: 600 }}>
             Berita
           </span>
         </div>
         <h3
           className="mb-2"
-          style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, lineHeight: 1.2, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}
+          style={{
+            fontSize: 'clamp(24px, 3vw, 36px)',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            color: 'var(--ink-900)',
+            letterSpacing: '-0.02em',
+          }}
         >
           Berita Lingkungan Terkini
         </h3>
@@ -174,7 +96,7 @@ function NewsSlider() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
             style={{ willChange: 'transform, opacity' }}
           >
-            {slidesData[currentSlide].cards.map((card, index) => (
+            {newsSlides[currentSlide].cards.map((card, index) => (
               <motion.article
                 key={card.id}
                 initial={{ opacity: 0, y: 15 }}
@@ -205,7 +127,9 @@ function NewsSlider() {
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <div className="flex items-center gap-2">
                     <Calendar size={14} style={{ color: 'var(--ink-500)' }} strokeWidth={2.5} />
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink-500)' }}>
+                    <span
+                      style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink-500)' }}
+                    >
                       {card.date}
                     </span>
                   </div>
@@ -251,10 +175,16 @@ function NewsSlider() {
 
                 {/* CTA */}
                 <div className="flex items-center gap-2 mt-auto">
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--brand-green)' }}>
+                  <span
+                    style={{ fontSize: '14px', fontWeight: 600, color: 'var(--brand-green)' }}
+                  >
                     Baca Selengkapnya
                   </span>
-                  <ArrowRight size={14} style={{ color: 'var(--brand-green)' }} strokeWidth={2.5} />
+                  <ArrowRight
+                    size={14}
+                    style={{ color: 'var(--brand-green)' }}
+                    strokeWidth={2.5}
+                  />
                 </div>
               </motion.article>
             ))}
@@ -287,12 +217,12 @@ function NewsSlider() {
 
           {/* Slide Counter */}
           <div className="flex items-center gap-2 px-4">
-            <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--brand-green)' }}>
+            <span
+              style={{ fontSize: '16px', fontWeight: 700, color: 'var(--brand-green)' }}
+            >
               {String(currentSlide + 1).padStart(2, '0')}
             </span>
-            <span style={{ fontSize: '14px', color: 'var(--ink-500)' }}>
-              /
-            </span>
+            <span style={{ fontSize: '14px', color: 'var(--ink-500)' }}>/</span>
             <span style={{ fontSize: '14px', color: 'var(--ink-500)' }}>
               {String(totalSlides).padStart(2, '0')}
             </span>
@@ -314,7 +244,7 @@ function NewsSlider() {
 
         {/* Dot Indicators */}
         <div className="flex items-center gap-2">
-          {slidesData.map((_, index) => (
+          {newsSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
@@ -322,7 +252,8 @@ function NewsSlider() {
               style={{
                 width: currentSlide === index ? '24px' : '8px',
                 height: '8px',
-                backgroundColor: currentSlide === index ? 'var(--brand-green)' : 'var(--surface-200)',
+                backgroundColor:
+                  currentSlide === index ? 'var(--brand-green)' : 'var(--surface-200)',
               }}
               aria-label={`Go to slide ${index + 1}`}
             />
