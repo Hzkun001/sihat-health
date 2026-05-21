@@ -1,7 +1,7 @@
 // src/components/HeroSection.tsx
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { StaticParticles } from './StaticParticles';
 import Waves from './waves';
 
@@ -19,6 +19,8 @@ function HeroVisual3DFallback() {
 
 // Rotating words for the headline
 const rotatingWords = ['Sehat', 'Hijau', 'Inklusif', 'Berkelanjutan'];
+// Widest word used as invisible spacer to prevent layout shift
+const widestWord = 'Berkelanjutan';
 
 // Marquee data items
 const marqueeItems = [
@@ -166,39 +168,78 @@ export function HeroSection({ onModelReady, onModelProgress }: HeroSectionProps 
           className="lg:col-span-7 order-2 lg:order-1"
         >
           {/* Display headline */}
-          <h1
+          <div
             className="text-white mb-5 sm:mb-6 lg:mb-8"
             style={{
               fontSize: 'clamp(40px, 7vw, 88px)',
               fontWeight: 800,
               letterSpacing: '-0.04em',
-              lineHeight: 1.0,
+              lineHeight: 1.1,
             }}
           >
-            Banjarbaru
-            <br />
-            Kota{' '}
-            <span className="relative inline-block overflow-hidden" style={{ height: '1.1em', verticalAlign: 'bottom' }}>
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={currentWordIndex}
-                  initial={{ y: '100%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  exit={{ y: '-100%', opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-                  className="inline-block"
-                  style={{
-                    background: 'linear-gradient(135deg, #34d399, #06b6d4)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
+            {/* Line 1 — static */}
+            <div>Banjarbaru</div>
+
+            {/* Line 2 — "Kota" static + animated word on same visual line */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.22em' }}>
+              <span>Kota</span>
+
+              {/*
+                Rotating word container.
+                - Width locked to widestWord via invisible spacer → no layout shift
+                - overflow:hidden clips the slide-in/out animation
+                - paddingBottom gives room for descenders (j in "Hijau")
+                - The animated word is NOT position:absolute to avoid
+                  gradient-clip rendering bugs in WebKit
+              */}
+              <span
+                style={{
+                  display: 'inline-block',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  /* height = 1 line + descender room */
+                  lineHeight: 1.15,
+                  paddingBottom: '0.1em',
+                  /* pull down so bottom-aligns with "Kota" */
+                  marginBottom: '-0.05em',
+                }}
+              >
+                {/* Invisible width spacer — widest word, never shown */}
+                <span
+                  aria-hidden
+                  style={{ display: 'block', visibility: 'hidden', whiteSpace: 'nowrap', lineHeight: 'inherit' }}
                 >
-                  {rotatingWords[currentWordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </h1>
+                  {widestWord}
+                </span>
+
+                {/* Animated words — slide over the spacer */}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={currentWordIndex}
+                    initial={{ y: '110%' }}
+                    animate={{ y: '0%' }}
+                    exit={{ y: '-110%' }}
+                    transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                    style={{
+                      /* cover the spacer exactly */
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      whiteSpace: 'nowrap',
+                      lineHeight: 'inherit',
+                      /* gradient text — on its own layer, not clipped */
+                      background: 'linear-gradient(135deg, #34d399 0%, #22d3ee 55%, #818cf8 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {rotatingWords[currentWordIndex]}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </div>
+          </div>
 
           {/* Subtitle */}
           <motion.p
