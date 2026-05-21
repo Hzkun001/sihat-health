@@ -2802,3 +2802,21 @@ html {
   inherits: false;
   initial-value: 1;
 }
+
+
+
+/* Marquee animation for hero ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

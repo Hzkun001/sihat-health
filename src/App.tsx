@@ -6,6 +6,7 @@ import { HeroSection } from './components/HeroSection';
 import { PartnersFloatingBar } from './components/PartnersFloatingBar';
 
 // Lazy load below-the-fold components for better initial load performance
+const BentoFeatures = lazy(() => import('./components/BentoFeatures').then(m => ({ default: m.BentoFeatures })));
 const AboutSection = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
 const MapSection = lazy(() => import('./components/MapSection').then(m => ({ default: m.MapSection })));
 const ReportSection = lazy(() => import('./components/ReportSection').then(m => ({ default: m.ReportSection })));
@@ -151,6 +152,7 @@ export default function App() {
               }}
             >
               <Suspense fallback={<div className="min-h-screen" />}>
+                <BentoFeatures />
                 <AboutSection />
                 <MapSectionLoader />
                 <ReportSection />
