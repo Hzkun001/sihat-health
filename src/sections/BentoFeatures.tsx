@@ -18,7 +18,7 @@ const cards: BentoCard[] = [
     description: 'Visualisasi geospasial fasilitas kesehatan, sebaran penduduk, dan infrastruktur kota secara real-time.',
     href: '#peta',
     span: 'col-span-1 sm:col-span-2 lg:col-span-2 lg:row-span-2',
-    accent: 'from-emerald-500/10 to-cyan-500/5',
+    accent: 'from-[#b9a9f5]/20 to-[#f1f0ea]/40',
   },
   {
     icon: <MessageSquareWarning size={20} />,
@@ -26,7 +26,7 @@ const cards: BentoCard[] = [
     description: 'Laporkan isu lingkungan langsung dengan foto dan koordinat otomatis.',
     href: '#laporan',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-amber-500/10 to-orange-500/5',
+    accent: 'from-[#dedbd1]/35 to-[#b9a9f5]/10',
   },
   {
     icon: <BarChart3 size={20} />,
@@ -34,7 +34,7 @@ const cards: BentoCard[] = [
     description: 'Data stunting, kepadatan, dan indikator SDG 11 divisualisasikan interaktif.',
     href: '#statistik',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-blue-500/10 to-indigo-500/5',
+    accent: 'from-[#b9a9f5]/15 to-[#465047]/5',
   },
   {
     icon: <Bot size={20} />,
@@ -42,7 +42,7 @@ const cards: BentoCard[] = [
     description: 'Tanya apa saja seputar data kesehatan dan lingkungan Banjarbaru.',
     href: '#hero',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-violet-500/10 to-purple-500/5',
+    accent: 'from-[#8f80db]/12 to-[#f1f0ea]/40',
   },
   {
     icon: <Newspaper size={20} />,
@@ -50,7 +50,7 @@ const cards: BentoCard[] = [
     description: 'Informasi terbaru seputar kesehatan lingkungan dan kebijakan kota.',
     href: '#berita',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-rose-500/10 to-pink-500/5',
+    accent: 'from-[#d9d6ca]/35 to-[#b9a9f5]/10',
   },
 ];
 
@@ -80,7 +80,7 @@ export function BentoFeatures() {
       {/* Subtle top gradient fade */}
       <div
         className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(249,252,255,1) 0%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(180deg, rgba(241,240,234,1) 0%, transparent 100%)' }}
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,7 +104,7 @@ export function BentoFeatures() {
               border: '1px solid var(--surface-200)',
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--brand-blue)' }} />
             Fitur Platform
           </span>
           <h2

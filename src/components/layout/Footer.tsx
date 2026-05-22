@@ -1,209 +1,336 @@
-import { Mail, MapPin, Phone, Linkedin, Twitter, Instagram } from 'lucide-react';
+import { useState } from 'react';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  Copy,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
+} from 'lucide-react';
 import { motion } from 'motion/react';
+
+const footerLinks = [
+  { label: 'Beranda', href: '#hero' },
+  { label: 'Tentang', href: '#tentang' },
+  { label: 'Peta Interaktif', href: '#peta' },
+  { label: 'Laporan Warga', href: '#laporan' },
+  { label: 'Statistik', href: '#statistik' },
+  { label: 'Kontak', href: '#kontak' },
+];
+
+const partners = [
+  'Geoportal Kota Banjarbaru',
+  'Dinkes Banjarbaru',
+  'BPS Kalimantan Selatan',
+  'Open Data Initiative',
+];
+
+const details = ['SDG 3 - Good Health & Well-Being', 'SDG 11 - Sustainable Cities', 'Data BPS 2024'];
+
+const socials = [
+  { Icon: Instagram, label: 'Instagram', href: '#' },
+  { Icon: Twitter, label: 'Twitter', href: '#' },
+  { Icon: Linkedin, label: 'LinkedIn', href: '#' },
+];
+
+function handleAnchorClick(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
+  if (!href.startsWith('#')) return;
+
+  const target = document.getElementById(href.replace('#', ''));
+  if (!target) return;
+
+  event.preventDefault();
+  const navbarOffset = 120;
+  const top = target.getBoundingClientRect().top + window.pageYOffset - navbarOffset;
+
+  window.scrollTo({ top, behavior: 'smooth' });
+}
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('sihat@banjarbaru.go.id');
+      setCopiedEmail(true);
+      window.setTimeout(() => setCopiedEmail(false), 1800);
+    } catch {
+      window.location.href = 'mailto:sihat@banjarbaru.go.id';
+    }
+  };
+
+  const handleBackToTop = () => {
+    const hero = document.getElementById('hero');
+
+    if (hero) {
+      hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer
       className="relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #065f46 0%, #064e3b 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #303832 0%, #232a25 100%)' }}
     >
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-12">
-          {/* Left - Headline */}
-          <div className="lg:col-span-5">
-            <motion.h3
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
-              viewport={{ once: true }}
-              className="text-white mb-4"
-              style={{ fontSize: 'clamp(28px, 3vw, 40px)', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em' }}
-            >
-              Let's Talk Health
-            </motion.h3>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.06, ease: [0.25, 0.8, 0.25, 1] }}
-              viewport={{ once: true }}
-              className="leading-relaxed" 
-              style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)' }}
-            >
-              Platform data lingkungan terpadu untuk mewujudkan Banjarbaru yang lebih sehat dan sejahtera.
-            </motion.p>
+      <div
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-40"
+        style={{ background: 'linear-gradient(180deg, rgba(185, 169, 245, 0.14), transparent)' }}
+      />
 
-            {/* Logo */}
-            <div className="flex items-center space-x-3 mt-8">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: 'white' }}
-              >
-              <img src="assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
+      <div className="relative mx-auto max-w-7xl px-6 py-14 lg:px-8 lg:py-16">
+        <div
+          className="mb-12 grid gap-8 rounded-2xl p-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:p-7"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease: [0.25, 0.8, 0.25, 1] }}
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white">
+                <img src="assets/logo.png" alt="Logo SIHAT" className="h-full w-full object-contain" />
               </div>
               <div>
-                <div className="text-white" style={{ fontSize: '20px', fontWeight: 700 }}>
+                <div className="text-white" style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1 }}>
                   SIHAT
                 </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Sistem Informasi Kesehatan Lingkungan Terpadu.</div>
+                <div className="mt-1" style={{ color: 'rgba(255,255,255,0.56)', fontSize: '12px' }}>
+                  Sistem Informasi Kesehatan Lingkungan Terpadu
+                </div>
               </div>
+            </div>
+
+            <h2
+              className="max-w-2xl text-white"
+              style={{
+                fontSize: 'clamp(28px, 4vw, 48px)',
+                fontWeight: 800,
+                letterSpacing: 0,
+                lineHeight: 1.12,
+              }}
+            >
+              Data kesehatan lingkungan yang mudah diakses dan siap ditindaklanjuti.
+            </h2>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.08, ease: [0.25, 0.8, 0.25, 1] }}
+            className="flex flex-col gap-3 sm:flex-row lg:justify-end"
+          >
+            <motion.a
+              href="#laporan"
+              onClick={(event) => handleAnchorClick(event, '#laporan')}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="group inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 font-semibold transition-shadow duration-300"
+              style={{ color: 'var(--ink-900)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.18)' }}
+            >
+              Laporkan Masalah
+              <ArrowRight size={18} className="ml-2 transition-transform group-hover:translate-x-1" />
+            </motion.a>
+
+            <motion.button
+              type="button"
+              onClick={handleCopyEmail}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex min-h-12 items-center justify-center rounded-xl px-5 font-semibold text-white transition-colors duration-300"
+              style={{
+                backgroundColor: copiedEmail ? 'rgba(185, 169, 245, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+              }}
+            >
+              {copiedEmail ? <Check size={18} className="mr-2" /> : <Copy size={18} className="mr-2" />}
+              {copiedEmail ? 'Email Tersalin' : 'Salin Email'}
+            </motion.button>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-4">
+            <p className="max-w-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.64)', fontSize: '15px' }}>
+              Platform geospasial terpadu untuk membantu warga, dinas, dan mitra memahami kondisi kesehatan
+              lingkungan Banjarbaru secara lebih cepat.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              <a
+                href="mailto:sihat@banjarbaru.go.id"
+                className="group flex items-center gap-3 rounded-xl p-3 transition-colors duration-200"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                  <Mail size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block" style={{ color: 'rgba(255,255,255,0.48)', fontSize: '12px' }}>
+                    Email
+                  </span>
+                  <span className="block truncate text-sm font-semibold text-white">sihat@banjarbaru.go.id</span>
+                </span>
+                <ArrowUpRight size={17} className="text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
+
+              <a
+                href="tel:+62511234567"
+                className="group flex items-center gap-3 rounded-xl p-3 transition-colors duration-200"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                  <Phone size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block" style={{ color: 'rgba(255,255,255,0.48)', fontSize: '12px' }}>
+                    Telepon
+                  </span>
+                  <span className="block truncate text-sm font-semibold text-white">+62 511 234 567</span>
+                </span>
+                <ArrowUpRight size={17} className="text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
+
+              <a
+                href="#peta"
+                onClick={(event) => handleAnchorClick(event, '#peta')}
+                className="group flex items-start gap-3 rounded-xl p-3 transition-colors duration-200"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+              >
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                  <MapPin size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block" style={{ color: 'rgba(255,255,255,0.48)', fontSize: '12px' }}>
+                    Lokasi
+                  </span>
+                  <span className="block text-sm font-semibold leading-relaxed text-white">
+                    Jl. Panglima Batur Barat No.5, Banjarbaru
+                  </span>
+                </span>
+                <ArrowUpRight size={17} className="mt-1 text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
             </div>
           </div>
 
-          {/* Partners */}
           <div className="lg:col-span-2">
-            <h4
-              className="text-white mb-6"
-              style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-            >
-              PARTNERS
-            </h4>
-            <ul className="space-y-3">
-              {['Geoportal Kota Banjarbaru', 'Dinkes Banjarbaru', 'BPS Kalsel', 'WHO Indonesia'].map(
-                (partner) => (
-                  <li key={partner}>
-                    <a
-                      href="#"
-                      className="text-sm transition-colors duration-200"
-                      style={{ color: 'rgba(255,255,255,0.6)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                    >
-                      {partner}
-                    </a>
-                  </li>
-                )
-              )}
+            <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.08em] text-white">Navigasi</h3>
+            <ul className="space-y-2">
+              {footerLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    onClick={(event) => handleAnchorClick(event, link.href)}
+                    className="group inline-flex items-center py-1 text-sm transition-colors duration-200"
+                    style={{ color: 'rgba(255,255,255,0.6)' }}
+                  >
+                    <span className="transition-colors duration-200 group-hover:text-white">{link.label}</span>
+                    <ArrowRight
+                      size={14}
+                      className="ml-1 opacity-0 transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100"
+                    />
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
           <div className="lg:col-span-3">
-            <h4
-              className="text-white mb-6"
-              style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-            >
-              CONTACT
-            </h4>
-            <ul className="space-y-4">
-              <li className="flex items-start space-x-3">
-                <MapPin size={18} style={{ color: 'var(--brand-green)' }} className="flex-shrink-0 mt-0.5" />
-                <span className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Jl. Panglima Batur Barat No.5, Banjarbaru, Kalimantan Selatan 70711
-                </span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Mail size={18} style={{ color: 'var(--brand-green)' }} className="flex-shrink-0" />
-                <a
-                  href="mailto:sihat@banjarbaru.go.id"
-                  className="text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+            <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.08em] text-white">Mitra Data</h3>
+            <ul className="space-y-3">
+              {partners.map((partner) => (
+                <li key={partner} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.62)' }}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#c9bee9]" />
+                  {partner}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="lg:col-span-3">
+            <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.08em] text-white">Ruang Lingkup</h3>
+            <ul className="space-y-3">
+              {details.map((detail) => (
+                <li
+                  key={detail}
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    color: 'rgba(255,255,255,0.66)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
                 >
-                  sihat@banjarbaru.go.id
-                </a>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Phone size={18} style={{ color: 'var(--brand-green)' }} className="flex-shrink-0" />
-                <a
-                  href="tel:+62511234567"
-                  className="text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                >
-                  +62 511 234 567
-                </a>
-              </li>
+                  {detail}
+                </li>
+              ))}
             </ul>
 
-            {/* Social Icons */}
-            <div className="flex items-center space-x-3 mt-6">
-              {[
-                { Icon: Instagram, label: 'Instagram' },
-                { Icon: Twitter, label: 'Twitter' },
-                { Icon: Linkedin, label: 'LinkedIn' },
-              ].map(({ Icon, label }, index) => (
+            <div className="mt-6 flex items-center gap-3">
+              {socials.map(({ Icon, label, href }, index) => (
                 <motion.a
                   key={label}
-                  href="#"
-                  initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ 
-                    duration: 0.3,
-                    delay: index * 0.06,
-                    ease: [0.25, 0.8, 0.25, 1]
-                  }}
+                  href={href}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--brand-green)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; }}
+                  whileHover={{ y: -3, scale: 1.04 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.25, delay: index * 0.04 }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-white transition-colors duration-200"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
                   aria-label={label}
                 >
-                  <Icon size={18} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                  <Icon size={18} />
                 </motion.a>
               ))}
             </div>
           </div>
-
-          {/* Details */}
-          <div className="lg:col-span-2">
-            <h4
-              className="text-white mb-6"
-              style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-            >
-              DETAILS
-            </h4>
-            <ul className="space-y-3">
-              <li className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>SDG 3 - Good Health & Well-Being</li>
-              <li className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Open Data Initiative</li>
-              <li className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>BPS 2024 Data</li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                >
-                  Privacy Policy
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} className="pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 gap-8">
-            <p className="text-sm text-right w-full" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              &copy; {currentYear} SIHAT. All Rights Reserved
-            </p>
-            <div className="flex items-center space-x-6">
-              <a
-                href="#"
-                className="text-sm transition-colors duration-200"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-              >
-                Terms of Service
-              </a>
-              <a
-                href="#"
-                className="text-sm transition-colors duration-200"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-              >
-                Accessibility
-              </a>
-            </div>
+        <div
+          className="mt-12 flex flex-col gap-5 pt-7 sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.46)' }}>
+            &copy; {currentYear} SIHAT Banjarbaru. All Rights Reserved.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.46)' }}>
+              Privacy Policy
+            </a>
+            <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.46)' }}>
+              Accessibility
+            </a>
+            <button
+              type="button"
+              onClick={handleBackToTop}
+              className="group inline-flex items-center rounded-full px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-200"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              Kembali ke Atas
+              <ArrowRight size={15} className="ml-1 rotate-[-45deg] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </button>
           </div>
         </div>
       </div>

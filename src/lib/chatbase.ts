@@ -5,6 +5,7 @@
 
 const REMOTE_SCRIPT_ID = 'f_w0Zlu5trRGKUknyahcR';
 const LOADER_ID = 'chatbase-inline-loader';
+const STYLE_ID = 'chatbase-hero-polish';
 
 const LOADER_BODY = `
 (function () {
@@ -20,7 +21,7 @@ const LOADER_BODY = `
       }
     });
   }
-  const onLoad = function () {
+  const injectWidget = function () {
     if (document.getElementById("${REMOTE_SCRIPT_ID}")) return;
     const script = document.createElement("script");
     script.src = "https://www.chatbase.co/embed.min.js";
@@ -28,10 +29,17 @@ const LOADER_BODY = `
     script.domain = "www.chatbase.co";
     document.body.appendChild(script);
   };
+  const onLoad = function () {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(injectWidget, { timeout: 4000 });
+    } else {
+      window.setTimeout(injectWidget, 2500);
+    }
+  };
   if (document.readyState === "complete") {
     onLoad();
   } else {
-    window.addEventListener("load", onLoad);
+    window.addEventListener("load", onLoad, { once: true });
   }
 })();
 `;
@@ -44,6 +52,13 @@ export function loadChatbaseWidget(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   if (document.getElementById(REMOTE_SCRIPT_ID)) return;
   if (document.getElementById(LOADER_ID)) return;
+
+  if (!document.getElementById(STYLE_ID)) {
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = '#chatbase-message-bubbles{display:none!important;}';
+    document.head.appendChild(style);
+  }
 
   const loader = document.createElement('script');
   loader.id = LOADER_ID;

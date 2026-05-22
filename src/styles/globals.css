@@ -42,16 +42,16 @@
   --sidebar-ring: oklch(0.708 0 0);
   
   /* SIHAT Design System Tokens */
-  --brand-green: #1BA351;
-  --brand-blue: #5AC8FA;
-  --brand-mint: #D8F3DC;
+  --brand-green: #465047;
+  --brand-blue: #b9a9f5;
+  --brand-mint: #f1f0ea;
   
-  --ink-900: #0F172A;
-  --ink-700: #334155;
-  --ink-500: #64748B;
+  --ink-900: #303832;
+  --ink-700: #424b45;
+  --ink-500: #70756f;
   
-  --surface-0: #FFFFFF;
-  --surface-alt: #F9FCFF;
+  --surface-0: #fbfaf5;
+  --surface-alt: #f1f0ea;
 }
 
 .dark {

@@ -48,7 +48,7 @@ function MapPlaceholder({ onLoadClick }: { onLoadClick: () => void }) {
     <section className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #f1f0ea 0%, #fbfaf5 100%)' }}
       />
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-12">

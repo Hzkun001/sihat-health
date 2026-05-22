@@ -61,7 +61,7 @@ export function StatsCards() {
             return (
               <SectionReveal key={stat.label} delay={index * 0.08}>
                 <motion.div
-                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.08)' }}
+                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(48,56,50,0.10)' }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.3, ease: [0.25, 0.8, 0.25, 1] }}
                   className="rounded-2xl p-6 cursor-pointer"
@@ -75,7 +75,7 @@ export function StatsCards() {
                     className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                     style={{ backgroundColor: 'var(--brand-mint)' }}
                   >
-                    {Icon && <Icon size={24} style={{ color: 'var(--brand-green)' }} />}
+                    {Icon && <Icon size={24} color="var(--brand-green)" />}
                   </div>
                   <div className="mb-1" style={{ fontSize: '36px', fontWeight: 700, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}>
                     {stat.value}

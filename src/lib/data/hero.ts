@@ -3,7 +3,7 @@
 // Static content used in the hero section.
 
 /** Words that cycle through the headline (every 2.5s). */
-export const rotatingWords = ['Sehat', 'Hijau', 'Inklusif', 'Berkelanjutan'] as const;
+export const rotatingWords = ['Sehat', 'Hijau', 'Inklusif'] as const;
 
 /** Widest word in the rotation — used as an invisible spacer to lock width. */
 export const widestRotatingWord =

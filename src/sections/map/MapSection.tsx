@@ -1,9 +1,25 @@
 // src/components/MapSection.tsx
 import { SectionReveal } from '@/components/shared/SectionReveal';
-import { MapPin, Filter, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  Loader2,
+  LocateFixed,
+  MapPin,
+  Eye,
+  Filter,
+  Info,
+  Layers3,
+  Search,
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  RotateCcw,
+} from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
+import { reportsToFeatureCollection, subscribeToCommunityReports } from '@/lib/communityReports';
 
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 
@@ -68,14 +84,14 @@ const LAYER_CONFIG = {
         'interpolate',
         ['linear'],
         ['get', 'kepadatan'],
-        0, '#F0FDF4',
-        150, '#BBF7D0',
-        250, '#4ADE80',
-        400, '#22C55E',
-        550, '#15803D'
+        0, '#F7F3EA',
+        150, '#E7DED1',
+        250, '#B8AA96',
+        400, '#7A6F60',
+        550, '#464039'
       ],
       'fill-opacity': 0.6,
-      'fill-outline-color': '#15803D'
+      'fill-outline-color': '#7A6F60'
     }
   },
   children: {
@@ -154,7 +170,7 @@ const LAYER_CONFIG = {
       'fill-outline-color': '#5B21B6'
     }
   },
-   tps: {
+  tps: {
     url: '/datageo/tps.json',
     render: 'symbol' as const,
     iconName: 'tps-icon',
@@ -163,14 +179,113 @@ const LAYER_CONFIG = {
     iconSize: 0.35,
     minzoom: 12,
   },
+  communityReports: {
+    render: 'symbol' as const,
+    iconName: [
+      'case',
+      ['==', ['get', 'hasPhoto'], true],
+      'community-report-photo-icon',
+      'community-report-icon',
+    ],
+    iconSize: 0.72,
+    minzoom: 0,
+  },
 } as const;
 
 type LayerId = keyof typeof LAYER_CONFIG;
 
 type PopupRow = { label: string; value: unknown; format?: 'number' | 'text' };
+type LngLatTuple = [number, number];
+type DetailInfo = {
+  layerId: LayerId;
+  title: string;
+  category: string;
+  rows: PopupRow[];
+  coordinates?: LngLatTuple | null;
+};
+type SearchResult = DetailInfo & {
+  id: string;
+  searchableText: string;
+  distanceMeters?: number;
+};
+type BasemapId = 'streets' | 'light' | 'satellite';
 
-const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true };
-const EMPTY_SELECTIONS: Readonly<Record<string, boolean>> = {};
+const MAPTILER_KEY = '2gdBMkelnNTDj6FyZkyv';
+const DEFAULT_CENTER: [number, number] = [114.833, -3.442];
+const DEFAULT_ZOOM = 12;
+const DEFAULT_BASEMAP: BasemapId = 'streets';
+const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true, communityReports: true };
+const FACILITY_LAYER_IDS: readonly LayerId[] = ['rumahsakit', 'puskesmas', 'klinik', 'apotek', 'homecare'];
+
+const BASEMAP_STYLES: Record<BasemapId, { label: string; style: string }> = {
+  streets: {
+    label: 'Streets',
+    style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}`,
+  },
+  light: {
+    label: 'Light',
+    style: `https://api.maptiler.com/maps/basic-v2-light/style.json?key=${MAPTILER_KEY}`,
+  },
+  satellite: {
+    label: 'Satellite',
+    style: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
+  },
+};
+
+const LAYER_LABELS: Record<LayerId, string> = {
+  rumahsakit: 'Rumah Sakit',
+  puskesmas: 'Puskesmas',
+  klinik: 'Klinik',
+  apotek: 'Apotek',
+  homecare: 'HomeCare Lansia',
+  population: 'Kepadatan Penduduk',
+  children: 'Sebaran Balita',
+  lansia: 'Sebaran Lansia',
+  disabilitas: 'Sebaran Disabilitas',
+  tps: 'TPS',
+  communityReports: 'Laporan Warga',
+};
+
+const LAYER_COLORS: Record<LayerId, string> = {
+  rumahsakit: '#3498DB',
+  puskesmas: '#B9A9F5',
+  klinik: '#D946EF',
+  apotek: '#1D4ED8',
+  homecare: '#F59E0B',
+  population: '#7A6F60',
+  children: '#DB2777',
+  lansia: '#C2410C',
+  disabilitas: '#7E22CE',
+  tps: '#8A8177',
+  communityReports: '#465047',
+};
+
+const FILL_LAYER_LEGENDS: Partial<Record<LayerId, { title: string; min: string; max: string; colors: string[] }>> = {
+  population: {
+    title: 'Kepadatan Penduduk',
+    min: 'Rendah',
+    max: 'Tinggi',
+    colors: ['#F7F3EA', '#E7DED1', '#B8AA96', '#7A6F60', '#464039'],
+  },
+  children: {
+    title: 'Sebaran Balita',
+    min: 'Sedikit',
+    max: 'Banyak',
+    colors: ['#FFF1F5', '#FBCFE8', '#F472B6', '#DB2777', '#9D174D'],
+  },
+  lansia: {
+    title: 'Sebaran Lansia',
+    min: 'Rendah',
+    max: 'Tinggi',
+    colors: ['#FFF7ED', '#FFEDD5', '#FDBA74', '#d6792eff', '#c94803ff'],
+  },
+  disabilitas: {
+    title: 'Sebaran Disabilitas',
+    min: 'Sedikit',
+    max: 'Banyak',
+    colors: ['#f2e8f5ff', '#dfc8e6ff', '#be81c7ff', '#a34cafff', '#712e7dff'],
+  },
+};
 
 function escapeHTML(value: string): string {
   return value.replace(/[&<>"']/g, (ch) => (
@@ -186,6 +301,12 @@ function formatNumber(value: unknown): string {
 function formatText(value: unknown): string {
   const str = value === null || value === undefined ? '' : String(value).trim();
   return str ? escapeHTML(str) : '-';
+}
+
+function formatDisplayValue(value: unknown, format?: 'number' | 'text'): string {
+  if (format === 'number') return formatNumber(value);
+  const str = value === null || value === undefined ? '' : String(value).trim();
+  return str || '-';
 }
 
 function buildPopupHTML(title: string, rows: PopupRow[]): string {
@@ -216,11 +337,331 @@ function normalizeSpriteSource(image: ImageBitmap | HTMLCanvasElement | HTMLImag
   return image;
 }
 
+async function loadIconImage(
+  url: string,
+  maxDimension = 1024
+): Promise<ImageBitmap | HTMLCanvasElement | HTMLImageElement> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+  const blob = await res.blob();
+
+  if ('createImageBitmap' in window) {
+    try {
+      let bitmap = await createImageBitmap(blob);
+      const maxDim = Math.max(bitmap.width, bitmap.height);
+      if (maxDim > maxDimension) {
+        const scale = maxDimension / maxDim;
+        bitmap = await createImageBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, {
+          resizeWidth: Math.max(1, Math.round(bitmap.width * scale)),
+          resizeHeight: Math.max(1, Math.round(bitmap.height * scale)),
+          resizeQuality: 'high',
+        });
+        console.info(`[Map] Ikon ${url} di-resize jadi ${bitmap.width}x${bitmap.height}`);
+      }
+      return bitmap;
+    } catch (err) {
+      console.info('[Map] createImageBitmap fallback ke HTMLImageElement untuk', url, err);
+    }
+  }
+
+  return await new Promise<HTMLCanvasElement | HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.decoding = 'async';
+    const objectUrl = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const maxDim = Math.max(img.naturalWidth, img.naturalHeight);
+      if (maxDim > maxDimension) {
+        const scale = maxDimension / maxDim;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Tidak bisa mendapatkan konteks canvas'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        console.info(`[Map] Ikon ${url} di-resize (fallback) jadi ${canvas.width}x${canvas.height}`);
+        resolve(canvas);
+      } else {
+        resolve(img);
+      }
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    };
+    img.src = objectUrl;
+  });
+}
+
+function createCommunityReportIcon(hasPhoto: boolean): ImageData {
+  const canvas = document.createElement('canvas');
+  canvas.width = 96;
+  canvas.height = 112;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Tidak bisa membuat ikon laporan warga');
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const baseColor = hasPhoto ? '#465047' : '#334155';
+  const accentColor = hasPhoto ? '#B9A9F5' : '#D9D6CA';
+
+  ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 7;
+
+  ctx.beginPath();
+  ctx.moveTo(48, 102);
+  ctx.bezierCurveTo(43, 88, 22, 76, 19, 47);
+  ctx.bezierCurveTo(16, 20, 31, 8, 48, 8);
+  ctx.bezierCurveTo(65, 8, 80, 20, 77, 47);
+  ctx.bezierCurveTo(74, 76, 53, 88, 48, 102);
+  ctx.closePath();
+  ctx.fillStyle = baseColor;
+  ctx.fill();
+
+  ctx.shadowColor = 'transparent';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.roundRect(28, 22, 40, 34, 10);
+  ctx.fillStyle = 'rgba(255,255,255,0.96)';
+  ctx.fill();
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = baseColor;
+  ctx.fillStyle = baseColor;
+  ctx.lineWidth = 3;
+
+  if (hasPhoto) {
+    ctx.beginPath();
+    ctx.roundRect(36, 31, 24, 17, 4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(38, 47);
+    ctx.lineTo(45, 40);
+    ctx.lineTo(50, 45);
+    ctx.lineTo(54, 41);
+    ctx.lineTo(59, 47);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(55, 35, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(36, 32);
+    ctx.lineTo(59, 32);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(36, 40);
+    ctx.lineTo(52, 40);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(36, 48);
+    ctx.lineTo(44, 48);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(48, 66, 5, 0, Math.PI * 2);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
 function normalizeToFC(raw: any): GeoJSON.FeatureCollection {
   if (raw && raw.type === 'FeatureCollection' && Array.isArray(raw.features)) return raw;
   if (raw && raw.type === 'Feature' && raw.geometry) return { type: 'FeatureCollection', features: [raw] };
   if (Array.isArray(raw) && raw.length && raw[0]?.type === 'Feature') return { type: 'FeatureCollection', features: raw };
   return { type: 'FeatureCollection', features: [] };
+}
+
+function collectCoordinatePairs(input: any, points: LngLatTuple[] = []): LngLatTuple[] {
+  if (!Array.isArray(input)) return points;
+  if (
+    input.length >= 2 &&
+    typeof input[0] === 'number' &&
+    typeof input[1] === 'number' &&
+    Number.isFinite(input[0]) &&
+    Number.isFinite(input[1])
+  ) {
+    points.push([input[0], input[1]]);
+    return points;
+  }
+  input.forEach((item) => collectCoordinatePairs(item, points));
+  return points;
+}
+
+function getFeatureCenter(feature: GeoJSON.Feature): LngLatTuple | null {
+  if (!feature.geometry) return null;
+  const points = collectCoordinatePairs((feature.geometry as any).coordinates);
+  if (!points.length) return null;
+  if (points.length === 1) return points[0];
+
+  const bounds = points.reduce(
+    (acc, [lng, lat]) => ({
+      minLng: Math.min(acc.minLng, lng),
+      minLat: Math.min(acc.minLat, lat),
+      maxLng: Math.max(acc.maxLng, lng),
+      maxLat: Math.max(acc.maxLat, lat),
+    }),
+    { minLng: Infinity, minLat: Infinity, maxLng: -Infinity, maxLat: -Infinity }
+  );
+
+  if (!Number.isFinite(bounds.minLng)) return null;
+  return [(bounds.minLng + bounds.maxLng) / 2, (bounds.minLat + bounds.maxLat) / 2];
+}
+
+function formatDistance(meters: number): string {
+  if (!Number.isFinite(meters)) return '-';
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} km`;
+}
+
+function distanceInMeters(from: LngLatTuple, to: LngLatTuple): number {
+  const toRad = (degree: number) => (degree * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRad(to[1] - from[1]);
+  const dLng = toRad(to[0] - from[0]);
+  const lat1 = toRad(from[1]);
+  const lat2 = toRad(to[1]);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function createLayerDetail(layerId: LayerId, props: any, coordinates?: LngLatTuple | null): DetailInfo {
+  if (layerId === 'communityReports') {
+    return {
+      layerId,
+      title: props.hasPhoto ? 'Laporan warga dengan foto' : 'Laporan warga',
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Keterangan', value: props.description, format: 'text' },
+        { label: 'Status', value: props.status, format: 'text' },
+        { label: 'Komentar', value: props.commentsCount, format: 'number' },
+        { label: 'Waktu', value: props.createdAt ? new Date(props.createdAt).toLocaleString('id-ID') : '', format: 'text' },
+      ],
+    };
+  }
+
+  if (layerId === 'tps') {
+    return {
+      layerId,
+      title: formatDisplayValue(props.tps ?? 'Tempat Pembuangan Sementara'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Keterangan', value: props.keterangan, format: 'text' },
+        { label: 'Sumber', value: props.sumber, format: 'text' },
+      ],
+    };
+  }
+
+  if (layerId === 'population') {
+    return {
+      layerId,
+      title: formatDisplayValue(props.namobj ?? 'Kepadatan Penduduk'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Kelurahan', value: props.wadmkd, format: 'text' },
+        { label: 'Penduduk', value: props.jlhpendudu, format: 'number' },
+        { label: 'Kepadatan (jiwa/km2)', value: props.kepadatan, format: 'number' },
+        { label: 'Luas (km2)', value: props.luaswh, format: 'number' },
+      ],
+    };
+  }
+
+  if (layerId === 'children') {
+    const total = ['00__04', '05__09', '10__14'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+    return {
+      layerId,
+      title: formatDisplayValue(props.namobj ?? 'Sebaran Penduduk'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Balita (0-4)', value: props['00__04'], format: 'number' },
+        { label: 'Anak (5-9)', value: props['05__09'], format: 'number' },
+        { label: 'Remaja (10-14)', value: props['10__14'], format: 'number' },
+        { label: 'Total 0-14 Tahun', value: total, format: 'number' },
+      ],
+    };
+  }
+
+  if (layerId === 'lansia') {
+    const lansia = ['60__64', '65__69', '70__74', '>75'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+    const total = [
+      '00__04', '05__09', '10__14', '15__19', '20__24', '25__29', '30__34', '35__39',
+      '40__44', '45__49', '50__54', '55__59', '60__64', '65__69', '70__74', '>75',
+    ].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+    const ratio = total ? ((lansia / total) * 100).toFixed(1) : '0';
+    return {
+      layerId,
+      title: formatDisplayValue(props.namobj ?? 'Sebaran Lansia'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Total Penduduk', value: total, format: 'number' },
+        { label: 'Total Lansia (>=60)', value: lansia, format: 'number' },
+        { label: 'Proporsi Lansia', value: `${ratio}%`, format: 'text' },
+      ],
+    };
+  }
+
+  if (layerId === 'disabilitas') {
+    const total = ['dsb_fisik', 'dsb_netra', 'dsb_rungu', 'dsb_mental', 'dsb_lainny', 'dsb_fismen']
+      .reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+    return {
+      layerId,
+      title: formatDisplayValue(props.namobj ?? 'Sebaran Disabilitas'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Fisik', value: props.dsb_fisik, format: 'number' },
+        { label: 'Netra', value: props.dsb_netra, format: 'number' },
+        { label: 'Rungu/Wicara', value: props.dsb_rungu, format: 'number' },
+        { label: 'Mental', value: props.dsb_mental, format: 'number' },
+        { label: 'Lainnya', value: props.dsb_lainny, format: 'number' },
+        { label: 'Fisik & Mental', value: props.dsb_fismen, format: 'number' },
+        { label: 'Total', value: total, format: 'number' },
+      ],
+    };
+  }
+
+  return {
+    layerId,
+    title: formatDisplayValue(props.namobj ?? props.nama ?? LAYER_LABELS[layerId]),
+    category: LAYER_LABELS[layerId],
+    coordinates,
+    rows: [
+      { label: 'Alamat', value: props.rsalamat ?? props.kalamat ?? props.pkmlmt ?? props.almaptk, format: 'text' },
+      { label: 'Status', value: props.status, format: 'text' },
+      { label: 'Kelas', value: props.kelas, format: 'text' },
+      { label: 'Penanggung jawab', value: props.pnjwb ?? props.apjaptk ?? props.pemilik, format: 'text' },
+      { label: 'Jumlah kasur', value: props.jumtt, format: 'number' },
+      { label: 'SIA/Izin', value: props.nosia ?? props.izin, format: 'text' },
+    ],
+  };
+}
+
+function detailSearchText(detail: DetailInfo): string {
+  return [
+    detail.title,
+    detail.category,
+    ...detail.rows.map((row) => `${row.label} ${String(row.value ?? '')}`),
+  ].join(' ').toLowerCase();
 }
 
 interface MapSectionProps {
@@ -237,12 +678,32 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [prefersReducedMotion, setPRM] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(12);
+  const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM);
+  const [activeSelections, setActiveSelections] = useState<Record<string, boolean>>(
+    () => ({ ...DEFAULT_DESKTOP_SELECTIONS })
+  );
+  const [layerErrors, setLayerErrors] = useState<Record<string, string>>({});
+  const [selectedDetail, setSelectedDetail] = useState<DetailInfo | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchIndexReady, setSearchIndexReady] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [nearestLoading, setNearestLoading] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [layerFeatureCounts, setLayerFeatureCounts] = useState<Record<string, number>>({});
+  const [focusMode, setFocusMode] = useState(false);
+  const [basemapId, setBasemapId] = useState<BasemapId>(DEFAULT_BASEMAP);
+  const [basemapLoading, setBasemapLoading] = useState(false);
 
   // Map refs & cache
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapCardRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<MLMap | null>(null);
+  const isMobileRef = useRef(false);
+  const activeSelectionsRef = useRef<Record<string, boolean>>({ ...DEFAULT_DESKTOP_SELECTIONS });
+  const searchIndexRef = useRef<SearchResult[]>([]);
+  const searchIndexPromiseRef = useRef<Promise<SearchResult[]> | null>(null);
+  const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
   const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
   const interactionCleanups = useRef<(() => void)[]>([]);
 
@@ -257,10 +718,12 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     const srcId = `${layerId}-src`;
     const layerName = `${layerId}-layer`;
     const cfg = LAYER_CONFIG[layerId] as any;
+    const isSymbol = 'render' in cfg && cfg.render === 'symbol';
 
     if (!map.getSource(srcId)) {
       map.addSource(srcId, {
         type: 'geojson',
+        ...(isSymbol ? { cluster: true, clusterMaxZoom: 13, clusterRadius: 48 } : {}),
         data: data || { type: 'FeatureCollection', features: [] },
       });
     } else if (data) {
@@ -268,11 +731,59 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     }
 
     if (!map.getLayer(layerName)) {
-      if ('render' in cfg && cfg.render === 'symbol') {
+      if (isSymbol) {
+        const clusterCircleLayer = `${layerId}-cluster-circle`;
+        const clusterCountLayer = `${layerId}-cluster-count`;
+        const clusterColor = LAYER_COLORS[layerId];
+
+        if (!map.getLayer(clusterCircleLayer)) {
+          map.addLayer({
+            id: clusterCircleLayer,
+            type: 'circle',
+            source: srcId,
+            filter: ['has', 'point_count'],
+            paint: {
+              'circle-color': clusterColor,
+              'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                18,
+                10,
+                23,
+                25,
+                28,
+              ],
+              'circle-opacity': 0.88,
+              'circle-stroke-color': '#FFFFFF',
+              'circle-stroke-width': 2,
+            },
+            layout: { visibility: 'none' },
+          } as any);
+        }
+
+        if (!map.getLayer(clusterCountLayer)) {
+          map.addLayer({
+            id: clusterCountLayer,
+            type: 'symbol',
+            source: srcId,
+            filter: ['has', 'point_count'],
+            layout: {
+              'text-field': ['get', 'point_count_abbreviated'],
+              'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+              'text-size': 12,
+              visibility: 'none',
+            },
+            paint: {
+              'text-color': '#FFFFFF',
+            },
+          } as any);
+        }
+
         const symbolLayer: any = {
           id: layerName,
           type: 'symbol',
           source: srcId,
+          filter: ['!', ['has', 'point_count']],
           layout: {
             'icon-image': cfg.iconName,
             'icon-size': cfg.iconSize ?? 0.85,
@@ -324,9 +835,10 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   /* --------------------------- visibilitas layer --------------------------- */
   const setLayerVisibility = useCallback((layerId: LayerId, visible: boolean) => {
     const map = mapInstance.current!;
-    const name = `${layerId}-layer`;
-    if (!map.getLayer(name)) return;
-    map.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
+    [`${layerId}-layer`, `${layerId}-cluster-circle`, `${layerId}-cluster-count`].forEach((name) => {
+      if (!map.getLayer(name)) return;
+      map.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
+    });
   }, []);
 
   /* --------------------------- fit bounds FeatureCollection --------------------------- */
@@ -349,11 +861,54 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     mapInstance.current!.fitBounds([[minX, minY], [maxX, maxY]], { padding: 40, duration: 400 });
   }, []);
 
+  const fetchLayerData = useCallback(async (layerId: LayerId): Promise<GeoJSON.FeatureCollection | null> => {
+    if (layerId === 'communityReports') {
+      const fc = reportsToFeatureCollection();
+      setLayerFeatureCounts((prev) => ({ ...prev, [layerId]: fc.features.length }));
+      return fc;
+    }
+
+    const { url } = LAYER_CONFIG[layerId] as { url: string };
+    if (dataCache.current[url]) return dataCache.current[url];
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.warn(`[Map] Gagal fetch ${url}: HTTP ${res.status}`);
+        setLayerErrors((prev) => ({
+          ...prev,
+          [layerId]: `${LAYER_LABELS[layerId]} gagal dimuat (HTTP ${res.status})`,
+        }));
+        return null;
+      }
+
+      const raw = await res.json();
+      const fc = normalizeToFC(raw);
+      console.info(`[Map] ${layerId}: loaded GeoJSON features = ${fc.features.length}`);
+      dataCache.current[url] = fc;
+      setLayerFeatureCounts((prev) => ({ ...prev, [layerId]: fc.features.length }));
+      return fc;
+    } catch (err) {
+      console.warn(`[Map] Error fetch ${url}:`, err);
+      setLayerErrors((prev) => ({
+        ...prev,
+        [layerId]: `${LAYER_LABELS[layerId]} gagal dimuat`,
+      }));
+      return null;
+    }
+  }, []);
+
   /* --------------------------- load & show layer --------------------------- */
   const loadAndShowLayer = useCallback(
     async (layerId: LayerId, fit = false) => {
       const map = mapInstance.current!;
-      const { url, minzoom } = LAYER_CONFIG[layerId];
+      const { minzoom } = LAYER_CONFIG[layerId];
+      setLayerErrors((prev) => {
+        if (!prev[layerId]) return prev;
+        const next = { ...prev };
+        delete next[layerId];
+        return next;
+      });
 
       ensureSourceAndLayer(layerId);
       setLayerVisibility(layerId, true);
@@ -363,23 +918,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         console.info(`[Map] Layer "${layerId}" aktif, tapi zoom (${z.toFixed(1)}) < minzoom (${minzoom}). Zoom in untuk melihat data.`);
       }
 
-      if (!dataCache.current[url]) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) {
-            console.warn(`[Map] Gagal fetch ${url}: HTTP ${res.status}`);
-          } else {
-            const raw = await res.json();
-            const fc = normalizeToFC(raw);
-            console.info(`[Map] ${layerId}: loaded GeoJSON features = ${fc.features.length}`);
-            dataCache.current[url] = fc;
-          }
-        } catch (err) {
-          console.warn(`[Map] Error fetch ${url}:`, err);
-        }
-      }
-
-      const fc = dataCache.current[url];
+      const fc = await fetchLayerData(layerId);
       const src = map.getSource(`${layerId}-src`) as maplibregl.GeoJSONSource | undefined;
       if (fc) {
         if (src) {
@@ -388,11 +927,15 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         if (fit && fc.features.length) fitFC(fc);
       } else {
         console.warn(`[Map] ${layerId}: no data in cache after fetch`);
+        setLayerErrors((prev) => ({
+          ...prev,
+          [layerId]: prev[layerId] ?? `${LAYER_LABELS[layerId]} belum tersedia`,
+        }));
       }
 
       setZoomLevel(map.getZoom());
     },
-    [ensureSourceAndLayer, fitFC, setLayerVisibility]
+    [ensureSourceAndLayer, fetchLayerData, fitFC, setLayerVisibility]
   );
 
   const hideLayer = useCallback((layerId: LayerId) => {
@@ -439,28 +982,75 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     });
   }, []);
 
-  const registerClickPopup = useCallback((layerId: LayerId, getContent: (feature: maplibregl.MapGeoJSONFeature) => string | null) => {
+  const registerClickPopup = useCallback((layerId: LayerId, _getContent: (feature: maplibregl.MapGeoJSONFeature) => string | null) => {
     const map = mapInstance.current;
     if (!map) return;
     const layerName = `${layerId}-layer`;
     if (!map.getLayer(layerName)) return;
 
-    const popup = new maplibregl.Popup({ closeButton: true, offset: 16, maxWidth: '320px' });
-
     const onClick = (event: maplibregl.MapLayerMouseEvent) => {
       const feature = event.features?.[0];
       if (!feature) return;
-      const html = getContent(feature);
-      if (!html) return;
-      popup.setLngLat(event.lngLat).setHTML(html).addTo(map);
+      const center = getFeatureCenter(feature as GeoJSON.Feature) ?? [event.lngLat.lng, event.lngLat.lat];
+      setSelectedDetail(createLayerDetail(layerId, feature.properties || {}, center));
     };
 
     map.on('click', layerName, onClick);
     interactionCleanups.current.push(() => {
-      popup.remove();
       map.off('click', layerName, onClick);
     });
   }, []);
+
+  const registerClusterInteractions = useCallback((layerId: LayerId) => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const clusterCircleLayer = `${layerId}-cluster-circle`;
+    if (!map.getLayer(clusterCircleLayer)) return;
+
+    const onClick = async (event: maplibregl.MapLayerMouseEvent) => {
+      const feature = event.features?.[0];
+      const clusterId = feature?.properties?.cluster_id;
+      const coordinates = (feature?.geometry as any)?.coordinates as LngLatTuple | undefined;
+      if (clusterId === undefined || !coordinates) return;
+
+      const source = map.getSource(`${layerId}-src`) as any;
+      if (!source?.getClusterExpansionZoom) return;
+
+      try {
+        const zoom = await new Promise<number>((resolve, reject) => {
+          source.getClusterExpansionZoom(clusterId, (err: unknown, nextZoom: number) => {
+            if (err) reject(err);
+            else resolve(nextZoom);
+          });
+        });
+        map.easeTo({
+          center: coordinates,
+          zoom,
+          duration: prefersReducedMotion ? 0 : 350,
+        });
+      } catch (err) {
+        console.warn(`[Map] Gagal membuka cluster ${layerId}:`, err);
+      }
+    };
+
+    const onEnter = () => {
+      map.getCanvas().style.cursor = 'pointer';
+    };
+
+    const onLeave = () => {
+      if (map.getCanvas().style.cursor === 'pointer') map.getCanvas().style.cursor = '';
+    };
+
+    map.on('click', clusterCircleLayer, onClick);
+    map.on('mouseenter', clusterCircleLayer, onEnter);
+    map.on('mouseleave', clusterCircleLayer, onLeave);
+
+    interactionCleanups.current.push(() => {
+      map.off('click', clusterCircleLayer, onClick);
+      map.off('mouseenter', clusterCircleLayer, onEnter);
+      map.off('mouseleave', clusterCircleLayer, onLeave);
+    });
+  }, [prefersReducedMotion]);
 
   const registerAllInteractions = useCallback(() => {
     const map = mapInstance.current;
@@ -470,7 +1060,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     const allowHover = (() => {
       if (typeof window === 'undefined') return true;
-      if (isMobile) return false;
+      if (isMobileRef.current) return false;
       const hoverMedia = window.matchMedia?.('(hover: hover)');
       const pointerFine = window.matchMedia?.('(pointer: fine)');
       return (hoverMedia?.matches ?? true) && (pointerFine?.matches ?? true);
@@ -506,6 +1096,58 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     registerFacilityLayer('klinik', 2);
     registerFacilityLayer('apotek', 2);
     registerFacilityLayer('homecare', 2);
+    (Object.entries(LAYER_CONFIG) as [LayerId, any][])
+      .filter(([, cfg]) => cfg.render === 'symbol')
+      .forEach(([layerId]) => registerClusterInteractions(layerId));
+
+    if (allowHover) {
+      registerHoverPopup('communityReports', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.hasPhoto ? 'Laporan warga dengan foto' : 'Laporan warga', [
+          { label: 'Keterangan', value: props.description, format: 'text' },
+          { label: 'Komentar', value: props.commentsCount, format: 'number' },
+        ]);
+      });
+    }
+
+    const reportLayerName = 'communityReports-layer';
+    if (map.getLayer(reportLayerName)) {
+      const onReportClick = (event: maplibregl.MapLayerMouseEvent) => {
+        const feature = event.features?.[0];
+        if (!feature) return;
+        const props = feature.properties || {};
+        const center = getFeatureCenter(feature as GeoJSON.Feature) ?? [event.lngLat.lng, event.lngLat.lat];
+
+        if (props.hasPhoto && props.id) {
+          window.location.hash = `laporan/${encodeURIComponent(String(props.id))}`;
+          return;
+        }
+
+        setSelectedDetail(createLayerDetail('communityReports', props, center));
+      };
+
+      map.on('click', reportLayerName, onReportClick);
+      interactionCleanups.current.push(() => {
+        map.off('click', reportLayerName, onReportClick);
+      });
+    }
+
+    if (allowHover) {
+      registerHoverPopup('tps', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.tps ?? 'TPS', [
+          { label: 'Keterangan', value: props.keterangan, format: 'text' },
+          { label: 'Sumber', value: props.sumber, format: 'text' },
+        ]);
+      });
+    }
+    registerClickPopup('tps', (feature) => {
+      const props = feature.properties || {};
+      return buildPopupHTML(props.tps ?? 'Tempat Pembuangan Sementara', [
+        { label: 'Keterangan', value: props.keterangan, format: 'text' },
+        { label: 'Sumber', value: props.sumber, format: 'text' },
+      ]);
+    });
 
     if (allowHover) {
       registerHoverPopup('population', (feature) => {
@@ -551,6 +1193,38 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       ]);
     });
 
+    const sumLansia = (props: any) =>
+      ['60__64', '65__69', '70__74', '>75'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+
+    const sumPopulationByAge = (props: any) =>
+      [
+        '00__04', '05__09', '10__14', '15__19', '20__24', '25__29', '30__34', '35__39',
+        '40__44', '45__49', '50__54', '55__59', '60__64', '65__69', '70__74', '>75',
+      ].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
+
+    if (allowHover) {
+      registerHoverPopup('lansia', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.namobj ?? 'Sebaran Lansia', [
+          { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+          { label: 'Total Lansia (>=60)', value: sumLansia(props), format: 'number' },
+        ]);
+      });
+    }
+    registerClickPopup('lansia', (feature) => {
+      const props = feature.properties || {};
+      const lansia = sumLansia(props);
+      const total = sumPopulationByAge(props);
+      const ratio = total ? ((lansia / total) * 100).toFixed(1) : '0';
+
+      return buildPopupHTML(props.namobj ?? 'Sebaran Lansia', [
+        { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
+        { label: 'Total Penduduk', value: total, format: 'number' },
+        { label: 'Total Lansia (>=60)', value: lansia, format: 'number' },
+        { label: 'Proporsi Lansia', value: `${ratio}%`, format: 'text' },
+      ]);
+    });
+
     const sumDisability = (props: any) =>
       ['dsb_fisik', 'dsb_netra', 'dsb_rungu', 'dsb_mental', 'dsb_lainny', 'dsb_fismen']
         .reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
@@ -577,7 +1251,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         { label: 'Total', value: sumDisability(props), format: 'number' },
       ]);
     });
-  }, [registerClickPopup, registerHoverPopup, teardownInteractions, isMobile]);
+  }, [registerClickPopup, registerClusterInteractions, registerHoverPopup, teardownInteractions]);
 
   /* --------------------------- responsif & PRM --------------------------- */
   useEffect(() => {
@@ -586,7 +1260,11 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     const onPRM = (e: MediaQueryListEvent) => setPRM(e.matches);
     mql.addEventListener?.('change', onPRM);
 
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    const checkMobile = () => {
+      const nextIsMobile = window.innerWidth < 1024;
+      isMobileRef.current = nextIsMobile;
+      setIsMobile((prev) => (prev === nextIsMobile ? prev : nextIsMobile));
+    };
     checkMobile();
 
     const onResize = () => {
@@ -602,6 +1280,30 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       window.removeEventListener('resize', onResize);
     };
   }, []);
+
+  useEffect(() => {
+    isMobileRef.current = isMobile;
+    if (mapLoaded) registerAllInteractions();
+  }, [isMobile, mapLoaded, registerAllInteractions]);
+
+  useEffect(() => {
+    activeSelectionsRef.current = activeSelections;
+  }, [activeSelections]);
+
+  useEffect(() => {
+    return subscribeToCommunityReports((reports) => {
+      const fc = reportsToFeatureCollection(reports);
+      setLayerFeatureCounts((prev) => ({ ...prev, communityReports: fc.features.length }));
+
+      const map = mapInstance.current;
+      const source = map?.getSource('communityReports-src') as maplibregl.GeoJSONSource | undefined;
+      source?.setData(fc);
+
+      if (activeSelectionsRef.current.communityReports && mapLoaded) {
+        setLayerVisibility('communityReports', true);
+      }
+    });
+  }, [mapLoaded, setLayerVisibility]);
 
   /* --------------------------- fullscreen --------------------------- */
   useEffect(() => {
@@ -676,15 +1378,307 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     setZoomLevel(next);
   }, []);
 
+  const handleResetView = useCallback(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    map.easeTo({
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
+      duration: prefersReducedMotion ? 0 : 450,
+    });
+    setZoomLevel(DEFAULT_ZOOM);
+  }, [prefersReducedMotion]);
+
+  const handleLayerToggle = useCallback(
+    async (layerId: string, enabled: boolean) => {
+      if (!(layerId in LAYER_CONFIG)) return;
+      const id = layerId as LayerId;
+      setActiveSelections((prev) => ({ ...prev, [id]: enabled }));
+      if (enabled) await loadAndShowLayer(id, false);
+      else {
+        hideLayer(id);
+        setSelectedDetail((prev) => (prev?.layerId === id ? null : prev));
+      }
+    },
+    [hideLayer, loadAndShowLayer]
+  );
+
+  const toggleLayerFromMap = useCallback((layerId: LayerId) => {
+    void handleLayerToggle(layerId, !activeSelections[layerId]);
+  }, [activeSelections, handleLayerToggle]);
+
+  const buildSearchIndex = useCallback(async () => {
+    if (searchIndexReady) return searchIndexRef.current;
+    if (searchIndexPromiseRef.current) return searchIndexPromiseRef.current;
+
+    setSearchLoading(true);
+    setLocationError('');
+
+    searchIndexPromiseRef.current = (async () => {
+      try {
+        const results: SearchResult[] = [];
+        for (const layerId of FACILITY_LAYER_IDS) {
+          const fc = await fetchLayerData(layerId);
+          if (!fc) continue;
+
+          fc.features.forEach((feature, featureIndex) => {
+            const coordinates = getFeatureCenter(feature);
+            if (!coordinates) return;
+            const detail = createLayerDetail(layerId, feature.properties || {}, coordinates);
+            results.push({
+              ...detail,
+              id: `${layerId}-${feature.id ?? featureIndex}`,
+              searchableText: detailSearchText(detail),
+            });
+          });
+        }
+
+        searchIndexRef.current = results;
+        setSearchIndexReady(true);
+        return results;
+      } finally {
+        setSearchLoading(false);
+        searchIndexPromiseRef.current = null;
+      }
+    })();
+
+    return searchIndexPromiseRef.current;
+  }, [fetchLayerData, searchIndexReady]);
+
+  const focusDetailOnMap = useCallback((detail: DetailInfo, zoom = 14.5) => {
+    const map = mapInstance.current;
+    if (!map || !detail.coordinates) return;
+    map.easeTo({
+      center: detail.coordinates,
+      zoom: Math.max(map.getZoom(), zoom),
+      duration: prefersReducedMotion ? 0 : 450,
+    });
+  }, [prefersReducedMotion]);
+
+  const selectSearchResult = useCallback(async (result: SearchResult) => {
+    await handleLayerToggle(result.layerId, true);
+    setSelectedDetail(
+      typeof result.distanceMeters === 'number'
+        ? {
+            ...result,
+            rows: [
+              { label: 'Jarak dari lokasi Anda', value: formatDistance(result.distanceMeters), format: 'text' },
+              ...result.rows.filter((row) => row.label !== 'Jarak dari lokasi Anda'),
+            ],
+          }
+        : result
+    );
+    focusDetailOnMap(result);
+    setSearchQuery(result.title);
+    setSearchResults([]);
+  }, [focusDetailOnMap, handleLayerToggle]);
+
+  const addUserLocationMarker = useCallback((coordinates: LngLatTuple) => {
+    const map = mapInstance.current;
+    if (!map) return;
+    userLocationMarkerRef.current?.remove();
+    userLocationMarkerRef.current = new maplibregl.Marker({ color: '#465047' })
+      .setLngLat(coordinates)
+      .addTo(map);
+  }, []);
+
+  const handleFindNearest = useCallback(async () => {
+    if (!navigator.geolocation) {
+      setLocationError('Browser tidak mendukung deteksi lokasi.');
+      return;
+    }
+
+    setNearestLoading(true);
+    setLocationError('');
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+      });
+
+      const userCoordinates: LngLatTuple = [position.coords.longitude, position.coords.latitude];
+      addUserLocationMarker(userCoordinates);
+
+      const index = await buildSearchIndex();
+      const nearest = index
+        .filter((item) => item.coordinates)
+        .map((item) => ({
+          ...item,
+          distanceMeters: distanceInMeters(userCoordinates, item.coordinates!),
+        }))
+        .sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
+        .slice(0, 5);
+
+      if (!nearest.length) {
+        setLocationError('Belum ada fasilitas yang bisa dibandingkan.');
+        return;
+      }
+
+      setSearchQuery('Fasilitas terdekat');
+      setSearchResults(nearest);
+
+      const first = nearest[0];
+      await handleLayerToggle(first.layerId, true);
+      setSelectedDetail({
+        ...first,
+        rows: [
+          { label: 'Jarak dari lokasi Anda', value: formatDistance(first.distanceMeters ?? 0), format: 'text' },
+          ...first.rows,
+        ],
+      });
+
+      const map = mapInstance.current;
+      if (map && first.coordinates) {
+        map.fitBounds([userCoordinates, first.coordinates], {
+          padding: 80,
+          duration: prefersReducedMotion ? 0 : 500,
+          maxZoom: 15,
+        });
+      }
+    } catch (err) {
+      const error = err as GeolocationPositionError;
+      setLocationError(
+        error.code === 1
+          ? 'Izin lokasi ditolak. Aktifkan izin lokasi untuk melihat fasilitas terdekat.'
+          : 'Gagal membaca lokasi Anda. Coba lagi beberapa saat.'
+      );
+    } finally {
+      setNearestLoading(false);
+    }
+  }, [addUserLocationMarker, buildSearchIndex, handleLayerToggle, prefersReducedMotion]);
+
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query || query === 'fasilitas terdekat') {
+      if (!nearestLoading) setSearchResults([]);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const index = await buildSearchIndex();
+      if (cancelled) return;
+      setSearchResults(
+        index
+          .filter((item) => item.searchableText.includes(query))
+          .slice(0, 6)
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [buildSearchIndex, nearestLoading, searchQuery]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!mapLoaded || !map) return;
+
+    const hasActiveFill = (Object.keys(LAYER_CONFIG) as LayerId[]).some(
+      (id) => activeSelections[id] && LAYER_CONFIG[id].render === 'fill'
+    );
+
+    (Object.entries(LAYER_CONFIG) as [LayerId, any][]).forEach(([layerId, cfg]) => {
+      const layerName = `${layerId}-layer`;
+      if (!map.getLayer(layerName)) return;
+
+      if (cfg.render === 'symbol') {
+        const symbolOpacity = focusMode && hasActiveFill ? 0.38 : 1;
+        map.setPaintProperty(layerName, 'icon-opacity', symbolOpacity);
+        if (map.getLayer(`${layerId}-cluster-circle`)) {
+          map.setPaintProperty(`${layerId}-cluster-circle`, 'circle-opacity', focusMode && hasActiveFill ? 0.32 : 0.88);
+        }
+        if (map.getLayer(`${layerId}-cluster-count`)) {
+          map.setPaintProperty(`${layerId}-cluster-count`, 'text-opacity', symbolOpacity);
+        }
+      }
+
+      if (cfg.render === 'fill') {
+        const baseOpacity = cfg.fill?.['fill-opacity'] ?? 0.55;
+        map.setPaintProperty(layerName, 'fill-opacity', focusMode && !activeSelections[layerId] ? 0.18 : baseOpacity);
+      }
+    });
+  }, [activeSelections, focusMode, mapLoaded]);
+
+  const ensureSymbolImages = useCallback(async () => {
+    const map = mapInstance.current;
+    if (!map) return;
+
+    if (!map.hasImage('community-report-icon')) {
+      map.addImage('community-report-icon', createCommunityReportIcon(false));
+    }
+    if (!map.hasImage('community-report-photo-icon')) {
+      map.addImage('community-report-photo-icon', createCommunityReportIcon(true));
+    }
+
+    const symbolLayers = (Object.entries(LAYER_CONFIG) as [LayerId, any][])
+      .filter(([, cfg]) => cfg.render === 'symbol');
+
+    for (const [layerId, cfg] of symbolLayers) {
+      if (!cfg.iconName || !cfg.iconURL || map.hasImage(cfg.iconName)) continue;
+      try {
+        const bitmap = await loadIconImage(cfg.iconURL, cfg.iconBitmapMaxSize ?? 256);
+        map.addImage(cfg.iconName, normalizeSpriteSource(bitmap));
+        console.info(`[Map] Ikon ${layerId} berhasil dimuat`);
+      } catch (iconErr) {
+        console.warn(`[Map] Gagal memuat ikon ${layerId}:`, iconErr);
+      }
+    }
+  }, []);
+
+  const hydrateMapStyle = useCallback(
+    async (fitDefaultLayer = false) => {
+      const map = mapInstance.current;
+      if (!map) return;
+
+      setMapLoaded(false);
+      await ensureSymbolImages();
+      (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
+      registerAllInteractions();
+
+      const activeIds = (Object.keys(LAYER_CONFIG) as LayerId[]).filter((id) => activeSelectionsRef.current[id]);
+      for (const id of activeIds) {
+        await loadAndShowLayer(id, fitDefaultLayer && id === 'rumahsakit');
+      }
+
+      (Object.keys(LAYER_CONFIG) as LayerId[])
+        .filter((id) => !activeSelectionsRef.current[id])
+        .forEach((id) => setLayerVisibility(id, false));
+
+      setMapLoaded(true);
+      window.setTimeout(() => map.resize(), 0);
+    },
+    [ensureSourceAndLayer, ensureSymbolImages, loadAndShowLayer, registerAllInteractions, setLayerVisibility]
+  );
+
+  const handleBasemapChange = useCallback((nextBasemapId: BasemapId) => {
+    const map = mapInstance.current;
+    if (!map || nextBasemapId === basemapId) return;
+
+    setBasemapId(nextBasemapId);
+    setBasemapLoading(true);
+    setSelectedDetail(null);
+    teardownInteractions();
+
+    map.once('style.load', () => {
+      void hydrateMapStyle(false).finally(() => setBasemapLoading(false));
+    });
+    map.setStyle(BASEMAP_STYLES[nextBasemapId].style);
+  }, [basemapId, hydrateMapStyle, teardownInteractions]);
+
   /* --------------------------- init map sekali --------------------------- */
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: 'https://api.maptiler.com/maps/streets-v4/style.json?key=2gdBMkelnNTDj6FyZkyv',
-      center: [114.833, -3.442],
-      zoom: 12,
+      style: BASEMAP_STYLES[DEFAULT_BASEMAP].style,
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
       attributionControl: false,
       hash: false,
     });
@@ -692,6 +1686,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     const ctrl = new maplibregl.NavigationControl({ visualizePitch: true, showZoom: false });
     map.addControl(ctrl, 'top-left');
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
     const navMq = window.matchMedia('(max-width: 640px)');
     const applyNavMargin = () => {
@@ -705,70 +1700,9 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     if (navMq.addEventListener) navMq.addEventListener('change', onMqChange);
     else if (navMq.addListener) navMq.addListener(onMqChange);
 
-
-    async function loadIconImage(
-      url: string,
-      maxDimension = 1024
-    ): Promise<ImageBitmap | HTMLCanvasElement | HTMLImageElement> {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
-      const blob = await res.blob();
-
-      if ('createImageBitmap' in window) {
-        try {
-          let bitmap = await createImageBitmap(blob);
-          const maxDim = Math.max(bitmap.width, bitmap.height);
-          if (maxDim > maxDimension) {
-            const scale = maxDimension / maxDim;
-            bitmap = await createImageBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, {
-              resizeWidth: Math.max(1, Math.round(bitmap.width * scale)),
-              resizeHeight: Math.max(1, Math.round(bitmap.height * scale)),
-              resizeQuality: 'high',
-            });
-            console.info(`[Map] Ikon ${url} di-resize jadi ${bitmap.width}x${bitmap.height}`);
-          }
-          return bitmap;
-        } catch (err) {
-          console.info('[Map] createImageBitmap fallback → HTMLImageElement untuk', url, err);
-        }
-      }
-
-      return await new Promise<HTMLCanvasElement | HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.decoding = 'async';
-        const objectUrl = URL.createObjectURL(blob);
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          const maxDim = Math.max(img.naturalWidth, img.naturalHeight);
-          if (maxDim > maxDimension) {
-            const scale = maxDimension / maxDim;
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-            canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              reject(new Error('Tidak bisa mendapatkan konteks canvas'));
-              return;
-            }
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            console.info(`[Map] Ikon ${url} di-resize (fallback) jadi ${canvas.width}x${canvas.height}`);
-            resolve(canvas);
-          } else {
-            resolve(img);
-          }
-        };
-        img.onerror = (err) => {
-          URL.revokeObjectURL(objectUrl);
-          reject(err);
-        };
-        img.src = objectUrl;
-      });
-    }
-
     map.on('load', async () => {
       try {
         interactionCleanups.current = [];
-        setMapLoaded(true);
         setZoomLevel(map.getZoom());
 
         if (typeof window !== 'undefined' && import.meta.env.DEV) {
@@ -776,75 +1710,35 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           console.info('[Map Debug] window.map tersedia di console');
         }
 
-        const symbolLayers = (Object.entries(LAYER_CONFIG) as [LayerId, any][])
-          .filter(([, cfg]) => cfg.render === 'symbol');
-
-        for (const [layerId, cfg] of symbolLayers) {
-          if (!cfg.iconName || !cfg.iconURL) continue;
-          if (map.hasImage(cfg.iconName)) continue;
-          try {
-            const bitmap = await loadIconImage(cfg.iconURL, cfg.iconBitmapMaxSize ?? 256);
-            map.addImage(cfg.iconName, normalizeSpriteSource(bitmap));
-            console.info(`[Map] Ikon ${layerId} berhasil dimuat`);
-          } catch (iconErr) {
-            console.warn(`[Map] Gagal memuat ikon ${layerId}:`, iconErr);
-          }
-        }
-
-        (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
-        registerAllInteractions();
-
-        void loadAndShowLayer('rumahsakit', true);
-
-        if (map.isStyleLoaded()) map.once('idle', () => setMapLoaded(true));
-        else map.once('load', () => map.once('idle', () => setMapLoaded(true)));
-
-        setTimeout(() => map.resize(), 0);
+        await hydrateMapStyle(true);
       } catch (err) {
         console.warn('[Map] Gagal inisialisasi ikon/layer:', err);
       }
     });
 
-    map.on('click', 'lansia-layer', (event) => {
-      const props = event.features?.[0]?.properties || {};
-      const lansia = ['60__64', '65__69', '70__74', '>75'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
-      const total = [
-        '00__04', '05__09', '10__14', '15__19', '20__24', '25__29', '30__34', '35__39',
-        '40__44', '45__49', '50__54', '55__59', '60__64', '65__69', '70__74', '>75',
-      ].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
-      const ratio = total ? ((lansia / total) * 100).toFixed(1) : '0';
-
-      new maplibregl.Popup({ offset: 16 })
-        .setLngLat(event.lngLat)
-        .setHTML(buildPopupHTML(props.namobj ?? 'Sebaran Lansia', [
-          { label: 'Kecamatan', value: props.wadmkc, format: 'text' },
-          { label: 'Total Penduduk', value: total, format: 'number' },
-          { label: 'Total Lansia (≥60)', value: lansia, format: 'number' },
-          { label: 'Proporsi Lansia', value: `${ratio}%`, format: 'text' },
-        ]))
-        .addTo(map);
-    });
-
-    const onStyleData = () => registerAllInteractions();
-    map.on('styledata', onStyleData);
-
     return () => {
       if (navMq.removeEventListener) navMq.removeEventListener('change', onMqChange);
       else if (navMq.removeListener) navMq.removeListener(onMqChange);
-      map.off('styledata', onStyleData);
+      teardownInteractions();
+      userLocationMarkerRef.current?.remove();
+      userLocationMarkerRef.current = null;
       map.remove();
       mapInstance.current = null;
-      teardownInteractions();
       setMapLoaded(false);
     };
-  }, [ensureSourceAndLayer, loadAndShowLayer, registerAllInteractions, teardownInteractions]);
+  }, [hydrateMapStyle, teardownInteractions]);
+
+  const activeLayerIds = (Object.keys(LAYER_CONFIG) as LayerId[]).filter((id) => activeSelections[id]);
+  const activeFillLayerIds = activeLayerIds.filter((id) => LAYER_CONFIG[id].render === 'fill');
+  const totalActiveFeatures = activeLayerIds.reduce((sum, id) => sum + (layerFeatureCounts[id] ?? 0), 0);
+  const layerErrorMessages = Object.values(layerErrors).filter(Boolean);
 
   /* --------------------------- RENDER --------------------------- */
   return (
     <section id={sectionId ?? undefined} className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, #F9FCFF 0%, #FFFFFF 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #f1f0ea 0%, #fbfaf5 100%)' }}
       />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
@@ -874,13 +1768,8 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                 <div className="sticky top-32">
                   <MapLayerFilter
                     isMobile={false}
-                    defaultSelections={DEFAULT_DESKTOP_SELECTIONS}
-                    onToggle={async (layerId, enabled) => {
-                      if (!(layerId in LAYER_CONFIG)) return;
-                      const id = layerId as LayerId;
-                      if (enabled) await loadAndShowLayer(id, false);
-                      else hideLayer(id);
-                    }}
+                    defaultSelections={activeSelections}
+                    onToggle={handleLayerToggle}
                   />
                 </div>
               </div>
@@ -899,6 +1788,21 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                   aria-label="Interactive health map"
                 >
                   <div ref={mapRef} className="absolute inset-0" />
+
+                  {!isFullscreen && (
+                    <MapSearchControl
+                      query={searchQuery}
+                      results={searchResults}
+                      loading={searchLoading}
+                      nearestLoading={nearestLoading}
+                      error={locationError}
+                      onQueryChange={setSearchQuery}
+                      onFocus={buildSearchIndex}
+                      onSelect={selectSearchResult}
+                      onFindNearest={handleFindNearest}
+                      onDismissError={() => setLocationError('')}
+                    />
+                  )}
 
                   {!prefersReducedMotion && !isFullscreen && !mapLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -933,10 +1837,23 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     </motion.button>
                   )}
 
+                  {!isFullscreen && (
+                    <motion.button
+                      onClick={handleResetView}
+                      whileTap={{ scale: 0.95 }}
+                      className="md:hidden absolute top-4 right-4 bg-white rounded-full p-3 shadow-lg z-20 backdrop-blur-sm"
+                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'rgba(255,255,255,0.95)' }}
+                      aria-label="Reset map view"
+                    >
+                      <RotateCcw size={19} className="text-ink-700" strokeWidth={2.4} />
+                    </motion.button>
+                  )}
+
                   <div className="hidden md:block absolute bottom-6 right-6 z-10">
                     <div className="flex flex-col gap-3">
                       <IconButton label="Zoom in" onClick={handleZoomIn}><ZoomIn size={20} /></IconButton>
                       <IconButton label="Zoom out" onClick={handleZoomOut}><ZoomOut size={20} /></IconButton>
+                      <IconButton label="Reset map view" onClick={handleResetView}><RotateCcw size={19} /></IconButton>
                       <IconButton label="Toggle fullscreen" onClick={toggleFullscreen}><Maximize2 size={20} /></IconButton>
                     </div>
                   </div>
@@ -971,20 +1888,58 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     </motion.button>
                   )}
 
-                  <div className="hidden sm:block absolute top-2 left-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
-                    {mapLoaded && mapInstance.current
-                      ? (() => {
-                          const map = mapInstance.current!;
-                          const layerIds = (Object.keys(LAYER_CONFIG) as LayerId[])
-                            .map((id) => `${id}-layer`)
-                            .filter((layerId) => Boolean(map.getLayer(layerId)));
-                          const rendered = layerIds.length
-                            ? map.queryRenderedFeatures({ layers: layerIds }).length
-                            : 0;
-                          return `Zoom: ${zoomLevel.toFixed(1)} | Rendered: ${rendered}`;
-                        })()
-                      : 'Loading…'}
-                  </div>
+                  <BasemapSwitcher
+                    active={basemapId}
+                    loading={basemapLoading}
+                    isFullscreen={isFullscreen}
+                    onChange={handleBasemapChange}
+                  />
+
+                  {activeFillLayerIds.length > 0 && (
+                    <MapLegend
+                      layerIds={activeFillLayerIds}
+                      counts={layerFeatureCounts}
+                      isFullscreen={isFullscreen}
+                      onToggle={toggleLayerFromMap}
+                    />
+                  )}
+
+                  {layerErrorMessages.length > 0 && (
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 max-w-[min(92%,420px)] rounded-xl border border-amber-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                      <div className="flex items-start gap-2 text-amber-800">
+                        <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+                        <p className="text-xs font-semibold leading-relaxed">
+                          {layerErrorMessages[0]}
+                          {layerErrorMessages.length > 1 ? ` dan ${layerErrorMessages.length - 1} layer lain gagal dimuat.` : '.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedDetail && (
+                    <MapDetailPanel
+                      detail={selectedDetail}
+                      onClose={() => setSelectedDetail(null)}
+                      onFocus={() => focusDetailOnMap(selectedDetail)}
+                    />
+                  )}
+
+                  {import.meta.env.DEV && (
+                    <div className="hidden sm:block absolute top-2 left-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
+                      {mapLoaded && mapInstance.current
+                        ? (() => {
+                            const map = mapInstance.current!;
+                            const layerIds = (Object.keys(LAYER_CONFIG) as LayerId[])
+                              .map((id) => `${id}-layer`)
+                              .filter((layerId) => Boolean(map.getLayer(layerId)));
+                            const rendered = layerIds.length
+                              ? map.queryRenderedFeatures({ layers: layerIds }).length
+                              : 0;
+                            return `Zoom: ${zoomLevel.toFixed(1)} | Rendered: ${rendered}`;
+                          })()
+                        : 'Loading…'}
+                    </div>
+                  )}
                 </motion.div>
               </div>
             </div>
@@ -993,12 +1948,9 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
               isMobile={isMobile}
-              defaultSelections={EMPTY_SELECTIONS}
+              defaultSelections={activeSelections}
               onToggle={async (layerId: string, enabled: boolean) => {
-                if (!(layerId in LAYER_CONFIG)) return;
-                const id = layerId as LayerId;
-                if (enabled) await loadAndShowLayer(id, false);
-                else hideLayer(id);
+                await handleLayerToggle(layerId, enabled);
                 setIsFilterOpen(false);
               }}
             />
@@ -1018,7 +1970,217 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   );
 }
 
-/* ====== Tombol kecil DRY ====== */
+function BasemapSwitcher({
+  active,
+  loading,
+  isFullscreen,
+  onChange,
+}: {
+  active: BasemapId;
+  loading: boolean;
+  isFullscreen: boolean;
+  onChange: (id: BasemapId) => void;
+}) {
+  return (
+    <div
+      className={`hidden md:block absolute z-20 w-[250px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur-sm ${
+        isFullscreen ? 'top-4 right-20' : 'top-4 right-4'
+      }`}
+    >
+      <div className="mb-2 flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Layers3 size={15} className="text-brand-green" />
+          <span className="text-xs font-bold text-ink-900">Basemap</span>
+        </div>
+        {loading && <Loader2 size={14} className="animate-spin text-brand-green" />}
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {(Object.entries(BASEMAP_STYLES) as [BasemapId, { label: string; style: string }][]).map(([id, config]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onChange(id)}
+            disabled={loading && id !== active}
+            className={`h-9 rounded-xl text-xs font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${
+              active === id
+                ? 'bg-brand-green text-white'
+                : 'bg-surface-100 text-ink-700 hover:bg-brand-mint hover:text-brand-green'
+            }`}
+            aria-pressed={active === id}
+          >
+            {config.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MapSearchControl({
+  query,
+  results,
+  loading,
+  nearestLoading,
+  error,
+  onQueryChange,
+  onFocus,
+  onSelect,
+  onFindNearest,
+  onDismissError,
+}: {
+  query: string;
+  results: SearchResult[];
+  loading: boolean;
+  nearestLoading: boolean;
+  error: string;
+  onQueryChange: (value: string) => void;
+  onFocus: () => void;
+  onSelect: (result: SearchResult) => void;
+  onFindNearest: () => void;
+  onDismissError: () => void;
+}) {
+  return (
+    <div className="absolute top-4 left-16 right-16 z-30 sm:right-auto sm:w-[380px]">
+      <div className="rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-surface-100 px-3">
+            <Search size={17} className="flex-shrink-0 text-ink-500" />
+            <input
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              onFocus={onFocus}
+              placeholder="Cari fasilitas"
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ink-900 outline-none placeholder:text-ink-500"
+              aria-label="Cari fasilitas kesehatan"
+            />
+            {loading && <Loader2 size={16} className="animate-spin text-brand-green" />}
+            {query && !loading && (
+              <button
+                type="button"
+                onClick={() => onQueryChange('')}
+                className="rounded-full p-1 text-ink-500 hover:bg-white hover:text-ink-900"
+                aria-label="Hapus pencarian"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onFindNearest}
+            disabled={nearestLoading}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-green text-white shadow-sm transition-transform active:scale-95 disabled:cursor-wait disabled:opacity-70"
+            aria-label="Cari fasilitas terdekat"
+            title="Cari fasilitas terdekat"
+          >
+            {nearestLoading ? <Loader2 size={17} className="animate-spin" /> : <LocateFixed size={17} />}
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
+            <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" />
+            <span className="flex-1">{error}</span>
+            <button type="button" onClick={onDismissError} className="rounded-full p-0.5 hover:bg-amber-100" aria-label="Tutup pesan lokasi">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-gray-100 bg-white">
+            {results.map((result) => {
+              const address = result.rows.find((row) => row.label === 'Alamat')?.value;
+              return (
+                <button
+                  key={result.id}
+                  type="button"
+                  onClick={() => onSelect(result)}
+                  className="block w-full border-b border-gray-100 px-3 py-2.5 text-left last:border-b-0 hover:bg-surface-100"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-ink-900">{result.title}</p>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-brand-green">{result.category}</p>
+                      {address ? (
+                        <p className="mt-1 truncate text-xs text-ink-500">{String(address)}</p>
+                      ) : null}
+                    </div>
+                    {typeof result.distanceMeters === 'number' && (
+                      <span className="flex-shrink-0 rounded-full bg-brand-mint px-2 py-1 text-[11px] font-bold text-brand-green">
+                        {formatDistance(result.distanceMeters)}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MapDetailPanel({
+  detail,
+  onClose,
+  onFocus,
+}: {
+  detail: DetailInfo;
+  onClose: () => void;
+  onFocus: () => void;
+}) {
+  const rows = detail.rows.filter(({ value }) => value !== null && value !== undefined && String(value).trim() !== '');
+
+  return (
+    <motion.aside
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      className="absolute bottom-20 left-4 right-4 z-30 rounded-2xl border border-white/70 bg-white/95 p-4 shadow-xl backdrop-blur-sm md:bottom-6 md:right-auto md:w-[360px]"
+      aria-label="Detail lokasi peta"
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-brand-green">{detail.category}</p>
+          <h3 className="text-lg font-bold leading-tight text-ink-900">{detail.title}</h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-ink-500 hover:bg-surface-100 hover:text-ink-900"
+          aria-label="Tutup detail lokasi"
+        >
+          <X size={17} />
+        </button>
+      </div>
+
+      <dl className="max-h-56 space-y-2 overflow-y-auto pr-1">
+        {rows.length ? rows.map((row) => (
+          <div key={`${row.label}-${String(row.value)}`} className="grid grid-cols-[120px_1fr] gap-3 text-sm">
+            <dt className="font-semibold text-ink-500">{row.label}</dt>
+            <dd className="font-semibold text-ink-900">{formatDisplayValue(row.value, row.format)}</dd>
+          </div>
+        )) : (
+          <p className="text-sm font-semibold text-ink-500">Data detail belum tersedia.</p>
+        )}
+      </dl>
+
+      {detail.coordinates && (
+        <button
+          type="button"
+          onClick={onFocus}
+          className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-white transition-transform active:scale-95"
+        >
+          <MapPin size={16} />
+          Fokuskan di peta
+        </button>
+      )}
+    </motion.aside>
+  );
+}
+
 function IconButton({
   label, onClick, children,
 }: { label: string; onClick: () => void; children: React.ReactNode; }) {
@@ -1032,11 +2194,64 @@ function IconButton({
     >
       <div className="text-ink-700 group-hover:text-white transition-colors">{children}</div>
       <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-           style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)' }} />
+           style={{ background: 'linear-gradient(135deg, #465047 0%, #b9a9f5 100%)' }} />
       <div className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         {children}
       </div>
     </motion.button>
+  );
+}
+
+function MapLegend({
+  layerIds,
+  counts,
+  isFullscreen,
+  onToggle,
+}: {
+  layerIds: LayerId[];
+  counts: Record<string, number>;
+  isFullscreen: boolean;
+  onToggle: (layerId: LayerId) => void;
+}) {
+  return (
+    <div
+      className={`hidden sm:block absolute z-20 w-[240px] rounded-2xl border border-white/70 bg-white/95 p-3 shadow-lg backdrop-blur-sm ${
+        isFullscreen ? 'top-32 right-20' : 'top-32 right-4'
+      }`}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-bold text-ink-900">Legenda</span>
+        <span className="text-[11px] font-semibold text-ink-500">{layerIds.length} layer</span>
+      </div>
+      <div className="space-y-2">
+        {layerIds.map((layerId) => {
+          const legend = FILL_LAYER_LEGENDS[layerId];
+          if (!legend) return null;
+          return (
+            <button
+              key={layerId}
+              type="button"
+              onClick={() => onToggle(layerId)}
+              className="block w-full rounded-xl p-1 text-left transition-colors hover:bg-surface-100"
+              title={`Matikan ${legend.title}`}
+            >
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="truncate text-[12px] font-semibold text-ink-700">{legend.title}</span>
+                <span className="flex-shrink-0 text-[11px] font-bold text-ink-500">{formatNumber(counts[layerId] ?? 0)}</span>
+              </div>
+              <div
+                className="h-2.5 rounded-full"
+                style={{ background: `linear-gradient(90deg, ${legend.colors.join(', ')})` }}
+              />
+              <div className="mt-1 flex justify-between text-[11px] font-medium text-ink-500">
+                <span>{legend.min}</span>
+                <span>{legend.max}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -1054,7 +2269,7 @@ function SmallButton({
       {children}
       <motion.div
         className="absolute inset-0 rounded-xl"
-        style={{ background: 'linear-gradient(135deg, #1BA351 0%, #5AC8FA 100%)', opacity: 0 }}
+        style={{ background: 'linear-gradient(135deg, #465047 0%, #b9a9f5 100%)', opacity: 0 }}
         whileTap={{ opacity: 1 }} transition={{ duration: 0.15 }}
       />
     </motion.button>

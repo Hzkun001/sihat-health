@@ -19,39 +19,40 @@ interface LayerCategory {
 }
 
 const layerCategories: LayerCategory[] = [
-  // {
-  //   id: 'health-facilities',
-  //   title: 'Fasilitas Kesehatan',
-  //   items: [
-  //     { id: 'rumahsakit',   label: 'Rumah Sakit', color: '#3498DB' },
-  //     { id: 'puskesmas',   label: 'Puskesmas', color: '#3de770ff' },
-  //     { id: 'klinik',     label: 'Klinik', color: '#d843e8ff' },
-  //     { id: 'apotek',  label: 'Apotek', color: '#090e97ff' },
-  //     { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
-  //     { id: 'ambulances',  label: 'Ambulan(Next Update)', color: '#ffffffff' },
-  //     { id: 'posyandu',    label: 'Posyandu(Next Update)', color: '#ffffffff' },
-  //   ],
-  // },
+  {
+    id: 'health-facilities',
+    title: 'Fasilitas Kesehatan',
+    items: [
+      { id: 'rumahsakit',   label: 'Rumah Sakit', color: '#3498DB' },
+      { id: 'puskesmas',   label: 'Puskesmas', color: '#b9a9f5' },
+      { id: 'klinik',     label: 'Klinik', color: '#d843e8ff' },
+      { id: 'apotek',  label: 'Apotek', color: '#090e97ff' },
+      { id: 'homecare',    label: 'HomeCare Lansia', color: '#f2c193ff' },
+      { id: 'ambulances',  label: 'Ambulan (Next Update)', color: '#ffffffff', disabled: true },
+      { id: 'posyandu',    label: 'Posyandu (Next Update)', color: '#ffffffff', disabled: true },
+    ],
+  },
   {
     id: 'demographics',
     title: 'Data Demografis',
     items: [
-      { id: 'population', label: 'Kepadatan Penduduk', color: '#137731ff' },
+      { id: 'population', label: 'Kepadatan Penduduk', color: '#7a6f60' },
       { id: 'children',   label: 'Sebaran Balita',      color: '#be336aff' },
       { id: 'lansia',    label: 'Sebaran Lansia',      color: '#c47f09ff' },
       { id: 'disabilitas', label: 'Sebaran Disabilitas', color: '#844294ff' },
     ],
   },
-   {
-  id: 'environment-health',
-    title: ' Lingkungan dan Penyakit (Coming Soon)',
+  {
+    id: 'environment-health',
+    title: 'Lingkungan dan Penyakit',
     items: [
       { id: 'airquality', label: 'Kualitas Udara', color: '#95A5A6', disabled: true },
       { id: 'heat-island', label: 'Panas Perkotaan', color: '#F39C12', disabled: true },
       { id: 'dengue-zone', label: 'Daerah Rawan DBD', color: '#E38BCF', disabled: true },
-      { id: 'bank-sampah', label: 'Bank Sampah', color: '#1BA180', disabled: true },
-      { id: 'tps', label: 'TPS', color: '#1BA360' },
-      { id: 'jalur-persampahan', label: 'Jalur Persampahan', color: '#525257' },
+      { id: 'bank-sampah', label: 'Bank Sampah', color: '#8e8496', disabled: true },
+      { id: 'communityReports', label: 'Laporan Warga', color: '#465047' },
+      { id: 'tps', label: 'TPS', color: '#8a8177' },
+      { id: 'jalur-persampahan', label: 'Jalur Persampahan (Next Update)', color: '#525257', disabled: true },
       { id: 'jalan-berlubang', label: 'Jalan Berlubang', color: '#000000', disabled: true },
       { id: 'genangan air', label: 'Genangan Air', color: '#00AEEF', disabled: true },
     ],
@@ -120,7 +121,7 @@ export function MapLayerFilter({
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: '#D8F3DC' }}
+            style={{ backgroundColor: 'var(--brand-mint)' }}
           >
             <Filter size={20} className="text-brand-green" strokeWidth={2.5} />
           </div>

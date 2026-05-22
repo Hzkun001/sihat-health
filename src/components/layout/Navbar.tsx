@@ -1,65 +1,50 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowRight, ClipboardPlus, Menu, X } from 'lucide-react';
 
 const menuItems = [
   { label: 'Beranda', href: '#hero' },
-  { label: 'Tentang', href: '#tentang' },
   { label: 'Peta', href: '#peta' },
-  { label: 'Statistik', href: '#statistik' },
-  { label: 'Berita', href: '#berita' },
+  { label: 'Laporan', href: '#laporan' },
   { label: 'Kontak', href: '#kontak' },
 ];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>('');
+  const [activeSection, setActiveSection] = useState<string>('hero');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(max-width: 1023px)');
 
+    const media = window.matchMedia('(max-width: 767px)');
     const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
       setIsMobile(event.matches);
     };
 
     handleChange(media);
-    if (media.addEventListener) {
-      media.addEventListener('change', handleChange);
-    } else {
-      media.addListener?.(handleChange);
-    }
-
-    return () => {
-      if (media.removeEventListener) {
-        media.removeEventListener('change', handleChange);
-      } else {
-        media.removeListener?.(handleChange);
-      }
-    };
+    media.addEventListener?.('change', handleChange);
+    return () => media.removeEventListener?.('change', handleChange);
   }, []);
 
   useEffect(() => {
     let ticking = false;
-    const OFFSET = 120;
+    const offset = 140;
 
     const handleScroll = () => {
       if (ticking) return;
       ticking = true;
 
       window.requestAnimationFrame(() => {
-        setIsScrolled(window.scrollY > 50);
+        setIsScrolled(window.scrollY > 72);
 
-        const sections = menuItems.map(i => i.href.replace('#', ''));
-        let current = '';
-
-        for (const id of sections) {
-          const el = document.getElementById(id);
-          if (!el) continue;
-          const top = el.getBoundingClientRect().top - OFFSET;
-          if (top <= 0) current = id;
+        let current = 'hero';
+        for (const item of menuItems) {
+          const id = item.href.replace('#', '');
+          const element = document.getElementById(id);
+          if (!element) continue;
+          if (element.getBoundingClientRect().top - offset <= 0) current = id;
         }
 
         setActiveSection(current);
@@ -72,241 +57,165 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
+  const handleNavClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    event.preventDefault();
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
 
-    if (element) {
-      const navbarOffset = 120;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
+    if (!element) return;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
+    const navbarOffset = 108;
+    const offsetPosition = element.getBoundingClientRect().top + window.pageYOffset - navbarOffset;
 
-      setActiveSection(targetId);
-      setMobileMenuOpen(false);
-    }
+    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    setActiveSection(targetId);
+    setMobileMenuOpen(false);
   };
-
-  useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset';
-  }, [mobileMenuOpen]);
 
   return (
     <>
-      {/* Floating Navbar */}
       <motion.div
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
-        className="fixed top-3 sm:top-4 lg:top-5 left-0 right-0 z-40 flex justify-center px-3 sm:px-4 pointer-events-none"
+        initial={{ y: -80, opacity: 0 }}
+        animate={{
+          y: 0,
+          opacity: 1,
+          top: isScrolled ? (isMobile ? 12 : 16) : (isMobile ? 40 : 54),
+        }}
+        transition={{ duration: 0.45, ease: [0.25, 0.8, 0.25, 1] }}
+        className="fixed left-0 right-0 z-50 flex justify-center px-3 pointer-events-none"
       >
         <motion.nav
           animate={{
-            height: isScrolled ? (isMobile ? '52px' : '56px') : isMobile ? '56px' : '64px',
+            width: isMobile ? 'min(100%, 360px)' : isScrolled ? 'min(100%, 520px)' : 'min(100%, 560px)',
           }}
-          transition={{ duration: 0.25, ease: [0.25, 0.8, 0.25, 1] }}
-          className="w-full max-w-[95%] sm:max-w-[90%] lg:max-w-[82%] pointer-events-auto"
-          style={{
-            backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.92)' : 'rgba(255, 255, 255, 0.06)',
-            backdropFilter: isScrolled ? 'blur(24px) saturate(180%)' : 'blur(12px) saturate(120%)',
-            WebkitBackdropFilter: isScrolled ? 'blur(24px) saturate(180%)' : 'blur(12px) saturate(120%)',
-            borderRadius: '999px',
-            border: isScrolled
-              ? '1px solid rgba(228, 228, 231, 0.6)'
-              : '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: isScrolled
-              ? '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-              : '0 2px 12px rgba(0, 0, 0, 0.06)',
-            willChange: 'height',
-          }}
+          transition={{ duration: 0.28, ease: [0.25, 0.8, 0.25, 1] }}
+          className="pointer-events-auto h-11 rounded-full border border-white/70 bg-white/86 shadow-[0_16px_44px_rgba(42,48,43,0.18)] backdrop-blur-2xl sm:h-12"
         >
-          <div className="h-full px-4 sm:px-5 lg:px-8 flex items-center justify-between">
-            {/* Logo + Live indicator */}
-            <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                <img src="assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  style={{
-                    fontSize: isMobile ? '15px' : '16px',
-                    fontWeight: 700,
-                    letterSpacing: '-0.02em',
-                    color: isScrolled ? 'var(--ink-900)' : '#ffffff',
-                  }}
-                >
-                  SIHAT
-                </span>
-                {/* Live dot */}
-                <span className="relative flex h-1.5 w-1.5">
-                  <span
-                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    style={{ backgroundColor: isScrolled ? 'var(--brand-green)' : '#34d399' }}
-                  />
-                  <span
-                    className="relative inline-flex rounded-full h-1.5 w-1.5"
-                    style={{ backgroundColor: isScrolled ? 'var(--brand-green)' : '#34d399' }}
-                  />
-                </span>
-              </div>
+          <div className="flex h-full items-center justify-between gap-2 px-3 sm:px-4">
+            <a
+              href="#hero"
+              onClick={(event) => handleNavClick(event, '#hero')}
+              className="flex min-w-0 items-center gap-2 rounded-full px-1 text-[#333b35]"
+              aria-label="Ke beranda SIHAT"
+            >
+              <span className="text-xl font-semibold leading-none tracking-normal sm:text-2xl">SIHAT</span>
             </a>
 
-            {/* Desktop Menu — wider tracking for editorial vibe */}
-            <div className="hidden lg:flex items-center gap-x-0.5">
+            <div className="hidden items-center gap-1 md:flex">
               {menuItems.map((item) => {
-                const isActive = activeSection === item.href.replace('#', '');
+                const id = item.href.replace('#', '');
+                const isActive = activeSection === id;
+
                 return (
                   <a
                     key={item.href}
                     href={item.href}
-                    onClick={(e) => handleNavClick(e, item.href)}
+                    onClick={(event) => handleNavClick(event, item.href)}
                     aria-current={isActive ? 'page' : undefined}
-                    className="relative px-3.5 py-1.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      letterSpacing: '0.01em',
-                      color: isActive
-                        ? (isScrolled ? 'var(--brand-green)' : '#34d399')
-                        : (isScrolled ? 'var(--ink-600, #52525b)' : 'rgba(255,255,255,0.7)'),
-                      backgroundColor: isActive
-                        ? (isScrolled ? 'rgba(5, 150, 105, 0.08)' : 'rgba(52,211,153,0.1)')
-                        : 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = isScrolled
-                          ? 'rgba(0, 0, 0, 0.04)'
-                          : 'rgba(255, 255, 255, 0.08)';
-                        e.currentTarget.style.color = isScrolled ? 'var(--ink-900)' : '#ffffff';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = isScrolled
-                          ? 'var(--ink-600, #52525b)'
-                          : 'rgba(255,255,255,0.7)';
-                      }
-                    }}
+                    className="relative rounded-full px-2.5 py-1 text-xs font-semibold text-[#303832] transition-colors hover:bg-[#eef2eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#435047]/20"
                   >
                     {item.label}
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-underline"
+                        className="absolute inset-x-2 -bottom-0.5 h-px bg-[#303832]"
+                        transition={{ duration: 0.24, ease: [0.25, 0.8, 0.25, 1] }}
+                      />
+                    )}
                   </a>
                 );
               })}
             </div>
 
-            {/* Right side: CTA pill + mobile toggle */}
-            <div className="flex items-center gap-2">
-              {/* CTA Pill — desktop */}
+            <div className="flex items-center gap-1.5">
               <a
                 href="#laporan"
-                onClick={(e) => handleNavClick(e, '#laporan')}
-                className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 rounded-full transition-all duration-300 group"
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  backgroundColor: isScrolled ? 'var(--brand-green)' : 'rgba(255,255,255,0.95)',
-                  color: isScrolled ? '#ffffff' : 'var(--ink-900, #18181b)',
-                  boxShadow: isScrolled
-                    ? '0 2px 8px rgba(5,150,105,0.3)'
-                    : '0 2px 8px rgba(0,0,0,0.1)',
-                }}
+                onClick={(event) => handleNavClick(event, '#laporan')}
+                className="hidden h-8 w-8 items-center justify-center rounded-full bg-[#eef2eb] text-[#3c463f] transition-colors hover:bg-[#dfe7dc] md:inline-flex"
+                aria-label="Buka laporan warga"
               >
-                Lapor
-                <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                <ClipboardPlus size={16} />
               </a>
 
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-full transition-all duration-300"
-                aria-label="Toggle menu"
-                style={{ color: isScrolled ? 'var(--ink-900)' : '#ffffff' }}
+              <a
+                href="#laporan"
+                onClick={(event) => handleNavClick(event, '#laporan')}
+                className="hidden items-center gap-1.5 rounded-full bg-[#465047] px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(48,56,50,0.22)] transition-colors hover:bg-[#303832] sm:inline-flex"
               >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                Lapor
+                <ArrowRight size={13} />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef2eb] text-[#303832] md:hidden"
+                aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+              >
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
           </div>
         </motion.nav>
       </motion.div>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed top-18 left-3 right-3 z-30 lg:hidden rounded-2xl overflow-hidden"
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.98)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(228,228,231,0.5)',
-              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.12)',
-            }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="fixed left-3 right-3 top-24 z-40 overflow-hidden rounded-[14px] border border-white/70 bg-white/95 shadow-[0_22px_56px_rgba(42,48,43,0.18)] backdrop-blur-2xl md:hidden"
           >
-            <div className="flex flex-col py-3">
-              {menuItems.map((item, index) => {
-                const isActive = activeSection === item.href.replace('#', '');
+            <div className="flex flex-col p-2">
+              {menuItems.map((item) => {
+                const id = item.href.replace('#', '');
+                const isActive = activeSection === id;
+
                 return (
-                  <motion.a
+                  <a
                     key={item.href}
                     href={item.href}
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}
-                    onClick={(e) => handleNavClick(e, item.href)}
-                    className="mx-2 px-4 py-3 rounded-xl transition-all duration-200"
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      color: isActive ? 'var(--brand-green)' : 'var(--ink-900)',
-                      backgroundColor: isActive ? 'rgba(5, 150, 105, 0.06)' : 'transparent',
-                    }}
+                    onClick={(event) => handleNavClick(event, item.href)}
+                    className="rounded-[10px] px-3 py-2.5 text-sm font-semibold text-[#303832] transition-colors"
+                    style={{ backgroundColor: isActive ? '#eef2eb' : 'transparent' }}
                   >
                     {item.label}
-                  </motion.a>
+                  </a>
                 );
               })}
-              {/* Mobile CTA */}
-              <div className="mx-2 mt-2 pt-2" style={{ borderTop: '1px solid rgba(228,228,231,0.5)' }}>
-                <a
-                  href="#laporan"
-                  onClick={(e) => handleNavClick(e, '#laporan')}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-200"
-                  style={{
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    backgroundColor: 'var(--brand-green)',
-                    color: '#ffffff',
-                  }}
-                >
-                  Laporkan Masalah
-                  <ArrowRight size={16} />
-                </a>
-              </div>
+
+              <a
+                href="#laporan"
+                onClick={(event) => handleNavClick(event, '#laporan')}
+                className="mt-1 inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#465047] px-3 py-2.5 text-sm font-semibold text-white"
+              >
+                Buat Laporan
+                <ArrowRight size={15} />
+              </a>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Mobile Menu Backdrop */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
+          <motion.button
+            type="button"
+            aria-label="Tutup menu"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-20 bg-black/20 backdrop-blur-sm lg:hidden"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-30 bg-[#303832]/18 backdrop-blur-[2px] md:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
