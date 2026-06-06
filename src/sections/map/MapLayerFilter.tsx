@@ -40,6 +40,7 @@ const layerCategories: LayerCategory[] = [
       { id: 'children',   label: 'Sebaran Balita',      color: '#be336aff' },
       { id: 'lansia',    label: 'Sebaran Lansia',      color: '#c47f09ff' },
       { id: 'disabilitas', label: 'Sebaran Disabilitas', color: '#844294ff' },
+      { id: 'PendudukBanjarmasin', label: 'Penduduk Banjarmasin', color: '#16A34A' },
     ],
   },
   {
@@ -141,7 +142,7 @@ export function MapLayerFilter({
       </div>
 
       {/* Categories */}
-      <div className="space-y-4 flex-shrink-0">
+      <div className="space-y-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
         {layerCategories.map((category) => {
           const isExpanded = expandedCategories.includes(category.id);
 
@@ -186,7 +187,7 @@ export function MapLayerFilter({
                               checked={isSelected}
                               onCheckedChange={() => toggleLayer(item.id, item.disabled)}
                               disabled={item.disabled}
-                              className="border-2 data-[state=checked]:bg-brand-green data-[state=checked]:border-brand-green flex-shrink-0"
+                              className="flex-shrink-0 border-2 data-[state=checked]:border-brand-green data-[state=checked]:bg-brand-green data-[state=checked]:text-white"
                             />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {item.color && (
@@ -235,7 +236,7 @@ export function MapLayerFilter({
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="bg-white rounded-[20px] p-6 h-full overflow-hidden flex flex-col"
+        className="bg-white rounded-[20px] p-6 h-full min-h-0 overflow-hidden flex flex-col"
         style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}
       >
         {content}

@@ -19,7 +19,7 @@ import {
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
-import { reportsToFeatureCollection, subscribeToCommunityReports } from '@/lib/communityReports';
+import { loadCommunityReports, reportsToFeatureCollection, subscribeToCommunityReports } from '@/lib/communityReports';
 
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 
@@ -190,6 +190,31 @@ const LAYER_CONFIG = {
     iconSize: 0.72,
     minzoom: 0,
   },
+  PendudukBanjarmasin: {
+    url: '/datageo/kecamatan_penduduk_banjarmasin.geojson',
+    render: 'fill' as const,
+    minzoom: 0,
+    maxzoom: 22,
+    fill: {
+      'fill-color': [
+        'interpolate',
+        ['linear'],
+        ['get', 'Penduduk'],
+        80000, '#DCFCE7',
+        110000, '#86EFAC',
+        140000, '#22C55E',
+        170000, '#15803D'
+      ],
+      'fill-opacity': 0.56,
+      'fill-outline-color': '#14532D',
+    },
+    line: {
+      'line-color': '#052E16',
+      'line-width': 1.5,
+      'line-opacity': 0.9,
+    },
+    fitOnToggle: true,
+  },
 } as const;
 
 type LayerId = keyof typeof LAYER_CONFIG;
@@ -216,6 +241,7 @@ const DEFAULT_ZOOM = 12;
 const DEFAULT_BASEMAP: BasemapId = 'streets';
 const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true, communityReports: true };
 const FACILITY_LAYER_IDS: readonly LayerId[] = ['rumahsakit', 'puskesmas', 'klinik', 'apotek', 'homecare'];
+const BASEMAP_LOAD_TIMEOUT_MS = 12000;
 
 const BASEMAP_STYLES: Record<BasemapId, { label: string; style: string }> = {
   streets: {
@@ -232,6 +258,11 @@ const BASEMAP_STYLES: Record<BasemapId, { label: string; style: string }> = {
   },
 };
 
+function cloneStyle(style: unknown) {
+  if (typeof structuredClone === 'function') return structuredClone(style);
+  return JSON.parse(JSON.stringify(style));
+}
+
 const LAYER_LABELS: Record<LayerId, string> = {
   rumahsakit: 'Rumah Sakit',
   puskesmas: 'Puskesmas',
@@ -244,6 +275,7 @@ const LAYER_LABELS: Record<LayerId, string> = {
   disabilitas: 'Sebaran Disabilitas',
   tps: 'TPS',
   communityReports: 'Laporan Warga',
+  PendudukBanjarmasin: 'Penduduk Banjarmasin',
 };
 
 const LAYER_COLORS: Record<LayerId, string> = {
@@ -258,6 +290,7 @@ const LAYER_COLORS: Record<LayerId, string> = {
   disabilitas: '#7E22CE',
   tps: '#8A8177',
   communityReports: '#465047',
+  PendudukBanjarmasin: '#16A34A',
 };
 
 const FILL_LAYER_LEGENDS: Partial<Record<LayerId, { title: string; min: string; max: string; colors: string[] }>> = {
@@ -284,6 +317,12 @@ const FILL_LAYER_LEGENDS: Partial<Record<LayerId, { title: string; min: string; 
     min: 'Sedikit',
     max: 'Banyak',
     colors: ['#f2e8f5ff', '#dfc8e6ff', '#be81c7ff', '#a34cafff', '#712e7dff'],
+  },
+  PendudukBanjarmasin: {
+    title: 'Penduduk Banjarmasin',
+    min: 'Lebih sedikit',
+    max: 'Lebih banyak',
+    colors: ['#DCFCE7', '#86EFAC', '#22C55E', '#15803D'],
   },
 };
 
@@ -581,6 +620,21 @@ function createLayerDetail(layerId: LayerId, props: any, coordinates?: LngLatTup
     };
   }
 
+  if (layerId === 'PendudukBanjarmasin') {
+    return {
+      layerId,
+      title: formatDisplayValue(props.NAMOBJ ?? 'Penduduk Banjarmasin'),
+      category: LAYER_LABELS[layerId],
+      coordinates,
+      rows: [
+        { label: 'Kecamatan', value: props.NAMOBJ, format: 'text' },
+        { label: 'Kota/Kabupaten', value: props.WADMKK, format: 'text' },
+        { label: 'Provinsi', value: props.WADMPR, format: 'text' },
+        { label: 'Penduduk', value: props.Penduduk, format: 'number' },
+      ],
+    };
+  }
+
   if (layerId === 'children') {
     const total = ['00__04', '05__09', '10__14'].reduce((acc, key) => acc + (Number(props[key]) || 0), 0);
     return {
@@ -678,7 +732,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [prefersReducedMotion, setPRM] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM);
   const [activeSelections, setActiveSelections] = useState<Record<string, boolean>>(
     () => ({ ...DEFAULT_DESKTOP_SELECTIONS })
   );
@@ -705,7 +758,52 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const searchIndexPromiseRef = useRef<Promise<SearchResult[]> | null>(null);
   const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
   const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
+  const basemapStyleCache = useRef<Partial<Record<BasemapId, unknown>>>({});
+  const basemapRequestRef = useRef(0);
   const interactionCleanups = useRef<(() => void)[]>([]);
+
+  const fetchBasemapStyle = useCallback(async (id: BasemapId, signal?: AbortSignal) => {
+    const cached = basemapStyleCache.current[id];
+    if (cached) return cloneStyle(cached);
+
+    const response = await fetch(BASEMAP_STYLES[id].style, { signal });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const style = await response.json();
+    basemapStyleCache.current[id] = style;
+    return cloneStyle(style);
+  }, []);
+
+  const applyBasemapStyle = useCallback((map: MLMap, style: unknown) => (
+    new Promise<void>((resolve, reject) => {
+      let settled = false;
+      let timeoutId: number | undefined;
+
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+        map.off('style.load', onStyleLoad);
+        if (error) reject(error);
+        else resolve();
+      };
+
+      const onStyleLoad = () => finish();
+
+      timeoutId = window.setTimeout(() => {
+        finish(new Error('Basemap terlalu lama dimuat'));
+      }, BASEMAP_LOAD_TIMEOUT_MS);
+
+      map.once('style.load', onStyleLoad);
+      try {
+        map.setStyle(style as any, { diff: false } as any);
+      } catch (error) {
+        finish(error instanceof Error ? error : new Error('Basemap gagal diterapkan'));
+      }
+    })
+  ), []);
 
   const teardownInteractions = useCallback(() => {
     interactionCleanups.current.forEach((fn) => fn());
@@ -817,6 +915,19 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           maxzoom: cfg.maxzoom,
         };
         map.addLayer(fillLayer);
+
+        const lineLayerName = `${layerId}-line`;
+        if (cfg.line && !map.getLayer(lineLayerName)) {
+          map.addLayer({
+            id: lineLayerName,
+            type: 'line',
+            source: srcId,
+            paint: cfg.line,
+            layout: { visibility: 'none' },
+            minzoom: cfg.minzoom,
+            maxzoom: cfg.maxzoom,
+          } as any);
+        }
       } else {
         const circleLayer: any = {
           id: layerName,
@@ -835,7 +946,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   /* --------------------------- visibilitas layer --------------------------- */
   const setLayerVisibility = useCallback((layerId: LayerId, visible: boolean) => {
     const map = mapInstance.current!;
-    [`${layerId}-layer`, `${layerId}-cluster-circle`, `${layerId}-cluster-count`].forEach((name) => {
+    [`${layerId}-layer`, `${layerId}-line`, `${layerId}-cluster-circle`, `${layerId}-cluster-count`].forEach((name) => {
       if (!map.getLayer(name)) return;
       map.setLayoutProperty(name, 'visibility', visible ? 'visible' : 'none');
     });
@@ -863,7 +974,8 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
   const fetchLayerData = useCallback(async (layerId: LayerId): Promise<GeoJSON.FeatureCollection | null> => {
     if (layerId === 'communityReports') {
-      const fc = reportsToFeatureCollection();
+      const reports = await loadCommunityReports();
+      const fc = reportsToFeatureCollection(reports);
       setLayerFeatureCounts((prev) => ({ ...prev, [layerId]: fc.features.length }));
       return fc;
     }
@@ -932,8 +1044,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           [layerId]: prev[layerId] ?? `${LAYER_LABELS[layerId]} belum tersedia`,
         }));
       }
-
-      setZoomLevel(map.getZoom());
     },
     [ensureSourceAndLayer, fetchLayerData, fitFC, setLayerVisibility]
   );
@@ -1119,7 +1229,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         const center = getFeatureCenter(feature as GeoJSON.Feature) ?? [event.lngLat.lng, event.lngLat.lat];
 
         if (props.hasPhoto && props.id) {
-          window.location.hash = `laporan/${encodeURIComponent(String(props.id))}`;
+          window.location.hash = `/laporan/${encodeURIComponent(String(props.id))}`;
           return;
         }
 
@@ -1167,6 +1277,25 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         { label: 'Penduduk', value: props.jlhpendudu, format: 'number' },
         { label: 'Kepadatan (jiwa/km²)', value: props.kepadatan, format: 'number' },
         { label: 'Luas (km²)', value: props.luaswh, format: 'number' },
+      ]);
+    });
+
+    if (allowHover) {
+      registerHoverPopup('PendudukBanjarmasin', (feature) => {
+        const props = feature.properties || {};
+        return buildPopupHTML(props.NAMOBJ ?? 'Penduduk Banjarmasin', [
+          { label: 'Kecamatan', value: props.NAMOBJ, format: 'text' },
+          { label: 'Penduduk', value: props.Penduduk, format: 'number' },
+        ]);
+      });
+    }
+    registerClickPopup('PendudukBanjarmasin', (feature) => {
+      const props = feature.properties || {};
+      return buildPopupHTML(props.NAMOBJ ?? 'Penduduk Banjarmasin', [
+        { label: 'Kecamatan', value: props.NAMOBJ, format: 'text' },
+        { label: 'Kota/Kabupaten', value: props.WADMKK, format: 'text' },
+        { label: 'Provinsi', value: props.WADMPR, format: 'text' },
+        { label: 'Penduduk', value: props.Penduduk, format: 'number' },
       ]);
     });
 
@@ -1291,6 +1420,34 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   }, [activeSelections]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const preloadBasemaps = () => {
+      (Object.keys(BASEMAP_STYLES) as BasemapId[])
+        .filter((id) => id !== DEFAULT_BASEMAP)
+        .forEach((id) => {
+          void fetchBasemapStyle(id, controller.signal).catch((error) => {
+            if (controller.signal.aborted) return;
+            console.info(`[Map] Basemap ${id} belum bisa dipreload:`, error);
+          });
+        });
+    };
+
+    const requestIdle = (window as any).requestIdleCallback as
+      | ((callback: () => void, options?: { timeout?: number }) => number)
+      | undefined;
+    const cancelIdle = (window as any).cancelIdleCallback as ((id: number) => void) | undefined;
+    const idleId = requestIdle
+      ? requestIdle(preloadBasemaps, { timeout: 3000 })
+      : window.setTimeout(preloadBasemaps, 1500);
+
+    return () => {
+      controller.abort();
+      if (requestIdle && cancelIdle) cancelIdle(idleId);
+      else window.clearTimeout(idleId);
+    };
+  }, [fetchBasemapStyle]);
+
+  useEffect(() => {
     return subscribeToCommunityReports((reports) => {
       const fc = reportsToFeatureCollection(reports);
       setLayerFeatureCounts((prev) => ({ ...prev, communityReports: fc.features.length }));
@@ -1367,7 +1524,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     if (!map) return;
     const next = Math.min(map.getZoom() + 0.5, 18);
     map.easeTo({ zoom: next, duration: 300 });
-    setZoomLevel(next);
   }, []);
 
   const handleZoomOut = useCallback(() => {
@@ -1375,7 +1531,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     if (!map) return;
     const next = Math.max(map.getZoom() - 0.5, 3);
     map.easeTo({ zoom: next, duration: 300 });
-    setZoomLevel(next);
   }, []);
 
   const handleResetView = useCallback(() => {
@@ -1386,15 +1541,15 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       zoom: DEFAULT_ZOOM,
       duration: prefersReducedMotion ? 0 : 450,
     });
-    setZoomLevel(DEFAULT_ZOOM);
   }, [prefersReducedMotion]);
 
   const handleLayerToggle = useCallback(
     async (layerId: string, enabled: boolean) => {
       if (!(layerId in LAYER_CONFIG)) return;
       const id = layerId as LayerId;
+      const cfg = LAYER_CONFIG[id] as any;
       setActiveSelections((prev) => ({ ...prev, [id]: enabled }));
-      if (enabled) await loadAndShowLayer(id, false);
+      if (enabled) await loadAndShowLayer(id, Boolean(cfg.fitOnToggle));
       else {
         hideLayer(id);
         setSelectedDetail((prev) => (prev?.layerId === id ? null : prev));
@@ -1600,6 +1755,9 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       if (cfg.render === 'fill') {
         const baseOpacity = cfg.fill?.['fill-opacity'] ?? 0.55;
         map.setPaintProperty(layerName, 'fill-opacity', focusMode && !activeSelections[layerId] ? 0.18 : baseOpacity);
+        if (map.getLayer(`${layerId}-line`) && cfg.line?.['line-opacity'] !== undefined) {
+          map.setPaintProperty(`${layerId}-line`, 'line-opacity', cfg.line['line-opacity']);
+        }
       }
     });
   }, [activeSelections, focusMode, mapLoaded]);
@@ -1655,20 +1813,70 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     [ensureSourceAndLayer, ensureSymbolImages, loadAndShowLayer, registerAllInteractions, setLayerVisibility]
   );
 
-  const handleBasemapChange = useCallback((nextBasemapId: BasemapId) => {
+  const handleBasemapChange = useCallback(async (nextBasemapId: BasemapId) => {
     const map = mapInstance.current;
-    if (!map || nextBasemapId === basemapId) return;
+    if (!map || nextBasemapId === basemapId || basemapLoading) return;
 
-    setBasemapId(nextBasemapId);
+    const previousBasemapId = basemapId;
+    const previousStyle = cloneStyle(map.getStyle());
+    const requestId = basemapRequestRef.current + 1;
+    basemapRequestRef.current = requestId;
     setBasemapLoading(true);
     setSelectedDetail(null);
-    teardownInteractions();
-
-    map.once('style.load', () => {
-      void hydrateMapStyle(false).finally(() => setBasemapLoading(false));
+    setLayerErrors((prev) => {
+      if (!prev.basemap) return prev;
+      const next = { ...prev };
+      delete next.basemap;
+      return next;
     });
-    map.setStyle(BASEMAP_STYLES[nextBasemapId].style);
-  }, [basemapId, hydrateMapStyle, teardownInteractions]);
+
+    try {
+      const style = await fetchBasemapStyle(nextBasemapId);
+      if (basemapRequestRef.current !== requestId) return;
+
+      teardownInteractions();
+      setMapLoaded(false);
+      await applyBasemapStyle(map, style);
+      if (basemapRequestRef.current !== requestId) return;
+
+      await hydrateMapStyle(false);
+      if (basemapRequestRef.current !== requestId) return;
+
+      setBasemapId(nextBasemapId);
+    } catch (error) {
+      console.warn(`[Map] Gagal mengganti basemap ke ${nextBasemapId}:`, error);
+      if (basemapRequestRef.current !== requestId) return;
+
+      setLayerErrors((prev) => ({
+        ...prev,
+        basemap: `Basemap ${BASEMAP_STYLES[nextBasemapId].label} gagal dimuat. Tetap memakai ${BASEMAP_STYLES[previousBasemapId].label}`,
+      }));
+
+      try {
+        if (basemapRequestRef.current !== requestId) return;
+
+        teardownInteractions();
+        setMapLoaded(false);
+        await applyBasemapStyle(map, previousStyle);
+        await hydrateMapStyle(false);
+        setBasemapId(previousBasemapId);
+      } catch (fallbackError) {
+        console.warn(`[Map] Gagal restore basemap ${previousBasemapId}:`, fallbackError);
+        setBasemapId(previousBasemapId);
+      }
+    } finally {
+      if (basemapRequestRef.current === requestId) {
+        setBasemapLoading(false);
+      }
+    }
+  }, [
+    applyBasemapStyle,
+    basemapId,
+    basemapLoading,
+    fetchBasemapStyle,
+    hydrateMapStyle,
+    teardownInteractions,
+  ]);
 
   /* --------------------------- init map sekali --------------------------- */
   useEffect(() => {
@@ -1684,26 +1892,11 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     });
     mapInstance.current = map;
 
-    const ctrl = new maplibregl.NavigationControl({ visualizePitch: true, showZoom: false });
-    map.addControl(ctrl, 'top-left');
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
-
-    const navMq = window.matchMedia('(max-width: 640px)');
-    const applyNavMargin = () => {
-      const container = map.getContainer().querySelector('.maplibregl-ctrl-top-left') as HTMLElement | null;
-      if (!container) return;
-      container.style.margin = navMq.matches ? '15px 0 0 12px' : '32px 0 0 6px';
-    };
-
-    applyNavMargin();
-    const onMqChange = () => applyNavMargin();
-    if (navMq.addEventListener) navMq.addEventListener('change', onMqChange);
-    else if (navMq.addListener) navMq.addListener(onMqChange);
 
     map.on('load', async () => {
       try {
         interactionCleanups.current = [];
-        setZoomLevel(map.getZoom());
 
         if (typeof window !== 'undefined' && import.meta.env.DEV) {
           (window as any).map = map;
@@ -1717,8 +1910,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     });
 
     return () => {
-      if (navMq.removeEventListener) navMq.removeEventListener('change', onMqChange);
-      else if (navMq.removeListener) navMq.removeListener(onMqChange);
       teardownInteractions();
       userLocationMarkerRef.current?.remove();
       userLocationMarkerRef.current = null;
@@ -1735,7 +1926,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <section id={sectionId ?? undefined} className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
+    <section id={sectionId ?? undefined} className="relative pt-28 pb-10 sm:pt-28 sm:pb-12 lg:pt-28 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
         style={{ background: 'linear-gradient(180deg, #f1f0ea 0%, #fbfaf5 100%)' }}
@@ -1765,7 +1956,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           <div className="relative">
             <div className="flex gap-6 lg:gap-8">
               <div className="hidden lg:block w-80 flex-shrink-0">
-                <div className="sticky top-32">
+                <div className="sticky top-32 h-[clamp(480px,60vh,760px)] max-h-[calc(100vh-9rem)]">
                   <MapLayerFilter
                     isMobile={false}
                     defaultSelections={activeSelections}
@@ -1837,54 +2028,28 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     </motion.button>
                   )}
 
-                  {!isFullscreen && (
-                    <motion.button
-                      onClick={handleResetView}
-                      whileTap={{ scale: 0.95 }}
-                      className="md:hidden absolute top-4 right-4 bg-white rounded-full p-3 shadow-lg z-20 backdrop-blur-sm"
-                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'rgba(255,255,255,0.95)' }}
-                      aria-label="Reset map view"
-                    >
-                      <RotateCcw size={19} className="text-ink-700" strokeWidth={2.4} />
-                    </motion.button>
-                  )}
-
-                  <div className="hidden md:block absolute bottom-6 right-6 z-10">
-                    <div className="flex flex-col gap-3">
-                      <IconButton label="Zoom in" onClick={handleZoomIn}><ZoomIn size={20} /></IconButton>
-                      <IconButton label="Zoom out" onClick={handleZoomOut}><ZoomOut size={20} /></IconButton>
-                      <IconButton label="Reset map view" onClick={handleResetView}><RotateCcw size={19} /></IconButton>
-                      <IconButton label="Toggle fullscreen" onClick={toggleFullscreen}><Maximize2 size={20} /></IconButton>
-                    </div>
+                  <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2 sm:bottom-5 sm:right-5">
+                    <ZoomControl onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+                    <MapControlButton label="Reset tampilan peta" onClick={handleResetView}>
+                      <RotateCcw size={18} />
+                    </MapControlButton>
+                    {!isFullscreen && (
+                      <MapControlButton label="Buka layar penuh" onClick={toggleFullscreen}>
+                        <Maximize2 size={18} />
+                      </MapControlButton>
+                    )}
                   </div>
-
-                  {!isFullscreen && (
-                    <div className="md:hidden absolute bottom-3 left-0 right-0 flex justify-center gap-2.5 px-4">
-                      <SmallButton aria="Zoom in map" onClick={handleZoomIn}><ZoomIn size={18}/><span className="text-ink-740 text-xs font-semibold">Zoom In</span>
-                        </SmallButton>
-                      <SmallButton aria="Toggle fullscreen" onClick={toggleFullscreen}>
-                        <Maximize2 size={15} />
-                        <span className="text-ink-740 text-xs font-semibold">Fullscreen</span>
-                      </SmallButton>
-                      <SmallButton aria="Zoom out map" onClick={handleZoomOut}><ZoomOut size={18}/><span className="text-ink-740 text-xs font-semibold">Zoom Out</span></SmallButton>
-                    </div>
-                  )}
 
                   {isFullscreen && (
                     <motion.button
+                      type="button"
                       onClick={toggleFullscreen}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center z-[101]"
-                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                      aria-label="Close fullscreen"
+                      whileTap={{ scale: 0.94 }}
+                      className="absolute right-4 top-4 z-[101] flex h-10 w-10 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-ink-700 shadow-md backdrop-blur-sm transition-colors hover:bg-brand-green hover:text-white"
+                      aria-label="Keluar dari layar penuh"
+                      title="Keluar dari layar penuh"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                        className="text-ink-700">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
+                      <X size={18} />
                     </motion.button>
                   )}
 
@@ -1924,22 +2089,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     />
                   )}
 
-                  {import.meta.env.DEV && (
-                    <div className="hidden sm:block absolute top-2 left-3 text-xs bg-white/90 px-2 py-1 rounded shadow z-10">
-                      {mapLoaded && mapInstance.current
-                        ? (() => {
-                            const map = mapInstance.current!;
-                            const layerIds = (Object.keys(LAYER_CONFIG) as LayerId[])
-                              .map((id) => `${id}-layer`)
-                              .filter((layerId) => Boolean(map.getLayer(layerId)));
-                            const rendered = layerIds.length
-                              ? map.queryRenderedFeatures({ layers: layerIds }).length
-                              : 0;
-                            return `Zoom: ${zoomLevel.toFixed(1)} | Rendered: ${rendered}`;
-                          })()
-                        : 'Loading…'}
-                    </div>
-                  )}
                 </motion.div>
               </div>
             </div>
@@ -1981,37 +2130,60 @@ function BasemapSwitcher({
   isFullscreen: boolean;
   onChange: (id: BasemapId) => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div
-      className={`hidden md:block absolute z-20 w-[250px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur-sm ${
+      className={`absolute z-30 hidden md:block ${
         isFullscreen ? 'top-4 right-20' : 'top-4 right-4'
       }`}
     >
-      <div className="mb-2 flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <Layers3 size={15} className="text-brand-green" />
-          <span className="text-xs font-bold text-ink-900">Basemap</span>
-        </div>
-        {loading && <Loader2 size={14} className="animate-spin text-brand-green" />}
-      </div>
-      <div className="grid grid-cols-3 gap-1">
-        {(Object.entries(BASEMAP_STYLES) as [BasemapId, { label: string; style: string }][]).map(([id, config]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onChange(id)}
-            disabled={loading && id !== active}
-            className={`h-9 rounded-xl text-xs font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${
-              active === id
-                ? 'bg-brand-green text-white'
-                : 'bg-surface-100 text-ink-700 hover:bg-brand-mint hover:text-brand-green'
-            }`}
-            aria-pressed={active === id}
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex h-10 items-center gap-2 rounded-lg border border-white/70 bg-white/95 px-3 text-sm font-bold text-ink-800 shadow-md backdrop-blur-sm transition-colors hover:bg-white"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        title="Pilih basemap"
+      >
+        {loading ? <Loader2 size={16} className="animate-spin text-brand-green" /> : <Layers3 size={17} className="text-brand-green" />}
+        <span>{BASEMAP_STYLES[active].label}</span>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.16 }}
+            className="absolute right-0 top-12 w-44 overflow-hidden rounded-lg border border-surface-200 bg-white p-1.5 shadow-xl"
+            role="menu"
           >
-            {config.label}
-          </button>
-        ))}
-      </div>
+            {(Object.entries(BASEMAP_STYLES) as [BasemapId, { label: string; style: string }][]).map(([id, config]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  onChange(id);
+                  setIsOpen(false);
+                }}
+                disabled={loading}
+                className={`flex h-9 w-full items-center justify-between rounded-md px-3 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                  active === id
+                    ? 'bg-brand-mint text-brand-green'
+                    : 'text-ink-700 hover:bg-surface-100'
+                }`}
+                role="menuitemradio"
+                aria-checked={active === id}
+              >
+                {config.label}
+                {active === id && <span className="h-2 w-2 rounded-full bg-brand-green" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -2181,24 +2353,52 @@ function MapDetailPanel({
   );
 }
 
-function IconButton({
+function MapControlButton({
   label, onClick, children,
 }: { label: string; onClick: () => void; children: React.ReactNode; }) {
   return (
     <motion.button
+      type="button"
       onClick={onClick}
-      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-      className="group relative w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-200"
-      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+      whileTap={{ scale: 0.94 }}
+      className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-ink-700 shadow-md backdrop-blur-sm transition-colors hover:bg-brand-green hover:text-white"
       aria-label={label}
+      title={label}
     >
-      <div className="text-ink-700 group-hover:text-white transition-colors">{children}</div>
-      <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-           style={{ background: 'linear-gradient(135deg, #465047 0%, #b9a9f5 100%)' }} />
-      <div className="absolute text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        {children}
-      </div>
+      {children}
     </motion.button>
+  );
+}
+
+function ZoomControl({
+  onZoomIn,
+  onZoomOut,
+}: {
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-white/70 bg-white/95 shadow-md backdrop-blur-sm">
+      <button
+        type="button"
+        onClick={onZoomIn}
+        className="flex h-10 w-10 items-center justify-center text-ink-700 transition-colors hover:bg-brand-green hover:text-white"
+        aria-label="Perbesar peta"
+        title="Perbesar peta"
+      >
+        <ZoomIn size={18} />
+      </button>
+      <div className="mx-2 h-px bg-surface-200" />
+      <button
+        type="button"
+        onClick={onZoomOut}
+        className="flex h-10 w-10 items-center justify-center text-ink-700 transition-colors hover:bg-brand-green hover:text-white"
+        aria-label="Perkecil peta"
+        title="Perkecil peta"
+      >
+        <ZoomOut size={18} />
+      </button>
+    </div>
   );
 }
 
@@ -2216,7 +2416,7 @@ function MapLegend({
   return (
     <div
       className={`hidden sm:block absolute z-20 w-[240px] rounded-2xl border border-white/70 bg-white/95 p-3 shadow-lg backdrop-blur-sm ${
-        isFullscreen ? 'top-32 right-20' : 'top-32 right-4'
+        isFullscreen ? 'top-16 right-20' : 'top-16 right-4'
       }`}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -2252,26 +2452,5 @@ function MapLegend({
         })}
       </div>
     </div>
-  );
-}
-
-function SmallButton({
-  aria, onClick, children,
-}: { aria: string; onClick: () => void; children: React.ReactNode; }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.96 }}
-      className="relative flex-1 h-12 rounded-xl bg-white flex items-center justify-center gap-2 overflow-hidden active:shadow-lg transition-shadow duration-200 max-w-[120px]"
-      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-      aria-label={aria}
-    >
-      {children}
-      <motion.div
-        className="absolute inset-0 rounded-xl"
-        style={{ background: 'linear-gradient(135deg, #465047 0%, #b9a9f5 100%)', opacity: 0 }}
-        whileTap={{ opacity: 1 }} transition={{ duration: 0.15 }}
-      />
-    </motion.button>
   );
 }

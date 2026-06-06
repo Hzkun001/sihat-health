@@ -1,5 +1,11 @@
-import { addReportComment, getCommunityReportById, subscribeToCommunityReports } from '@/lib/communityReports';
-import { ArrowLeft, Camera, MapPin, MessageCircle, Send } from 'lucide-react';
+import {
+  addReportComment,
+  getCommunityReportById,
+  loadCommunityReportById,
+  subscribeToCommunityReports,
+  type ReportStatus,
+} from '@/lib/communityReports';
+import { ArrowLeft, Camera, CheckCircle2, Clock3, Loader2, MapPin, MessageCircle, Send } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -17,15 +23,42 @@ function formatDateTime(value: string) {
   });
 }
 
+const STATUS_LABELS: Record<ReportStatus, string> = {
+  baru: 'Menunggu verifikasi',
+  diverifikasi: 'Terverifikasi',
+  diproses: 'Sedang ditangani',
+  selesai: 'Selesai',
+  ditolak: 'Ditolak',
+};
+
 export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
   const [report, setReport] = useState(() => getCommunityReportById(reportId));
   const [comment, setComment] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentError, setCommentError] = useState('');
 
   useEffect(() => {
-    setReport(getCommunityReportById(reportId));
-    return subscribeToCommunityReports(() => {
-      setReport(getCommunityReportById(reportId));
+    let active = true;
+    setIsLoading(true);
+
+    void loadCommunityReportById(reportId).then((nextReport) => {
+      if (!active) return;
+      setReport(nextReport);
+      setIsLoading(false);
     });
+
+    const unsubscribe = subscribeToCommunityReports((reports) => {
+      if (active) {
+        setReport(reports.find((item) => item.id === reportId) ?? null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [reportId]);
 
   const coordinateText = useMemo(() => {
@@ -33,13 +66,34 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
     return `${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}`;
   }, [report]);
 
-  const handleSubmitComment = (event: FormEvent) => {
+  const handleSubmitComment = async (event: FormEvent) => {
     event.preventDefault();
     if (!report || !comment.trim()) return;
-    const updated = addReportComment(report.id, comment);
-    setReport(updated);
-    setComment('');
+
+    setIsSubmittingComment(true);
+    setCommentError('');
+    try {
+      const updated = await addReportComment(report.id, comment);
+      setReport(updated);
+      setComment('');
+    } catch (error) {
+      console.warn('[Reports] Gagal mengirim komentar:', error);
+      setCommentError('Komentar gagal dikirim. Silakan coba kembali.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
+
+  if (isLoading && !report) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-surface-0">
+        <div className="flex items-center gap-3 text-sm font-bold text-ink-500">
+          <Loader2 size={20} className="animate-spin text-brand-green" />
+          Memuat laporan...
+        </div>
+      </main>
+    );
+  }
 
   if (!report) {
     return (
@@ -55,7 +109,7 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
           </button>
           <div className="rounded-2xl border border-surface-200 bg-white p-8">
             <h1 className="text-2xl font-bold text-ink-900">Laporan tidak ditemukan</h1>
-            <p className="mt-2 text-ink-500">Data laporan mungkin sudah dihapus dari penyimpanan browser ini.</p>
+            <p className="mt-2 text-ink-500">Laporan mungkin sudah dihapus atau tidak dapat diakses.</p>
           </div>
         </div>
       </main>
@@ -94,10 +148,10 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
             <div className="p-6 sm:p-8">
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-brand-mint px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-brand-green">
-                  Laporan warga
+                  {report.ticketNumber ?? 'Laporan warga'}
                 </span>
                 <span className="rounded-full bg-surface-100 px-3 py-1 text-xs font-bold capitalize text-ink-700">
-                  Status {report.status}
+                  {STATUS_LABELS[report.status]}
                 </span>
               </div>
 
@@ -117,6 +171,37 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
                 <div className="rounded-xl bg-surface-100 p-4">
                   <p className="mb-2 text-sm font-bold text-ink-900">Waktu laporan</p>
                   <p className="text-sm font-semibold text-ink-700">{formatDateTime(report.createdAt)}</p>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-surface-200 pt-6">
+                <div className="mb-4 flex items-center gap-2">
+                  <Clock3 size={17} className="text-brand-green" />
+                  <h2 className="text-base font-bold text-ink-900">Riwayat penanganan</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {report.updates.length ? report.updates.map((update, index) => (
+                    <div key={update.id} className="grid grid-cols-[28px_1fr] gap-3">
+                      <div className="relative flex justify-center">
+                        <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-brand-mint text-brand-green">
+                          {update.status === 'selesai' ? <CheckCircle2 size={15} /> : <span className="h-2 w-2 rounded-full bg-brand-green" />}
+                        </span>
+                        {index < report.updates.length - 1 && (
+                          <span className="absolute top-7 h-[calc(100%+16px)] w-px bg-surface-200" />
+                        )}
+                      </div>
+                      <div className="pb-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-bold text-ink-900">{update.title}</p>
+                          <time className="text-xs font-semibold text-ink-500">{formatDateTime(update.createdAt)}</time>
+                        </div>
+                        {update.note && <p className="mt-1 text-sm leading-6 text-ink-500">{update.note}</p>}
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-sm font-semibold text-ink-500">Riwayat status belum tersedia.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -160,13 +245,14 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
                 placeholder="Tambahkan komentar atau tindak lanjut..."
                 className="w-full resize-none rounded-xl bg-surface-100 px-4 py-3 text-sm font-semibold leading-6 text-ink-900 outline-none transition-shadow placeholder:text-ink-500 focus:shadow-[0_0_0_3px_rgba(70,80,71,0.12)]"
               />
+              {commentError && <p className="text-sm font-semibold text-red-600">{commentError}</p>}
               <button
                 type="submit"
-                disabled={!comment.trim()}
+                disabled={!comment.trim() || isSubmittingComment}
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:bg-surface-200 disabled:text-ink-500"
               >
-                <Send size={16} />
-                Kirim Komentar
+                {isSubmittingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                {isSubmittingComment ? 'Mengirim...' : 'Kirim Komentar'}
               </button>
             </form>
           </aside>

@@ -31,6 +31,7 @@
             "@radix-ui/react-toggle-group": "^1.1.2",
             "@radix-ui/react-tooltip": "^1.1.8",
             "@splinetool/react-spline": "^4.1.0",
+            "@supabase/supabase-js": "^2.107.0",
             "@terraformer/arcgis": "^2.1.2",
             "@turf/clean-coords": "^7.2.0",
             "@turf/dissolve": "^7.2.0",
@@ -65,6 +66,7 @@
             "autoprefixer": "^10.4.21",
             "postcss": "^8.5.6",
             "tailwindcss": "^3.4.18",
+            "typescript": "^6.0.3",
             "vite": "6.3.5"
       },
       "scripts": {

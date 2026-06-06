@@ -24,7 +24,7 @@ export function useResponsiveMotion() {
 
     updateMotionScale();
     // Debounce resize event for better performance
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(updateMotionScale, 150);

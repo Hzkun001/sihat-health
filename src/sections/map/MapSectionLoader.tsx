@@ -45,7 +45,7 @@ export function MapSectionLoader() {
 
 function MapPlaceholder({ onLoadClick }: { onLoadClick: () => void }) {
   return (
-    <section className="relative pt-2 pb-10 sm:pt-16 sm:pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
+    <section className="relative pt-28 pb-10 sm:pt-28 sm:pb-12 lg:pt-28 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
         style={{ background: 'linear-gradient(180deg, #f1f0ea 0%, #fbfaf5 100%)' }}

@@ -19,7 +19,7 @@ const contactItems = [
     icon: MapPinned,
     label: 'Wilayah layanan',
     value: 'Banjarbaru, Kalimantan Selatan',
-    href: '#peta',
+    href: '#/peta',
   },
 ];
 
@@ -107,7 +107,7 @@ export function CTASection() {
                 </motion.a>
 
                 <motion.a
-                  href="#laporan"
+                  href="#/laporan"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex min-h-12 items-center justify-center rounded-xl px-6 font-semibold transition-colors duration-300"

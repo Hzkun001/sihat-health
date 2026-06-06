@@ -14,12 +14,12 @@ import {
 import { motion } from 'motion/react';
 
 const footerLinks = [
-  { label: 'Beranda', href: '#hero' },
-  { label: 'Tentang', href: '#tentang' },
-  { label: 'Peta Interaktif', href: '#peta' },
-  { label: 'Laporan Warga', href: '#laporan' },
-  { label: 'Statistik', href: '#statistik' },
-  { label: 'Kontak', href: '#kontak' },
+  { label: 'Beranda', href: '#/' },
+  { label: 'Peta Interaktif', href: '#/peta' },
+  { label: 'Laporan Warga', href: '#/laporan' },
+  { label: 'Statistik', href: '#/insight' },
+  { label: 'Kontak', href: '#/kontak' },
+  { label: 'Portal Petugas', href: '#/petugas' },
 ];
 
 const partners = [
@@ -138,8 +138,8 @@ export function Footer() {
             className="flex flex-col gap-3 sm:flex-row lg:justify-end"
           >
             <motion.a
-              href="#laporan"
-              onClick={(event) => handleAnchorClick(event, '#laporan')}
+              href="#/laporan"
+              onClick={(event) => handleAnchorClick(event, '#/laporan')}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="group inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 font-semibold transition-shadow duration-300"
@@ -209,8 +209,8 @@ export function Footer() {
               </a>
 
               <a
-                href="#peta"
-                onClick={(event) => handleAnchorClick(event, '#peta')}
+                href="#/peta"
+                onClick={(event) => handleAnchorClick(event, '#/peta')}
                 className="group flex items-start gap-3 rounded-xl p-3 transition-colors duration-200"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
               >

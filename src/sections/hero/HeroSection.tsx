@@ -65,7 +65,7 @@ export function HeroSection() {
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <motion.a
-                  href="#laporan"
+                  href="#/laporan"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   className="group inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#303832] shadow-[0_14px_36px_rgba(49,58,52,0.15)] transition-colors hover:bg-[#f8faf5]"
@@ -75,7 +75,7 @@ export function HeroSection() {
                 </motion.a>
 
                 <motion.a
-                  href="#peta"
+                  href="#/peta"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-[#465047]/80 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_36px_rgba(49,58,52,0.18)] backdrop-blur-xl transition-colors hover:bg-[#303832]/90"

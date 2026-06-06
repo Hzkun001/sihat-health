@@ -32,6 +32,8 @@ export function ReportSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [submittedReportId, setSubmittedReportId] = useState<string | null>(null);
+  const [submittedTicketNumber, setSubmittedTicketNumber] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const resetTimeoutRef = useRef<number | null>(null);
@@ -151,34 +153,45 @@ export function ReportSection() {
     if (!description.trim() || !coordinates || coordinateError) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    const report = addCommunityReport({
-      description,
-      latitude: coordinates.latitude,
-      longitude: coordinates.longitude,
-      photoDataUrl: selectedImage,
-    });
+    try {
+      const report = await addCommunityReport({
+        description,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        photoDataUrl: selectedImage,
+      });
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      setShowSuccess(true);
+      setSubmittedReportId(report.id);
+      setSubmittedTicketNumber(report.ticketNumber ?? null);
 
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    setSubmittedReportId(report.id);
+      if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
 
-    if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
-
-    resetTimeoutRef.current = window.setTimeout(() => {
-      setSelectedImage(null);
-      setDescription('');
-      setShowSuccess(false);
-      setSubmittedReportId(null);
-      setLocationError(null);
-      setCoordinateError(null);
-      setCoordinateInput('');
-      setCoordinates(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (cameraInputRef.current) cameraInputRef.current.value = '';
-    }, 3000);
+      resetTimeoutRef.current = window.setTimeout(() => {
+        setSelectedImage(null);
+        setDescription('');
+        setShowSuccess(false);
+        setSubmittedReportId(null);
+        setSubmittedTicketNumber(null);
+        setLocationError(null);
+        setCoordinateError(null);
+        setCoordinateInput('');
+        setCoordinates(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+      }, 5000);
+    } catch (error) {
+      console.warn('[Reports] Gagal mengirim laporan:', error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Laporan gagal dikirim. Periksa koneksi lalu coba kembali.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canSubmit = Boolean(description.trim() && coordinates && !coordinateError && !isSubmitting);
@@ -375,6 +388,21 @@ export function ReportSection() {
         </SectionReveal>
 
         <AnimatePresence>
+          {submitError && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mt-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700"
+            >
+              <AlertTriangle size={20} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-bold">Laporan belum terkirim.</p>
+                <p className="mt-1 text-sm font-semibold leading-6">{submitError}</p>
+              </div>
+            </motion.div>
+          )}
+
           {showSuccess && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -388,12 +416,14 @@ export function ReportSection() {
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-ink-900">Laporan tersimpan.</p>
                 <p className="text-sm font-semibold leading-6 text-ink-700">
-                  Titik kontribusi akan tampil di layer Laporan Warga pada peta.
+                  {submittedTicketNumber
+                    ? `Nomor tiket ${submittedTicketNumber}. Titik laporan akan tampil pada peta.`
+                    : 'Titik kontribusi akan tampil di layer Laporan Warga pada peta.'}
                 </p>
               </div>
-              {submittedReportId && selectedImage && (
+              {submittedReportId && (
                 <a
-                  href={`#laporan/${encodeURIComponent(submittedReportId)}`}
+                  href={`#/laporan/${encodeURIComponent(submittedReportId)}`}
                   className="inline-flex h-10 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-brand-green"
                 >
                   Buka detail
