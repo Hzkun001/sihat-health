@@ -223,7 +223,7 @@ export function MapLayerFilter({
         <p className="text-ink-500 leading-relaxed" style={{ fontSize: '13px', fontWeight: 400, lineHeight: 1.5 }}>
           <span style={{ fontWeight: 600 }}>Sumber Data:</span>
           <br />
-          Dinas Kesehatan Banjarbaru, BPS Kota Banjarbaru, Geoportal Kota Banjarbaru
+          Sumber lintas wilayah Banjarmasin–Banjarbaru. Periksa tahun dan atribut pada setiap layer.
         </p>
       </div>
     </div>

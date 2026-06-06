@@ -25,11 +25,11 @@ const footerLinks = [
 const partners = [
   'Geoportal Kota Banjarbaru',
   'Dinkes Banjarbaru',
+  'Data wilayah Banjarmasin',
   'BPS Kalimantan Selatan',
-  'Open Data Initiative',
 ];
 
-const details = ['SDG 3 - Good Health & Well-Being', 'SDG 11 - Sustainable Cities', 'Data BPS 2024'];
+const details = ['Banjarmasin–Banjarbaru', 'SDG 3 - Good Health & Well-Being', 'SDG 11 - Sustainable Cities'];
 
 const socials = [
   { Icon: Instagram, label: 'Instagram', href: '#' },
@@ -170,7 +170,7 @@ export function Footer() {
           <div className="lg:col-span-4">
             <p className="max-w-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.64)', fontSize: '15px' }}>
               Platform geospasial terpadu untuk membantu warga, dinas, dan mitra memahami kondisi kesehatan
-              lingkungan Banjarbaru secara lebih cepat.
+              lingkungan Banjarmasin dan Banjarbaru secara lebih cepat.
             </p>
 
             <div className="mt-6 space-y-3">
@@ -312,15 +312,12 @@ export function Footer() {
           style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
         >
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.46)' }}>
-            &copy; {currentYear} SIHAT Banjarbaru. All Rights Reserved.
+            &copy; {currentYear} SIHAT. Banjarmasin–Banjarbaru.
           </p>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.46)' }}>
-              Privacy Policy
-            </a>
-            <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.46)' }}>
-              Accessibility
+            <a href="#/privasi" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.46)' }}>
+              Privasi & Aksesibilitas
             </a>
             <button
               type="button"

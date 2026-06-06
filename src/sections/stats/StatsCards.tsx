@@ -22,15 +22,15 @@ type StatItem = {
 };
 
 const statsData: StatItem[] = [
-  { icon: Users, label: 'Dokter', value: '450+' },
-  { icon: Building2, label: 'Rumah Sakit', value: '8' },
-  { icon: Cross, label: 'Klinik', value: '35+' },
-  { icon: HeartPulse, label: 'Puskesmas', value: '12' },
-  { icon: Pill, label: 'Apotek', value: '60+' },
-  { icon: Activity, label: 'Posyandu', value: '120+' },
-  { icon: Home, label: 'Home Care Lansia', value: '25+' },
-  { icon: UserCog, label: 'Tenaga Non-Dokter', value: '1200+' },
-  { icon: Ambulance, label: 'Ambulans', value: '18' },
+  { icon: Users, label: 'Dokter · indikatif', value: '450+' },
+  { icon: Building2, label: 'Rumah Sakit · indikatif', value: '8' },
+  { icon: Cross, label: 'Klinik · indikatif', value: '35+' },
+  { icon: HeartPulse, label: 'Puskesmas · indikatif', value: '12' },
+  { icon: Pill, label: 'Apotek · indikatif', value: '60+' },
+  { icon: Activity, label: 'Posyandu · indikatif', value: '120+' },
+  { icon: Home, label: 'Home Care Lansia · indikatif', value: '25+' },
+  { icon: UserCog, label: 'Tenaga Non-Dokter · indikatif', value: '1200+' },
+  { icon: Ambulance, label: 'Ambulans · indikatif', value: '18' },
 ];
 
 export function StatsCards() {
@@ -46,10 +46,10 @@ export function StatsCards() {
               className="tracking-tight mb-4"
               style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'var(--ink-900)', letterSpacing: '-0.02em' }}
             >
-              Fasilitas Kesehatan Banjarbaru
+              Ringkasan Data Awal
             </h2>
             <p className="max-w-3xl mx-auto" style={{ fontSize: '18px', color: 'var(--ink-500)' }}>
-              Data komprehensif fasilitas kesehatan yang tersedia untuk melayani masyarakat Banjarbaru
+              Angka berikut masih bersifat indikatif dan harus diverifikasi terhadap rilis resmi sebelum digunakan untuk keputusan.
             </p>
           </div>
         </SectionReveal>

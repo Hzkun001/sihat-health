@@ -1,6 +1,6 @@
-# Website Kesehatan Masyarakat sihat.health
+# SIHAT Banjarmasin–Banjarbaru
 
-Situs pemasaran interaktif untuk **sihat.health** yang menyajikan platform kesehatan digital, data kesehatan regional, dan kapabilitas produk. Antarmuka pengguna (*UI*) dibuat berdasarkan [domain resmi](https://sihat.health) dan diimplementasikan dengan perkakas React modern, animasi yang kaya, serta komponen web 3D.
+Platform informasi kesehatan lingkungan untuk Banjarmasin–Banjarbaru yang memuat peta tematik, data fasilitas, pelaporan warga, dan portal operasional petugas.
 
 ## Fitur Utama (*Highlights*)
 
@@ -40,6 +40,10 @@ Situs pemasaran interaktif untuk **sihat.health** yang menyajikan platform keseh
 
 - `npm run dev` – memulai *server* pengembangan dengan HMR.
 - `npm run build` – membuat *build* produksi yang dioptimalkan di direktori `build/`.
+- `npm run typecheck` – memeriksa tipe TypeScript.
+- `npm run lint` – menjalankan pemeriksaan kualitas kode.
+- `npm test` – menjalankan unit test.
+- `npm run check` – menjalankan seluruh quality gate sebelum merge/deploy.
 
 > **Tips:** Tambahkan `--host` saat menjalankan `npm run dev` untuk menguji pada perangkat lain dalam jaringan yang sama.
 

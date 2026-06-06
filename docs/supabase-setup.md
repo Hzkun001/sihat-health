@@ -37,6 +37,14 @@ Buka SQL Editor Supabase dan jalankan:
 
 `supabase/migrations/202606060001_reports.sql`
 
+Setelah migration utama berhasil, jalankan migration privasi:
+
+`supabase/migrations/202606060002_report_privacy.sql`
+
+Terakhir, jalankan migration operasional:
+
+`supabase/migrations/202606060003_report_operations.sql`
+
 Migration membuat:
 
 - PostGIS location dan spatial index
@@ -48,6 +56,11 @@ Migration membuat:
 - Row Level Security policies
 - Realtime publication
 - Trigger nomor tiket dan timeline status
+- Moderasi publikasi laporan
+- Bucket foto privat dan signed URL
+- Assignment petugas, prioritas, dan tenggat SLA
+- Catatan internal petugas
+- Audit log perubahan operasional
 
 ## 4. Buat akun petugas
 
@@ -84,6 +97,9 @@ Tanpa environment Supabase, laporan tetap menggunakan `localStorage` untuk
 development. Setelah environment terisi dan migration dijalankan, laporan,
 foto, komentar, timeline, dan perubahan status menggunakan Supabase.
 
+Laporan baru bersifat internal. Petugas dapat menerbitkannya ke peta publik
+melalui panel detail di Portal Petugas setelah isi dan lokasi diverifikasi.
+
 ## Catatan produksi
 
 - Aktifkan CAPTCHA untuk anonymous sign-in.
@@ -91,3 +107,4 @@ foto, komentar, timeline, dan perubahan status menggunakan Supabase.
 - Jangan simpan nomor telepon atau data pribadi pada tabel publik.
 - Buat jadwal pembersihan anonymous user yang tidak aktif.
 - Tambahkan monitoring dan rate limiting sebelum peluncuran publik.
+- Ikuti prosedur backup dan uji restore di `docs/backup-runbook.md`.

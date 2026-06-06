@@ -5,9 +5,7 @@ import {
   Loader2,
   LocateFixed,
   MapPin,
-  Eye,
   Filter,
-  Info,
   Layers3,
   Search,
   X,
@@ -744,7 +742,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const [nearestLoading, setNearestLoading] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [layerFeatureCounts, setLayerFeatureCounts] = useState<Record<string, number>>({});
-  const [focusMode, setFocusMode] = useState(false);
+  const focusMode = false;
   const [basemapId, setBasemapId] = useState<BasemapId>(DEFAULT_BASEMAP);
   const [basemapLoading, setBasemapLoading] = useState(false);
 
@@ -779,12 +777,10 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const applyBasemapStyle = useCallback((map: MLMap, style: unknown) => (
     new Promise<void>((resolve, reject) => {
       let settled = false;
-      let timeoutId: number | undefined;
-
       const finish = (error?: Error) => {
         if (settled) return;
         settled = true;
-        if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+        window.clearTimeout(timeoutId);
         map.off('style.load', onStyleLoad);
         if (error) reject(error);
         else resolve();
@@ -792,7 +788,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
       const onStyleLoad = () => finish();
 
-      timeoutId = window.setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         finish(new Error('Basemap terlalu lama dimuat'));
       }, BASEMAP_LOAD_TIMEOUT_MS);
 
@@ -1921,7 +1917,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
   const activeLayerIds = (Object.keys(LAYER_CONFIG) as LayerId[]).filter((id) => activeSelections[id]);
   const activeFillLayerIds = activeLayerIds.filter((id) => LAYER_CONFIG[id].render === 'fill');
-  const totalActiveFeatures = activeLayerIds.reduce((sum, id) => sum + (layerFeatureCounts[id] ?? 0), 0);
   const layerErrorMessages = Object.values(layerErrors).filter(Boolean);
 
   /* --------------------------- RENDER --------------------------- */
@@ -1946,7 +1941,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                 Peta Interaktif Lingkungan
               </h2>
               <p className="text-ink-700 max-w-3xl mx-auto text-[18px]">
-                Visualisasi Lingkungan di Banjarbaru Berbasis Data Spasial
+                Visualisasi Banjarmasin–Banjarbaru Berbasis Data Spasial
               </p>
             </div>
           </SectionReveal>
@@ -2007,7 +2002,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                         </motion.div>
                         <div>
                           <h3 className="text-ink-900 mb-2 text-[24px] font-bold">
-                            Peta Kesehatan Banjarbaru
+                            Peta Kesehatan Banjarmasin–Banjarbaru
                           </h3>
                           <p className="text-ink-700 text-[16px]">Integrasi data geospasial kesehatan</p>
                         </div>

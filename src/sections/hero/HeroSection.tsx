@@ -2,8 +2,8 @@ import { motion } from 'motion/react';
 import { ArrowRight, MapPin, MessageSquareWarning } from 'lucide-react';
 
 const insightItems = [
-  '47 fasilitas kesehatan',
-  'Peta risiko warga',
+  'Banjarmasin–Banjarbaru',
+  'Peta tematik wilayah',
   'Laporan berbasis koordinat',
 ] as const;
 
@@ -60,7 +60,7 @@ export function HeroSection() {
               </h1>
 
               <p className="mt-5 max-w-[440px] text-sm font-medium leading-snug text-[#263129] sm:text-base">
-                SIHAT membantu warga Banjarbaru melihat fasilitas kesehatan, membaca data wilayah, dan mengirim laporan langsung dari titik lokasi.
+                SIHAT membantu warga Banjarmasin dan Banjarbaru melihat fasilitas kesehatan, membaca data wilayah, dan mengirim laporan langsung dari titik lokasi.
               </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">

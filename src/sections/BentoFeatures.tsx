@@ -15,7 +15,7 @@ const cards: BentoCard[] = [
   {
     icon: <Map size={22} />,
     title: 'Peta Interaktif',
-    description: 'Visualisasi geospasial fasilitas kesehatan, sebaran penduduk, dan infrastruktur kota secara real-time.',
+    description: 'Visualisasi geospasial fasilitas kesehatan, sebaran penduduk, dan infrastruktur Banjarmasin–Banjarbaru.',
     href: '#/peta',
     span: 'col-span-1 sm:col-span-2 lg:col-span-2 lg:row-span-2',
     accent: 'from-[#b9a9f5]/20 to-[#f1f0ea]/40',
@@ -39,7 +39,7 @@ const cards: BentoCard[] = [
   {
     icon: <Bot size={20} />,
     title: 'AI Chatbot',
-    description: 'Tanya apa saja seputar data kesehatan dan lingkungan Banjarbaru.',
+    description: 'Tanya seputar data kesehatan dan lingkungan Banjarmasin–Banjarbaru.',
     href: '#/',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
     accent: 'from-[#8f80db]/12 to-[#f1f0ea]/40',
@@ -47,7 +47,7 @@ const cards: BentoCard[] = [
   {
     icon: <Newspaper size={20} />,
     title: 'Sumber Data',
-    description: 'Rujukan data fasilitas, kependudukan, dan indikator wilayah tersusun untuk audit publik.',
+    description: 'Rujukan data fasilitas, kependudukan, dan indikator wilayah dengan cakupan serta periode yang berbeda.',
     href: '#/insight',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
     accent: 'from-[#d9d6ca]/35 to-[#b9a9f5]/10',

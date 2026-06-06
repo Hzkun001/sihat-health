@@ -1,11 +1,11 @@
 {
-  "name": "SIHAT Banjarbaru",
+  "name": "SIHAT Banjarmasin–Banjarbaru",
   "short_name": "SIHAT",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
-  "description": "Dasbor kesehatan terintegrasi untuk Banjarbaru.",
+  "description": "Dasbor kesehatan lingkungan untuk Banjarmasin dan Banjarbaru.",
   "icons": [
     {
       "src": "/assets/logo.png",

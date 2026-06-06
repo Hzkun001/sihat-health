@@ -1,6 +1,14 @@
 import { SectionReveal } from '@/components/shared/SectionReveal';
 import { addCommunityReport } from '@/lib/communityReports';
 import {
+  parseCoordinates,
+  REPORT_DESCRIPTION_MAX_LENGTH,
+  REPORT_DESCRIPTION_MIN_LENGTH,
+  REPORT_PHOTO_TYPES,
+  validateReportDescription,
+  validateReportPhoto,
+} from '@/lib/reportValidation';
+import {
   AlertTriangle,
   CheckCircle2,
   ImagePlus,
@@ -34,6 +42,8 @@ export function ReportSection() {
   const [submittedReportId, setSubmittedReportId] = useState<string | null>(null);
   const [submittedTicketNumber, setSubmittedTicketNumber] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const resetTimeoutRef = useRef<number | null>(null);
@@ -67,7 +77,7 @@ export function ReportSection() {
         setCoordinateError(null);
       },
       (error) => {
-        let errorMessage = 'Tidak dapat mengakses lokasi';
+        let errorMessage: string;
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -85,13 +95,8 @@ export function ReportSection() {
 
         setLocationError(errorMessage);
         setIsLoadingLocation(false);
-
-        const defaultCoords = {
-          latitude: -3.4543,
-          longitude: 114.8419,
-        };
-        setCoordinates(defaultCoords);
-        setCoordinateInput(`${defaultCoords.latitude.toFixed(6)}, ${defaultCoords.longitude.toFixed(6)}`);
+        setCoordinates(null);
+        setCoordinateInput('');
       },
       {
         enableHighAccuracy: false,
@@ -104,7 +109,14 @@ export function ReportSection() {
   const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const validationError = validateReportPhoto(file);
+    if (validationError) {
+      setImageError(validationError);
+      event.target.value = '';
+      return;
+    }
 
+    setImageError(null);
     const reader = new FileReader();
     reader.onloadend = () => setSelectedImage(reader.result as string);
     reader.readAsDataURL(file);
@@ -112,6 +124,7 @@ export function ReportSection() {
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
+    setImageError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
@@ -120,29 +133,15 @@ export function ReportSection() {
     setCoordinateInput(value);
     setCoordinateError(null);
 
-    const parts = value.split(',').map((part) => part.trim());
-
-    if (parts.length === 2) {
-      const lat = parseFloat(parts[0]);
-      const lng = parseFloat(parts[1]);
-
-      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-          setCoordinates({ latitude: lat, longitude: lng });
-          setCoordinateError(null);
-        } else {
-          setCoordinateError('Latitude: -90 hingga 90, longitude: -180 hingga 180.');
-          setCoordinates(null);
-        }
-      } else {
-        setCoordinateError('Format koordinat tidak valid.');
-        setCoordinates(null);
-      }
+    const parsed = parseCoordinates(value);
+    if (parsed) {
+      setCoordinates(parsed);
+      setCoordinateError(null);
     } else if (value.trim() === '') {
       setCoordinates(null);
       setCoordinateError(null);
     } else {
-      setCoordinateError('Gunakan format latitude, longitude.');
+      setCoordinateError('Gunakan latitude, longitude yang valid.');
       setCoordinates(null);
     }
   };
@@ -150,7 +149,12 @@ export function ReportSection() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (!description.trim() || !coordinates || coordinateError) return;
+    const descriptionError = validateReportDescription(description);
+    if (descriptionError) {
+      setSubmitError(descriptionError);
+      return;
+    }
+    if (!coordinates || coordinateError || !privacyConsent) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -179,6 +183,7 @@ export function ReportSection() {
         setCoordinateError(null);
         setCoordinateInput('');
         setCoordinates(null);
+        setPrivacyConsent(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (cameraInputRef.current) cameraInputRef.current.value = '';
       }, 5000);
@@ -194,7 +199,15 @@ export function ReportSection() {
     }
   };
 
-  const canSubmit = Boolean(description.trim() && coordinates && !coordinateError && !isSubmitting);
+  const descriptionError = description ? validateReportDescription(description) : null;
+  const canSubmit = Boolean(
+    !descriptionError
+    && coordinates
+    && !coordinateError
+    && !imageError
+    && privacyConsent
+    && !isSubmitting,
+  );
 
   return (
     <section id="laporan" className="relative overflow-hidden bg-surface-0 py-20 sm:py-24 lg:py-28">
@@ -236,9 +249,17 @@ export function ReportSection() {
                     onChange={(event) => setDescription(event.target.value)}
                     placeholder="Contoh: drainase tersumbat di tepi jalan, sampah menumpuk, genangan air..."
                     rows={6}
+                    minLength={REPORT_DESCRIPTION_MIN_LENGTH}
+                    maxLength={REPORT_DESCRIPTION_MAX_LENGTH}
                     className="min-h-[180px] w-full resize-none rounded-xl border border-surface-200 bg-surface-alt px-4 py-3 text-base leading-7 text-ink-900 outline-none transition-shadow placeholder:text-ink-500 focus:border-brand-green focus:bg-white focus:shadow-[0_0_0_4px_rgba(70,80,71,0.12)]"
                     required
                   />
+                  <div className="mt-2 flex justify-between gap-4 text-xs font-semibold">
+                    <span className={descriptionError ? 'text-red-600' : 'text-ink-500'}>
+                      {descriptionError ?? `Minimal ${REPORT_DESCRIPTION_MIN_LENGTH} karakter`}
+                    </span>
+                    <span className="text-ink-500">{description.length}/{REPORT_DESCRIPTION_MAX_LENGTH}</span>
+                  </div>
                 </div>
 
                 <div>
@@ -359,7 +380,7 @@ export function ReportSection() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept={REPORT_PHOTO_TYPES.join(',')}
                   onChange={handleImageSelect}
                   className="hidden"
                   aria-label="Upload foto dari file"
@@ -367,12 +388,28 @@ export function ReportSection() {
                 <input
                   ref={cameraInputRef}
                   type="file"
-                  accept="image/*"
+                  accept={REPORT_PHOTO_TYPES.join(',')}
                   capture="environment"
                   onChange={handleImageSelect}
                   className="hidden"
                   aria-label="Ambil foto"
                 />
+                {imageError && (
+                  <p className="mt-3 text-sm font-semibold text-red-600">{imageError}</p>
+                )}
+
+                <label className="mt-5 flex items-start gap-3 rounded-lg border border-surface-200 bg-white p-3">
+                  <input
+                    type="checkbox"
+                    checked={privacyConsent}
+                    onChange={(event) => setPrivacyConsent(event.target.checked)}
+                    className="mt-1 h-4 w-4 accent-brand-green"
+                    required
+                  />
+                  <span className="text-xs font-semibold leading-5 text-ink-600">
+                    Saya menyetujui lokasi, deskripsi, dan foto diproses oleh petugas. Laporan tidak tampil di peta publik sebelum diverifikasi dan diterbitkan petugas.
+                  </span>
+                </label>
 
                 <button
                   type="submit"
@@ -417,8 +454,8 @@ export function ReportSection() {
                 <p className="font-bold text-ink-900">Laporan tersimpan.</p>
                 <p className="text-sm font-semibold leading-6 text-ink-700">
                   {submittedTicketNumber
-                    ? `Nomor tiket ${submittedTicketNumber}. Titik laporan akan tampil pada peta.`
-                    : 'Titik kontribusi akan tampil di layer Laporan Warga pada peta.'}
+                    ? `Nomor tiket ${submittedTicketNumber}. Laporan menunggu verifikasi sebelum dapat diterbitkan ke peta.`
+                    : 'Laporan menunggu verifikasi petugas sebelum dapat diterbitkan ke peta.'}
                 </p>
               </div>
               {submittedReportId && (

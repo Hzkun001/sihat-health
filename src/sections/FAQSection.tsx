@@ -11,7 +11,7 @@ const faqItems = [
   {
     question: 'Apa itu SIHAT?',
     answer:
-      'SIHAT adalah platform informasi kesehatan lingkungan Banjarbaru yang menyatukan data geospasial, fasilitas kesehatan, indikator wilayah, dan laporan warga dalam satu tempat.',
+      'SIHAT adalah platform informasi kesehatan lingkungan Banjarmasin–Banjarbaru yang menyatukan data geospasial, fasilitas kesehatan, indikator wilayah, dan laporan warga dalam satu tempat.',
   },
   {
     question: 'Data apa saja yang tersedia di SIHAT?',
@@ -21,7 +21,7 @@ const faqItems = [
   {
     question: 'Dari mana sumber data yang ditampilkan?',
     answer:
-      'Data SIHAT berasal dari sumber pemerintah dan mitra data terkait, termasuk Geoportal Kota Banjarbaru, Dinas Kesehatan, dan BPS. Keterangan sumber digunakan agar data dapat ditelusuri dengan lebih jelas.',
+      'Data SIHAT berasal dari sumber pemerintah dan mitra data terkait untuk Banjarmasin dan Banjarbaru, termasuk geoportal, dinas terkait, dan BPS. Tahun serta cakupan setiap dataset perlu diperhatikan karena jadwal pembaruannya berbeda.',
   },
   {
     question: 'Seberapa sering data diperbarui?',

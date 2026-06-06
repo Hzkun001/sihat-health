@@ -13,9 +13,10 @@ const CTASection = lazy(() => import('@/sections/CTASection').then(m => ({ defau
 const StatsCards = lazy(() => import('@/sections/stats/StatsCards').then(m => ({ default: m.StatsCards })));
 const FAQSection = lazy(() => import('@/sections/FAQSection').then(m => ({ default: m.FAQSection })));
 const StaffDashboardPage = lazy(() => import('@/sections/StaffDashboardPage').then(m => ({ default: m.StaffDashboardPage })));
+const PrivacyPage = lazy(() => import('@/sections/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const Footer = lazy(() => import('@/components/layout/Footer').then(m => ({ default: m.Footer })));
 
-type AppRoute = 'home' | 'map' | 'reports' | 'insight' | 'contact' | 'staff';
+type AppRoute = 'home' | 'map' | 'reports' | 'insight' | 'contact' | 'staff' | 'privacy';
 
 function getRouteFromHash(): { route: AppRoute; reportId: string | null } {
   if (typeof window === 'undefined') return { route: 'home', reportId: null };
@@ -39,6 +40,8 @@ function getRouteFromHash(): { route: AppRoute; reportId: string | null } {
       return { route: 'contact', reportId: null };
     case '#/petugas':
       return { route: 'staff', reportId: null };
+    case '#/privasi':
+      return { route: 'privacy', reportId: null };
     case '#/':
     case '#hero':
     default:
@@ -102,6 +105,12 @@ export default function App() {
         return (
           <Suspense fallback={<div className="min-h-screen bg-surface-0" />}>
             <StaffDashboardPage />
+          </Suspense>
+        );
+      case 'privacy':
+        return (
+          <Suspense fallback={<div className="min-h-screen bg-surface-0" />}>
+            <PrivacyPage />
           </Suspense>
         );
       case 'home':

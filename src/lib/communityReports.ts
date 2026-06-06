@@ -1,6 +1,7 @@
 import { ensureAnonymousSession, isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type ReportStatus = 'baru' | 'diverifikasi' | 'diproses' | 'selesai' | 'ditolak';
+export type ReportPriority = 'rendah' | 'normal' | 'tinggi' | 'darurat';
 
 export interface ReportComment {
   id: string;
@@ -28,6 +29,11 @@ export interface CommunityReport {
   createdAt: string;
   updatedAt?: string;
   status: ReportStatus;
+  priority: ReportPriority;
+  dueAt?: string;
+  assignedTo?: string;
+  isPublic: boolean;
+  photoPath?: string;
   comments: ReportComment[];
   updates: ReportUpdate[];
 }
@@ -46,9 +52,46 @@ export interface StaffProfile {
   role: 'admin' | 'verifikator' | 'petugas';
 }
 
+export interface ReportInternalNote {
+  id: string;
+  reportId: string;
+  authorId: string;
+  authorName: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface ReportAuditEvent {
+  id: string;
+  reportId: string;
+  actorId?: string;
+  actorName: string;
+  action: string;
+  changes: Record<string, { before: unknown; after: unknown }>;
+  createdAt: string;
+}
+
+export interface StaffReportQuery {
+  page?: number;
+  pageSize?: number;
+  status?: ReportStatus | 'semua';
+  search?: string;
+}
+
+export interface StaffReportPage {
+  reports: CommunityReport[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export type ReportStatusCounts = Record<ReportStatus, number>;
+
 const STORAGE_KEY = 'sihat-community-reports-v1';
 const REPORTS_UPDATED_EVENT = 'sihat:community-reports-updated';
 const PHOTO_BUCKET = 'report-photos';
+const REPORT_QUERY_LIMIT = 200;
+const SIGNED_PHOTO_URL_TTL_SECONDS = 60 * 60;
 
 let reportsCache: CommunityReport[] = [];
 
@@ -94,6 +137,11 @@ function normalizeReport(value: unknown): CommunityReport | null {
     createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
     updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
     status: normalizeStatus(item.status),
+    priority: item.priority ?? 'normal',
+    dueAt: typeof item.dueAt === 'string' ? item.dueAt : undefined,
+    assignedTo: typeof item.assignedTo === 'string' ? item.assignedTo : undefined,
+    isPublic: item.isPublic === true,
+    photoPath: typeof item.photoPath === 'string' ? item.photoPath : undefined,
     comments: Array.isArray(item.comments)
       ? item.comments
         .map((comment) => {
@@ -169,9 +217,14 @@ function mapDatabaseReport(row: any): CommunityReport {
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
     photoDataUrl: row.photo_url || undefined,
+    photoPath: row.photo_path || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     status: normalizeStatus(row.status),
+    priority: row.priority || 'normal',
+    dueAt: row.due_at || undefined,
+    assignedTo: row.assigned_to || undefined,
+    isPublic: row.is_public === true,
     comments: comments
       .map((comment: any) => ({
         id: comment.id,
@@ -200,7 +253,9 @@ const REPORT_SELECT = `
   latitude,
   longitude,
   photo_url,
+  photo_path,
   status,
+  is_public,
   created_at,
   updated_at,
   report_comments (
@@ -218,6 +273,58 @@ const REPORT_SELECT = `
   )
 `;
 
+const LEGACY_REPORT_SELECT = REPORT_SELECT.replace('  is_public,\n', '');
+const STAFF_REPORT_SELECT = REPORT_SELECT.replace(
+  '  updated_at,',
+  '  updated_at,\n  priority,\n  due_at,\n  assigned_to,',
+);
+
+function requiresPrivacyMigration(error: { code?: string; message?: string } | null) {
+  return error?.code === '42703' && error.message?.includes('is_public');
+}
+
+function requiresOperationsMigration(error: { code?: string; message?: string } | null) {
+  return (
+    (error?.code === '42703' && (
+      error.message?.includes('priority')
+      || error.message?.includes('due_at')
+      || error.message?.includes('assigned_to')
+    ))
+    || (error?.code === 'PGRST205' && (
+      error.message?.includes('report_internal_notes')
+      || error.message?.includes('report_audit_log')
+    ))
+  );
+}
+
+async function attachSignedPhotoUrls(reports: CommunityReport[]) {
+  if (!supabase) return reports;
+  const paths = reports
+    .map((report) => report.photoPath)
+    .filter((path): path is string => Boolean(path));
+  if (!paths.length) return reports;
+
+  const { data, error } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .createSignedUrls(paths, SIGNED_PHOTO_URL_TTL_SECONDS);
+
+  if (error || !data) {
+    console.warn('[Reports] Gagal membuat signed URL foto:', error);
+    return reports;
+  }
+
+  const signedUrls = new Map(
+    data
+      .filter((item) => item.path && item.signedUrl)
+      .map((item) => [item.path as string, item.signedUrl as string]),
+  );
+
+  return reports.map((report) => ({
+    ...report,
+    photoDataUrl: report.photoPath ? signedUrls.get(report.photoPath) : report.photoDataUrl,
+  }));
+}
+
 export function getCommunityReports(): CommunityReport[] {
   if (!reportsCache.length) reportsCache = getLocalReports();
   return reportsCache;
@@ -230,29 +337,197 @@ export async function loadCommunityReports(): Promise<CommunityReport[]> {
     return localReports;
   }
 
-  const { data, error } = await supabase
+  const primaryResult = await supabase
     .from('reports')
     .select(REPORT_SELECT)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(REPORT_QUERY_LIMIT);
+  let data = primaryResult.data as any[] | null;
+  let error = primaryResult.error;
+
+  if (requiresPrivacyMigration(error)) {
+    const legacyResult = await supabase
+      .from('reports')
+      .select(LEGACY_REPORT_SELECT)
+      .order('created_at', { ascending: false })
+      .limit(REPORT_QUERY_LIMIT);
+    data = legacyResult.data as any[] | null;
+    error = legacyResult.error;
+  }
 
   if (error) {
     console.warn('[Reports] Gagal memuat laporan Supabase:', error);
     return getCommunityReports();
   }
 
-  const reports = (data ?? []).map(mapDatabaseReport);
+  const reports = await attachSignedPhotoUrls((data ?? []).map(mapDatabaseReport));
   setReportsCache(reports);
   return reports;
+}
+
+function sanitizeSearchQuery(value: string) {
+  return value
+    .trim()
+    .replace(/[,%()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, 120);
+}
+
+export async function loadStaffReportsPage(
+  options: StaffReportQuery = {},
+): Promise<StaffReportPage> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const pageSize = Math.min(Math.max(options.pageSize ?? 20, 5), 100);
+  const page = Math.max(options.page ?? 1, 1);
+  const from = (page - 1) * pageSize;
+  const search = sanitizeSearchQuery(options.search ?? '');
+
+  let query = supabase
+    .from('reports')
+    .select(STAFF_REPORT_SELECT, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, from + pageSize - 1);
+
+  if (options.status && options.status !== 'semua') {
+    query = query.eq('status', options.status);
+  }
+
+  if (search) {
+    query = query.or(
+      `ticket_number.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`,
+    );
+  }
+
+  const { data, error, count } = await query;
+  if (requiresOperationsMigration(error)) {
+    throw new Error(
+      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
+    );
+  }
+  if (error) throw error;
+
+  const reports = await attachSignedPhotoUrls((data ?? []).map(mapDatabaseReport));
+  return { reports, total: count ?? 0, page, pageSize };
+}
+
+export async function loadReportStatusCounts(): Promise<ReportStatusCounts> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+  const client = supabase;
+
+  const statuses: ReportStatus[] = ['baru', 'diverifikasi', 'diproses', 'selesai', 'ditolak'];
+  const results = await Promise.all(
+    statuses.map(async (status) => {
+      const { count, error } = await client
+        .from('reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', status);
+      if (error) throw error;
+      return [status, count ?? 0] as const;
+    }),
+  );
+
+  return Object.fromEntries(results) as ReportStatusCounts;
+}
+
+export async function loadStaffProfiles(): Promise<StaffProfile[]> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const { data, error } = await supabase
+    .from('staff_profiles')
+    .select('user_id, display_name, role')
+    .order('display_name');
+
+  if (error) throw error;
+  return (data ?? []).map((profile) => ({
+    userId: profile.user_id,
+    displayName: profile.display_name,
+    role: profile.role,
+  }));
+}
+
+export async function loadReportInternalNotes(reportId: string): Promise<ReportInternalNote[]> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const [{ data, error }, profiles] = await Promise.all([
+    supabase
+      .from('report_internal_notes')
+      .select('id, report_id, author_id, message, created_at')
+      .eq('report_id', reportId)
+      .order('created_at', { ascending: false }),
+    loadStaffProfiles(),
+  ]);
+
+  if (requiresOperationsMigration(error)) {
+    throw new Error(
+      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
+    );
+  }
+  if (error) throw error;
+
+  const names = new Map(profiles.map((profile) => [profile.userId, profile.displayName]));
+  return (data ?? []).map((note) => ({
+    id: note.id,
+    reportId: note.report_id,
+    authorId: note.author_id,
+    authorName: names.get(note.author_id) ?? 'Petugas',
+    message: note.message,
+    createdAt: note.created_at,
+  }));
+}
+
+export async function loadReportAuditLog(reportId: string): Promise<ReportAuditEvent[]> {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const [{ data, error }, profiles] = await Promise.all([
+    supabase
+      .from('report_audit_log')
+      .select('id, report_id, actor_id, action, changes, created_at')
+      .eq('report_id', reportId)
+      .order('created_at', { ascending: false })
+      .limit(100),
+    loadStaffProfiles(),
+  ]);
+
+  if (requiresOperationsMigration(error)) {
+    throw new Error(
+      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
+    );
+  }
+  if (error) throw error;
+
+  const names = new Map(profiles.map((profile) => [profile.userId, profile.displayName]));
+  return (data ?? []).map((event) => ({
+    id: event.id,
+    reportId: event.report_id,
+    actorId: event.actor_id || undefined,
+    actorName: event.actor_id ? names.get(event.actor_id) ?? 'Petugas' : 'Sistem',
+    action: event.action,
+    changes: event.changes as ReportAuditEvent['changes'],
+    createdAt: event.created_at,
+  }));
 }
 
 export async function loadCommunityReportById(reportId: string): Promise<CommunityReport | null> {
   if (!isSupabaseConfigured || !supabase) return getCommunityReportById(reportId);
 
-  const { data, error } = await supabase
+  const primaryResult = await supabase
     .from('reports')
     .select(REPORT_SELECT)
     .eq('id', reportId)
     .maybeSingle();
+  let data = primaryResult.data as any;
+  let error = primaryResult.error;
+
+  if (requiresPrivacyMigration(error)) {
+    const legacyResult = await supabase
+      .from('reports')
+      .select(LEGACY_REPORT_SELECT)
+      .eq('id', reportId)
+      .maybeSingle();
+    data = legacyResult.data as any;
+    error = legacyResult.error;
+  }
 
   if (error) {
     console.warn(`[Reports] Gagal memuat laporan ${reportId}:`, error);
@@ -260,7 +535,7 @@ export async function loadCommunityReportById(reportId: string): Promise<Communi
   }
 
   if (!data) return null;
-  const report = mapDatabaseReport(data);
+  const [report] = await attachSignedPhotoUrls([mapDatabaseReport(data)]);
   setReportsCache([report, ...getCommunityReports().filter((item) => item.id !== report.id)], false);
   return report;
 }
@@ -289,6 +564,8 @@ function addLocalCommunityReport(input: NewCommunityReportInput): CommunityRepor
     photoDataUrl: input.photoDataUrl || undefined,
     createdAt: new Date().toISOString(),
     status: 'baru',
+    priority: 'normal',
+    isPublic: false,
     comments: [],
     updates: [
       {
@@ -313,8 +590,6 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
   try {
     const session = await ensureAnonymousSession();
     const reportId = crypto.randomUUID();
-    let photoUrl: string | null = null;
-
     if (input.photoDataUrl) {
       const { blob, mimeType } = dataUrlToBlob(input.photoDataUrl);
       photoPath = `${session.user.id}/${reportId}/${crypto.randomUUID()}.${extensionForMimeType(mimeType)}`;
@@ -323,7 +598,6 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
         .upload(photoPath, blob, { contentType: mimeType, upsert: false });
 
       if (uploadError) throw uploadError;
-      photoUrl = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(photoPath).data.publicUrl;
     }
 
     const { data: inserted, error: insertError } = await supabase
@@ -336,11 +610,16 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
         latitude: input.latitude,
         longitude: input.longitude,
         photo_path: photoPath,
-        photo_url: photoUrl,
+        photo_url: null,
+        is_public: false,
+        privacy_consent_at: new Date().toISOString(),
       })
       .select('id')
       .single();
 
+    if (requiresPrivacyMigration(insertError)) {
+      throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
+    }
     if (insertError) throw insertError;
 
     const report = await loadCommunityReportById(inserted.id);
@@ -353,9 +632,11 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
     }
 
     if (error instanceof Error && error.message?.toLowerCase().includes('load failed')) {
-      throw new Error(
+      const connectionError = new Error(
         'Gagal mengirim laporan karena request ke Supabase tidak bisa dijangkau. Periksa VITE_SUPABASE_URL, CORS/allowed origins, dan aktifkan Anonymous Sign-Ins.',
       );
+      Object.defineProperty(connectionError, 'cause', { value: error });
+      throw connectionError;
     }
 
     throw error;
@@ -475,8 +756,91 @@ export async function updateReportStatus(
     })
     .eq('id', reportId);
 
+  if (requiresPrivacyMigration(error)) {
+    throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
+  }
   if (error) throw error;
   return loadCommunityReportById(reportId);
+}
+
+export async function updateReportPublication(reportId: string, isPublic: boolean) {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const { error } = await supabase
+    .from('reports')
+    .update({ is_public: isPublic })
+    .eq('id', reportId);
+
+  if (requiresPrivacyMigration(error)) {
+    throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
+  }
+  if (error) throw error;
+  return loadCommunityReportById(reportId);
+}
+
+export async function updateReportOperations(
+  reportId: string,
+  changes: {
+    priority?: ReportPriority;
+    assignedTo?: string | null;
+    dueAt?: string;
+  },
+) {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+  const payload: Record<string, string | null> = {};
+  if (changes.priority) payload.priority = changes.priority;
+  if ('assignedTo' in changes) payload.assigned_to = changes.assignedTo ?? null;
+  if (changes.dueAt) payload.due_at = changes.dueAt;
+
+  const { error } = await supabase
+    .from('reports')
+    .update(payload)
+    .eq('id', reportId);
+
+  if (requiresOperationsMigration(error)) {
+    throw new Error(
+      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
+    );
+  }
+  if (error) throw error;
+}
+
+export async function addReportInternalNote(reportId: string, message: string) {
+  if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+  const session = await supabase.auth.getSession();
+  const userId = session.data.session?.user.id;
+  if (!userId) throw new Error('Sesi petugas tidak ditemukan');
+
+  const { error } = await supabase.from('report_internal_notes').insert({
+    report_id: reportId,
+    author_id: userId,
+    message: message.trim(),
+  });
+
+  if (requiresOperationsMigration(error)) {
+    throw new Error(
+      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
+    );
+  }
+  if (error) throw error;
+}
+
+export function subscribeToStaffReportChanges(listener: () => void) {
+  if (!supabase) return () => undefined;
+  const client = supabase;
+
+  const channel = client
+    .channel(`staff-reports-${createId('subscription')}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, listener)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'report_comments' }, listener)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'report_updates' }, listener)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'report_internal_notes' }, listener)
+    .subscribe();
+
+  return () => {
+    void client.removeChannel(channel);
+  };
 }
 
 export function subscribeToCommunityReports(listener: (reports: CommunityReport[]) => void) {
@@ -505,10 +869,14 @@ export function subscribeToCommunityReports(listener: (reports: CommunityReport[
   };
 }
 
-export function reportsToFeatureCollection(reports = getCommunityReports()): GeoJSON.FeatureCollection {
+export function reportsToFeatureCollection(
+  reports = getCommunityReports(),
+  includeInternal = false,
+): GeoJSON.FeatureCollection {
+  const visibleReports = includeInternal ? reports : reports.filter((report) => report.isPublic);
   return {
     type: 'FeatureCollection',
-    features: reports.map((report) => ({
+    features: visibleReports.map((report) => ({
       type: 'Feature',
       id: report.id,
       geometry: {
@@ -521,6 +889,7 @@ export function reportsToFeatureCollection(reports = getCommunityReports()): Geo
         description: report.description,
         createdAt: report.createdAt,
         status: report.status,
+        isPublic: report.isPublic,
         hasPhoto: Boolean(report.photoDataUrl),
         photoDataUrl: report.photoDataUrl ?? '',
         commentsCount: report.comments.length,
