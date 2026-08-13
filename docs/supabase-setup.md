@@ -12,6 +12,7 @@ Buat `.env.local` dari `.env.example`:
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+VITE_MAPTILER_KEY=your_maptiler_key
 ```
 
 Jangan gunakan `service_role` key pada frontend.

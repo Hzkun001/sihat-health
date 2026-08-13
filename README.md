@@ -46,6 +46,7 @@ Buat `.env.local` dari `.env.example` jika ingin menggunakan backend Supabase:
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+VITE_MAPTILER_KEY=your_maptiler_key
 ```
 
 Tanpa environment tersebut, form laporan menggunakan `localStorage`. Portal petugas tetap menampilkan batas konfigurasi karena login staf hanya tersedia melalui Supabase.

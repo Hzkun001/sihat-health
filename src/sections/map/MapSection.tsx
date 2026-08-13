@@ -233,13 +233,25 @@ type SearchResult = DetailInfo & {
 };
 type BasemapId = 'streets' | 'light' | 'satellite';
 
-const MAPTILER_KEY = '2gdBMkelnNTDj6FyZkyv';
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY?.trim() || '2gdBMkelnNTDj6FyZkyv';
 const DEFAULT_CENTER: [number, number] = [114.833, -3.442];
 const DEFAULT_ZOOM = 12;
 const DEFAULT_BASEMAP: BasemapId = 'streets';
 const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true, communityReports: true };
 const FACILITY_LAYER_IDS: readonly LayerId[] = ['rumahsakit', 'puskesmas', 'klinik', 'apotek', 'homecare'];
 const BASEMAP_LOAD_TIMEOUT_MS = 12000;
+
+const FALLBACK_MAP_STYLE = {
+  version: 8,
+  sources: {},
+  layers: [
+    {
+      id: 'fallback-background',
+      type: 'background',
+      paint: { 'background-color': '#f0eee7' },
+    },
+  ],
+} as const;
 
 const BASEMAP_STYLES: Record<BasemapId, { label: string; style: string }> = {
   streets: {
@@ -278,16 +290,16 @@ const LAYER_LABELS: Record<LayerId, string> = {
 
 const LAYER_COLORS: Record<LayerId, string> = {
   rumahsakit: '#3498DB',
-  puskesmas: '#B9A9F5',
-  klinik: '#D946EF',
-  apotek: '#1D4ED8',
-  homecare: '#F59E0B',
+  puskesmas: '#8FA28A',
+  klinik: '#C8A96B',
+  apotek: '#687365',
+  homecare: '#B08A3E',
   population: '#7A6F60',
   children: '#DB2777',
   lansia: '#C2410C',
   disabilitas: '#7E22CE',
   tps: '#8A8177',
-  communityReports: '#465047',
+  communityReports: '#8FA28A',
   PendudukBanjarmasin: '#16A34A',
 };
 
@@ -441,8 +453,8 @@ function createCommunityReportIcon(hasPhoto: boolean): ImageData {
   if (!ctx) throw new Error('Tidak bisa membuat ikon laporan warga');
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const baseColor = hasPhoto ? '#465047' : '#334155';
-  const accentColor = hasPhoto ? '#B9A9F5' : '#D9D6CA';
+  const baseColor = hasPhoto ? '#8FA28A' : '#596458';
+  const accentColor = hasPhoto ? '#C8A96B' : '#DFE4DA';
 
   ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
   ctx.shadowBlur = 14;
@@ -730,6 +742,8 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [prefersReducedMotion, setPRM] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [styleLoaded, setStyleLoaded] = useState(false);
+  const [mapError, setMapError] = useState('');
   const [activeSelections, setActiveSelections] = useState<Record<string, boolean>>(
     () => ({ ...DEFAULT_DESKTOP_SELECTIONS })
   );
@@ -1628,7 +1642,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     const map = mapInstance.current;
     if (!map) return;
     userLocationMarkerRef.current?.remove();
-    userLocationMarkerRef.current = new maplibregl.Marker({ color: '#465047' })
+    userLocationMarkerRef.current = new maplibregl.Marker({ color: '#8fa28a' })
       .setLngLat(coordinates)
       .addTo(map);
   }, []);
@@ -1789,7 +1803,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       const map = mapInstance.current;
       if (!map) return;
 
-      setMapLoaded(false);
+      setMapLoaded(true);
       await ensureSymbolImages();
       (Object.keys(LAYER_CONFIG) as LayerId[]).forEach((id) => ensureSourceAndLayer(id));
       registerAllInteractions();
@@ -1803,7 +1817,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
         .filter((id) => !activeSelectionsRef.current[id])
         .forEach((id) => setLayerVisibility(id, false));
 
-      setMapLoaded(true);
       window.setTimeout(() => map.resize(), 0);
     },
     [ensureSourceAndLayer, ensureSymbolImages, loadAndShowLayer, registerAllInteractions, setLayerVisibility]
@@ -1832,6 +1845,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
       teardownInteractions();
       setMapLoaded(false);
+      setStyleLoaded(false);
       await applyBasemapStyle(map, style);
       if (basemapRequestRef.current !== requestId) return;
 
@@ -1853,6 +1867,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
         teardownInteractions();
         setMapLoaded(false);
+        setStyleLoaded(false);
         await applyBasemapStyle(map, previousStyle);
         await hydrateMapStyle(false);
         setBasemapId(previousBasemapId);
@@ -1878,6 +1893,11 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
+    if (!MAPTILER_KEY) {
+      setMapError('Peta belum dikonfigurasi. Tambahkan VITE_MAPTILER_KEY di .env.local.');
+      return;
+    }
+
     const map = new maplibregl.Map({
       container: mapRef.current,
       style: BASEMAP_STYLES[DEFAULT_BASEMAP].style,
@@ -1888,30 +1908,72 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     });
     mapInstance.current = map;
 
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) {
+        map.resize();
+      }
+    });
+    resizeObserver.observe(mapRef.current);
+
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+    let fallbackApplied = false;
+    map.on('error', (event) => {
+      const message = event.error?.message || 'Basemap gagal dimuat.';
+      const isMissingStyleImage = message.includes('could not be loaded') && message.includes('Image');
+      if (isMissingStyleImage) {
+        console.warn('[Map] Style image tidak tersedia, diabaikan:', message);
+        return;
+      }
+      console.warn('[Map] MapLibre error:', event.error);
+      if (!fallbackApplied) {
+        fallbackApplied = true;
+        map.setStyle(FALLBACK_MAP_STYLE as any, { diff: false } as any);
+        setMapError('Basemap utama gagal dimuat. Menampilkan tampilan peta dasar.');
+        return;
+      }
+      setMapError(`Peta gagal dimuat: ${message}`);
+    });
 
     map.on('load', async () => {
+      setMapError('');
+      setStyleLoaded(true);
       try {
         interactionCleanups.current = [];
 
         if (typeof window !== 'undefined' && import.meta.env.DEV) {
           (window as any).map = map;
+          const rect = map.getContainer().getBoundingClientRect();
           console.info('[Map Debug] window.map tersedia di console');
+          console.info('[Map Debug] container size:', { width: rect.width, height: rect.height });
+          console.info('[Map Debug] isStyleLoaded:', map.isStyleLoaded());
+          console.info('[Map Debug] canvas size:', map.getCanvas().width, map.getCanvas().height);
         }
 
-        await hydrateMapStyle(true);
+        setMapLoaded(true);
+        void hydrateMapStyle(true).catch((error) => {
+          console.warn('[Map] Gagal memuat layer peta:', error);
+          setLayerErrors((previous) => ({
+            ...previous,
+            layers: 'Sebagian layer peta gagal dimuat, tetapi basemap tetap tersedia.',
+          }));
+        });
       } catch (err) {
         console.warn('[Map] Gagal inisialisasi ikon/layer:', err);
       }
     });
 
     return () => {
+      resizeObserver.disconnect();
       teardownInteractions();
       userLocationMarkerRef.current?.remove();
       userLocationMarkerRef.current = null;
       map.remove();
       mapInstance.current = null;
       setMapLoaded(false);
+      setStyleLoaded(false);
     };
   }, [hydrateMapStyle, teardownInteractions]);
 
@@ -1924,7 +1986,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     <section id={sectionId ?? undefined} className="relative pt-28 pb-10 sm:pt-28 sm:pb-12 lg:pt-28 lg:pb-20 overflow-hidden">
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, #f1f0ea 0%, #fbfaf5 100%)' }}
+        style={{ backgroundColor: '#faf8f2' }}
       />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
@@ -1973,7 +2035,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  <div ref={mapRef} className="absolute inset-0" />
+                  <div ref={mapRef} className="absolute inset-0 z-0" />
 
                   {!isFullscreen && (
                     <MapSearchControl
@@ -1990,7 +2052,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     />
                   )}
 
-                  {!prefersReducedMotion && !isFullscreen && !mapLoaded && (
+                  {!mapError && !isFullscreen && !styleLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-4">
                         <motion.div
@@ -2006,6 +2068,16 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                           </h3>
                           <p className="text-ink-700 text-[16px]">Integrasi data geospasial kesehatan</p>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {mapError && !isFullscreen && (
+                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-surface-0/90 px-6 text-center">
+                      <div className="max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-lg">
+                        <AlertTriangle size={28} className="mx-auto text-amber-600" />
+                        <h3 className="mt-3 text-lg font-bold text-ink-900">Peta belum tersedia</h3>
+                        <p className="mt-2 text-sm leading-6 text-ink-700">{mapError}</p>
                       </div>
                     </div>
                   )}
