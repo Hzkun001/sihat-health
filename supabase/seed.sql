@@ -1,0 +1,12 @@
+-- Optional local-development seed.
+-- Create authenticated users first, then replace the UUID values below.
+-- Never commit passwords, service-role keys, or production user data.
+
+-- insert into public.staff_profiles (user_id, display_name, role)
+-- values
+--   ('00000000-0000-0000-0000-000000000001', 'Admin Lokal', 'admin'),
+--   ('00000000-0000-0000-0000-000000000002', 'Verifikator Lokal', 'verifikator'),
+--   ('00000000-0000-0000-0000-000000000003', 'Petugas Lokal', 'petugas')
+-- on conflict (user_id) do update
+-- set display_name = excluded.display_name,
+--     role = excluded.role;

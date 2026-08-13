@@ -43,14 +43,20 @@
   
   /* SIHAT Design System Tokens */
   --brand-green: #465047;
+  --brand-green-light: #eef2eb;
+  --brand-green-dark: #303832;
   --brand-blue: #b9a9f5;
   --brand-mint: #f1f0ea;
-  
+
   --ink-900: #303832;
+  --ink-800: #38413b;
   --ink-700: #424b45;
+  --ink-600: #5d655e;
   --ink-500: #70756f;
-  
+
   --surface-0: #fbfaf5;
+  --surface-100: #f1f0ea;
+  --surface-200: #e3e4dd;
   --surface-alt: #f1f0ea;
 }
 
@@ -146,8 +152,7 @@
   --color-surface-alt: var(--surface-alt);
 }
 
-@layer base {
-  * {
+* {
     border-color: var(--border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
@@ -212,13 +217,11 @@ model-viewer {
       scroll-behavior: auto !important;
     }
   }
-}
 
 /**
  * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
  */
-@layer base {
-  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+:where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
@@ -267,7 +270,6 @@ model-viewer {
       line-height: 1.5;
     }
   }
-}
 
 html {
   font-size: var(--font-size);

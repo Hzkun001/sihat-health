@@ -189,12 +189,12 @@ revoke all on public.report_comments from anon, authenticated;
 revoke all on public.report_updates from anon, authenticated;
 
 grant select on public.reports to anon, authenticated;
-grant insert, update on public.reports to authenticated;
+grant insert on public.reports to authenticated;
 grant select on public.report_comments to anon, authenticated;
 grant insert on public.report_comments to authenticated;
 grant select on public.report_updates to anon, authenticated;
 grant select on public.staff_profiles to authenticated;
-grant insert on public.report_updates to authenticated;
+-- Report timeline entries are created by trusted triggers/RPCs, not direct client inserts.
 
 drop policy if exists "Public can read visible reports" on public.reports;
 create policy "Public can read visible reports"
@@ -291,13 +291,13 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'report-photos',
   'report-photos',
-  true,
+  false,
   5242880,
   array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do update
 set
-  public = excluded.public,
+  public = false,
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 

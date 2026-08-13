@@ -27,5 +27,13 @@ pnpm-debug.log*
 # other
 *.local
 
+# Playwright reports
+playwright-report/
+blob-report/
+test-results/
+
+# Supabase CLI local state
+supabase/.temp/
+
 # lighthouse reports
 lighthouse-report.*

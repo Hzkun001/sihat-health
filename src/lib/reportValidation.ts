@@ -2,6 +2,7 @@ export const REPORT_DESCRIPTION_MIN_LENGTH = 10;
 export const REPORT_DESCRIPTION_MAX_LENGTH = 2000;
 export const REPORT_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 export const REPORT_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const REPORT_COMMENT_MAX_LENGTH = 1000;
 
 export interface Coordinates {
   latitude: number;
@@ -28,6 +29,15 @@ export function parseCoordinates(value: string): Coordinates | null {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
   return { latitude, longitude };
+}
+
+export function validateReportComment(value: string) {
+  const length = value.trim().length;
+  if (!length) return 'Komentar tidak boleh kosong.';
+  if (length > REPORT_COMMENT_MAX_LENGTH) {
+    return `Komentar maksimal ${REPORT_COMMENT_MAX_LENGTH} karakter.`;
+  }
+  return null;
 }
 
 export function validateReportPhoto(file: Pick<File, 'size' | 'type'>) {

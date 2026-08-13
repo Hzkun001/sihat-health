@@ -25,9 +25,17 @@ test('privacy route is accessible', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Pengelolaan data laporan SIHAT/i })).toBeVisible();
 });
 
-test('staff route requires authentication', async ({ page }) => {
+test('staff route exposes its authentication boundary', async ({ page }) => {
   await page.goto('/#/petugas');
   await expect(page.getByRole('heading', { name: /Portal Petugas SIHAT/i })).toBeVisible();
+
+  const configurationHeading = page.getByRole('heading', { name: /Supabase belum dikonfigurasi/i });
+  if (await configurationHeading.count()) {
+    await expect(configurationHeading).toBeVisible();
+    await expect(page.getByText(/VITE_SUPABASE_URL/i)).toBeVisible();
+    return;
+  }
+
   await expect(page.getByLabel('Email')).toBeVisible();
   await expect(page.getByLabel('Password')).toBeVisible();
 });

@@ -1,10 +1,10 @@
 import {
   addReportComment,
-  getCommunityReportById,
   loadCommunityReportById,
   subscribeToCommunityReports,
   type ReportStatus,
 } from '@/lib/communityReports';
+import { REPORT_COMMENT_MAX_LENGTH, validateReportComment } from '@/lib/reportValidation';
 import { ArrowLeft, Camera, CheckCircle2, Clock3, Loader2, MapPin, MessageCircle, Send } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
@@ -32,21 +32,33 @@ const STATUS_LABELS: Record<ReportStatus, string> = {
 };
 
 export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
-  const [report, setReport] = useState(() => getCommunityReportById(reportId));
+  const [report, setReport] = useState<Awaited<ReturnType<typeof loadCommunityReportById>>>(null);
   const [comment, setComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [commentError, setCommentError] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
+    setReport(null);
+    setLoadError('');
+    setCommentError('');
 
-    void loadCommunityReportById(reportId).then((nextReport) => {
-      if (!active) return;
-      setReport(nextReport);
-      setIsLoading(false);
-    });
+    void loadCommunityReportById(reportId)
+      .then((nextReport) => {
+        if (!active) return;
+        setReport(nextReport);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.warn('[Reports] Gagal memuat detail laporan:', error);
+        setReport(null);
+        setLoadError('Detail laporan gagal dimuat. Silakan coba lagi.');
+        setIsLoading(false);
+      });
 
     const unsubscribe = subscribeToCommunityReports((reports) => {
       if (active) {
@@ -68,7 +80,13 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
 
   const handleSubmitComment = async (event: FormEvent) => {
     event.preventDefault();
-    if (!report || !comment.trim()) return;
+    if (!report) return;
+
+    const validationError = validateReportComment(comment);
+    if (validationError) {
+      setCommentError(validationError);
+      return;
+    }
 
     setIsSubmittingComment(true);
     setCommentError('');
@@ -108,8 +126,12 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
             Kembali
           </button>
           <div className="rounded-2xl border border-surface-200 bg-white p-8">
-            <h1 className="text-2xl font-bold text-ink-900">Laporan tidak ditemukan</h1>
-            <p className="mt-2 text-ink-500">Laporan mungkin sudah dihapus atau tidak dapat diakses.</p>
+            <h1 className="text-2xl font-bold text-ink-900">
+              {loadError ? 'Laporan gagal dimuat' : 'Laporan tidak ditemukan'}
+            </h1>
+            <p className="mt-2 text-ink-500">
+              {loadError || 'Laporan mungkin sudah dihapus atau tidak dapat diakses.'}
+            </p>
           </div>
         </div>
       </main>
@@ -242,10 +264,12 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
                 rows={4}
+                maxLength={REPORT_COMMENT_MAX_LENGTH}
                 placeholder="Tambahkan komentar atau tindak lanjut..."
+                aria-describedby={commentError ? 'comment-error' : undefined}
                 className="w-full resize-none rounded-xl bg-surface-100 px-4 py-3 text-sm font-semibold leading-6 text-ink-900 outline-none transition-shadow placeholder:text-ink-500 focus:shadow-[0_0_0_3px_rgba(70,80,71,0.12)]"
               />
-              {commentError && <p className="text-sm font-semibold text-red-600">{commentError}</p>}
+              {commentError && <p id="comment-error" role="alert" className="text-sm font-semibold text-red-600">{commentError}</p>}
               <button
                 type="submit"
                 disabled={!comment.trim() || isSubmittingComment}

@@ -9,12 +9,11 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "types": ["node"],
     "strict": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "src/types/model-viewer.d.ts"]
+  "include": ["src", "tests", "playwright.config.ts", "src/types/model-viewer.d.ts"]
 }

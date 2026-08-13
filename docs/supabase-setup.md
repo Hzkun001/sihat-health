@@ -31,19 +31,46 @@ Jika aplikasi dijalankan dari `localhost`, tambahkan origin pengembangan ke konf
 Sebelum production, aktifkan Cloudflare Turnstile atau hCaptcha pada menu
 **Authentication > Bot and Abuse Protection**.
 
-## 3. Jalankan migration
+## 3. Jalankan migration dari awal
 
-Buka SQL Editor Supabase dan jalankan:
+Workflow yang direkomendasikan adalah Supabase CLI agar urutan dan status migration tercatat:
 
-`supabase/migrations/202606060001_reports.sql`
+```bash
+npm install -g supabase
+supabase login
+supabase link --project-ref PROJECT_REF_ANDA
+supabase db push
+```
 
-Setelah migration utama berhasil, jalankan migration privasi:
+Perintah tersebut menjalankan migration yang belum diterapkan dari direktori `supabase/migrations/` secara berurutan:
 
-`supabase/migrations/202606060002_report_privacy.sql`
+1. `202606060001_reports.sql`
+2. `202606060002_report_privacy.sql`
+3. `202606060003_report_operations.sql`
+4. `202606060004_security_hardening.sql`
 
-Terakhir, jalankan migration operasional:
+Untuk database fresh, jangan menjalankan hanya migration `004`; migration tersebut bergantung pada objek yang dibuat oleh `001`–`003`.
 
-`supabase/migrations/202606060003_report_operations.sql`
+Jika Supabase CLI belum tersedia, SQL Editor dapat digunakan sebagai fallback. Jalankan empat file di atas satu per satu sesuai urutan. Tunggu setiap query selesai tanpa error sebelum menjalankan file berikutnya.
+
+Verifikasi migration yang sudah tercatat:
+
+```sql
+select version, name
+from supabase_migrations.schema_migrations
+order by version;
+```
+
+Jangan mengedit atau menjalankan ulang migration yang sudah tercatat sebagai applied. Untuk perubahan setelah deployment, buat file migration baru dengan timestamp yang lebih besar.
+
+Untuk local development:
+
+```bash
+supabase start
+supabase db reset
+```
+
+`db reset` menghapus database local dan menjalankan ulang seluruh migration serta `supabase/seed.sql`.
 
 Migration membuat:
 
@@ -61,6 +88,7 @@ Migration membuat:
 - Assignment petugas, prioritas, dan tenggat SLA
 - Catatan internal petugas
 - Audit log perubahan operasional
+- RPC terproteksi untuk status, publikasi, dan operasi SLA
 
 ## 4. Buat akun petugas
 

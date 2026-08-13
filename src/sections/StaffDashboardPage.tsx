@@ -202,11 +202,19 @@ export function StaffDashboardPage() {
   useEffect(() => {
     let active = true;
 
-    void getCurrentStaffProfile().then((profile) => {
-      if (!active) return;
-      setStaff(profile);
-      setIsLoading(false);
-    });
+    void getCurrentStaffProfile()
+      .then((profile) => {
+        if (!active) return;
+        setStaff(profile);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.warn('[Reports] Gagal memeriksa sesi petugas:', error);
+        setLoginError('Sesi petugas gagal diperiksa. Silakan coba masuk kembali.');
+        setStaff(null);
+        setIsLoading(false);
+      });
 
     return () => {
       active = false;
@@ -814,7 +822,7 @@ export function StaffDashboardPage() {
                         type="datetime-local"
                         value={toDateTimeLocalValue(selectedReport.dueAt)}
                         onChange={(event) => void handleOperationsChange(selectedReport, {
-                          dueAt: new Date(event.target.value).toISOString(),
+                          dueAt: event.target.value ? new Date(event.target.value).toISOString() : null,
                         })}
                         disabled={operationId === selectedReport.id}
                         className="h-10 w-full rounded-lg border border-surface-200 bg-surface-alt px-2 text-xs font-bold text-ink-900 outline-none"

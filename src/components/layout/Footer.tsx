@@ -105,7 +105,7 @@ export function Footer() {
           >
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white">
-                <img src="assets/logo.png" alt="Logo SIHAT" className="h-full w-full object-contain" />
+                <img src="/assets/logo.png" alt="Logo SIHAT" className="h-full w-full object-contain" />
               </div>
               <div>
                 <div className="text-white" style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1 }}>

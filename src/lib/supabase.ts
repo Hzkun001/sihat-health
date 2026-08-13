@@ -24,7 +24,10 @@ export async function ensureAnonymousSession() {
   } = await supabase.auth.getSession();
 
   if (sessionError) throw sessionError;
-  if (session) return session;
+  if (session) {
+    if (session.user.is_anonymous) return session;
+    throw new Error('Sesi petugas sedang aktif. Gunakan sesi warga terpisah untuk mengirim laporan.');
+  }
 
   const { data, error } = await supabase.auth.signInAnonymously();
   if (error) {

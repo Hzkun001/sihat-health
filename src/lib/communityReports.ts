@@ -87,13 +87,26 @@ export interface StaffReportPage {
 
 export type ReportStatusCounts = Record<ReportStatus, number>;
 
+
+const REPORT_PRIORITIES: readonly ReportPriority[] = ['rendah', 'normal', 'tinggi', 'darurat'];
 const STORAGE_KEY = 'sihat-community-reports-v1';
 const REPORTS_UPDATED_EVENT = 'sihat:community-reports-updated';
 const PHOTO_BUCKET = 'report-photos';
 const REPORT_QUERY_LIMIT = 200;
 const SIGNED_PHOTO_URL_TTL_SECONDS = 60 * 60;
 
+class ReportLoadError extends Error {
+  cause: unknown;
+
+  constructor(message: string, cause: unknown) {
+    super(message);
+    this.name = 'ReportLoadError';
+    this.cause = cause;
+  }
+}
+
 let reportsCache: CommunityReport[] = [];
+let reportsCacheSource: 'local' | 'public' | null = null;
 
 function canUseBrowserStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -104,6 +117,12 @@ function createId(prefix: string) {
     return `${prefix}-${crypto.randomUUID()}`;
   }
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function normalizePriority(value: unknown): ReportPriority {
+  return REPORT_PRIORITIES.includes(value as ReportPriority)
+    ? value as ReportPriority
+    : 'normal';
 }
 
 function normalizeStatus(value: unknown): ReportStatus {
@@ -137,7 +156,7 @@ function normalizeReport(value: unknown): CommunityReport | null {
     createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
     updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
     status: normalizeStatus(item.status),
-    priority: item.priority ?? 'normal',
+    priority: normalizePriority(item.priority),
     dueAt: typeof item.dueAt === 'string' ? item.dueAt : undefined,
     assignedTo: typeof item.assignedTo === 'string' ? item.assignedTo : undefined,
     isPublic: item.isPublic === true,
@@ -192,8 +211,21 @@ function getLocalReports(): CommunityReport[] {
   }
 }
 
-function setReportsCache(reports: CommunityReport[], emitEvent = true) {
+export function clearCommunityReportCache() {
+  reportsCache = [];
+  reportsCacheSource = null;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REPORTS_UPDATED_EVENT, { detail: [] }));
+  }
+}
+
+function setReportsCache(
+  reports: CommunityReport[],
+  emitEvent = true,
+  source: 'local' | 'public' | null = reportsCacheSource,
+) {
   reportsCache = [...reports].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  reportsCacheSource = source;
   if (emitEvent && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(REPORTS_UPDATED_EVENT, { detail: reportsCache }));
   }
@@ -201,8 +233,20 @@ function setReportsCache(reports: CommunityReport[], emitEvent = true) {
 
 function saveLocalReports(reports: CommunityReport[]) {
   if (!canUseBrowserStorage()) return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-  setReportsCache(reports);
+
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      throw new ReportLoadError(
+        'Penyimpanan lokal penuh. Hapus data situs atau kirim laporan setelah Supabase dikonfigurasi.',
+        error,
+      );
+    }
+    throw error;
+  }
+
+  setReportsCache(reports, true, 'local');
 }
 
 function mapDatabaseReport(row: any): CommunityReport {
@@ -221,7 +265,7 @@ function mapDatabaseReport(row: any): CommunityReport {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     status: normalizeStatus(row.status),
-    priority: row.priority || 'normal',
+    priority: normalizePriority(row.priority),
     dueAt: row.due_at || undefined,
     assignedTo: row.assigned_to || undefined,
     isPublic: row.is_public === true,
@@ -273,7 +317,7 @@ const REPORT_SELECT = `
   )
 `;
 
-const LEGACY_REPORT_SELECT = REPORT_SELECT.replace('  is_public,\n', '');
+
 const STAFF_REPORT_SELECT = REPORT_SELECT.replace(
   '  updated_at,',
   '  updated_at,\n  priority,\n  due_at,\n  assigned_to,',
@@ -326,14 +370,17 @@ async function attachSignedPhotoUrls(reports: CommunityReport[]) {
 }
 
 export function getCommunityReports(): CommunityReport[] {
-  if (!reportsCache.length) reportsCache = getLocalReports();
+  if (!reportsCache.length || reportsCacheSource === null) {
+    const localReports = getLocalReports();
+    setReportsCache(localReports, false, 'local');
+  }
   return reportsCache;
 }
 
 export async function loadCommunityReports(): Promise<CommunityReport[]> {
   if (!isSupabaseConfigured || !supabase) {
     const localReports = getLocalReports();
-    setReportsCache(localReports);
+    setReportsCache(localReports, true, 'local');
     return localReports;
   }
 
@@ -342,26 +389,16 @@ export async function loadCommunityReports(): Promise<CommunityReport[]> {
     .select(REPORT_SELECT)
     .order('created_at', { ascending: false })
     .limit(REPORT_QUERY_LIMIT);
-  let data = primaryResult.data as any[] | null;
-  let error = primaryResult.error;
+  const data = primaryResult.data as any[] | null;
+  const error = primaryResult.error;
 
   if (requiresPrivacyMigration(error)) {
-    const legacyResult = await supabase
-      .from('reports')
-      .select(LEGACY_REPORT_SELECT)
-      .order('created_at', { ascending: false })
-      .limit(REPORT_QUERY_LIMIT);
-    data = legacyResult.data as any[] | null;
-    error = legacyResult.error;
+    throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
   }
-
-  if (error) {
-    console.warn('[Reports] Gagal memuat laporan Supabase:', error);
-    return getCommunityReports();
-  }
+  if (error) throw error;
 
   const reports = await attachSignedPhotoUrls((data ?? []).map(mapDatabaseReport));
-  setReportsCache(reports);
+  setReportsCache(reports, true, 'public');
   return reports;
 }
 
@@ -516,22 +553,18 @@ export async function loadCommunityReportById(reportId: string): Promise<Communi
     .select(REPORT_SELECT)
     .eq('id', reportId)
     .maybeSingle();
-  let data = primaryResult.data as any;
-  let error = primaryResult.error;
+  const data = primaryResult.data as any;
+  const error = primaryResult.error;
 
   if (requiresPrivacyMigration(error)) {
-    const legacyResult = await supabase
-      .from('reports')
-      .select(LEGACY_REPORT_SELECT)
-      .eq('id', reportId)
-      .maybeSingle();
-    data = legacyResult.data as any;
-    error = legacyResult.error;
+    throw new Error(
+      'Migration privasi belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.',
+    );
   }
 
   if (error) {
     console.warn(`[Reports] Gagal memuat laporan ${reportId}:`, error);
-    return getCommunityReportById(reportId);
+    throw new ReportLoadError(`Gagal memuat laporan ${reportId}.`, error);
   }
 
   if (!data) return null;
@@ -586,6 +619,7 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
   if (!isSupabaseConfigured || !supabase) return addLocalCommunityReport(input);
 
   let photoPath: string | null = null;
+  let reportInserted = false;
 
   try {
     const session = await ensureAnonymousSession();
@@ -621,12 +655,13 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
       throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
     }
     if (insertError) throw insertError;
+    reportInserted = true;
 
     const report = await loadCommunityReportById(inserted.id);
     if (!report) throw new Error('Laporan berhasil dikirim tetapi gagal dimuat kembali');
     return report;
   } catch (error) {
-    if (photoPath) {
+    if (photoPath && !reportInserted) {
       const { error: cleanupError } = await supabase.storage.from(PHOTO_BUCKET).remove([photoPath]);
       if (cleanupError) console.warn('[Reports] Gagal membersihkan foto setelah insert gagal:', cleanupError);
     }
@@ -738,6 +773,7 @@ export async function getCurrentStaffProfile(): Promise<StaffProfile | null> {
 }
 
 export async function signOutStaff() {
+  clearCommunityReportCache();
   if (supabase) await supabase.auth.signOut();
 }
 
@@ -748,17 +784,12 @@ export async function updateReportStatus(
 ) {
   if (!supabase) throw new Error('Supabase belum dikonfigurasi');
 
-  const { error } = await supabase
-    .from('reports')
-    .update({
-      status,
-      rejection_reason: status === 'ditolak' ? rejectionReason?.trim() || 'Tidak memenuhi kriteria laporan' : null,
-    })
-    .eq('id', reportId);
+  const { error } = await supabase.rpc('update_report_status', {
+    p_report_id: reportId,
+    p_status: status,
+    p_rejection_reason: rejectionReason?.trim() || null,
+  });
 
-  if (requiresPrivacyMigration(error)) {
-    throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
-  }
   if (error) throw error;
   return loadCommunityReportById(reportId);
 }
@@ -766,14 +797,11 @@ export async function updateReportStatus(
 export async function updateReportPublication(reportId: string, isPublic: boolean) {
   if (!supabase) throw new Error('Supabase belum dikonfigurasi');
 
-  const { error } = await supabase
-    .from('reports')
-    .update({ is_public: isPublic })
-    .eq('id', reportId);
+  const { error } = await supabase.rpc('update_report_publication', {
+    p_report_id: reportId,
+    p_is_public: isPublic,
+  });
 
-  if (requiresPrivacyMigration(error)) {
-    throw new Error('Migration privasi laporan belum dijalankan. Terapkan migration 202606060002_report_privacy.sql.');
-  }
   if (error) throw error;
   return loadCommunityReportById(reportId);
 }
@@ -783,26 +811,21 @@ export async function updateReportOperations(
   changes: {
     priority?: ReportPriority;
     assignedTo?: string | null;
-    dueAt?: string;
+    dueAt?: string | null;
   },
 ) {
   if (!supabase) throw new Error('Supabase belum dikonfigurasi');
 
-  const payload: Record<string, string | null> = {};
-  if (changes.priority) payload.priority = changes.priority;
-  if ('assignedTo' in changes) payload.assigned_to = changes.assignedTo ?? null;
-  if (changes.dueAt) payload.due_at = changes.dueAt;
+  const { error } = await supabase.rpc('update_report_operations', {
+    p_report_id: reportId,
+    p_priority: changes.priority ?? null,
+    p_assigned_to: changes.assignedTo ?? null,
+    p_due_at: changes.dueAt ?? null,
+    p_clear_priority: false,
+    p_clear_assigned_to: 'assignedTo' in changes && changes.assignedTo === null,
+    p_clear_due_at: 'dueAt' in changes && changes.dueAt === null,
+  });
 
-  const { error } = await supabase
-    .from('reports')
-    .update(payload)
-    .eq('id', reportId);
-
-  if (requiresOperationsMigration(error)) {
-    throw new Error(
-      'Migration operasional belum dijalankan. Terapkan migration 202606060003_report_operations.sql.',
-    );
-  }
   if (error) throw error;
 }
 

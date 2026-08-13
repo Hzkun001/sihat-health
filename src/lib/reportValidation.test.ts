@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseCoordinates,
+  REPORT_COMMENT_MAX_LENGTH,
   REPORT_DESCRIPTION_MAX_LENGTH,
+  validateReportComment,
   validateReportDescription,
   validateReportPhoto,
 } from './reportValidation';
@@ -26,6 +28,14 @@ describe('validateReportDescription', () => {
     expect(validateReportDescription('pendek')).toContain('minimal');
     expect(validateReportDescription('Genangan air menutup jalan.')).toBeNull();
     expect(validateReportDescription('a'.repeat(REPORT_DESCRIPTION_MAX_LENGTH + 1))).toContain('maksimal');
+  });
+});
+
+describe('validateReportComment', () => {
+  it('rejects blank comments and enforces the server limit', () => {
+    expect(validateReportComment('   ')).toContain('kosong');
+    expect(validateReportComment('Komentar yang valid.')).toBeNull();
+    expect(validateReportComment('a'.repeat(REPORT_COMMENT_MAX_LENGTH + 1))).toContain('maksimal');
   });
 });
 

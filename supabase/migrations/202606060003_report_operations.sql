@@ -43,7 +43,7 @@ begin
     raise exception 'Report can only be assigned to a registered staff account';
   end if;
 
-  if tg_op = 'INSERT' or old.priority is distinct from new.priority or new.due_at is null then
+  if tg_op = 'INSERT' or old.priority is distinct from new.priority then
     new.due_at = coalesce(new.created_at, now()) + public.report_sla_interval(new.priority);
   end if;
 
@@ -155,8 +155,10 @@ alter table public.report_audit_log enable row level security;
 revoke all on public.report_internal_notes from anon, authenticated;
 revoke all on public.report_audit_log from anon, authenticated;
 
-grant select, insert on public.report_internal_notes to authenticated;
+grant select, insert (report_id, message) on public.report_internal_notes to authenticated;
 grant select on public.report_audit_log to authenticated;
+
+revoke insert, update, delete on public.report_audit_log from anon, authenticated;
 
 drop policy if exists "Staff manage internal notes" on public.report_internal_notes;
 create policy "Staff read internal notes"
