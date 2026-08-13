@@ -63,8 +63,8 @@ const STATUS_LABELS = Object.fromEntries(
 
 const STATUS_STYLES: Record<ReportStatus, string> = {
   baru: 'bg-amber-50 text-amber-700',
-  diverifikasi: 'bg-blue-50 text-blue-700',
-  diproses: 'bg-violet-50 text-violet-700',
+  diverifikasi: 'bg-teal-50 text-teal-700',
+  diproses: 'bg-green-50 text-green-700',
   selesai: 'bg-emerald-50 text-emerald-700',
   ditolak: 'bg-red-50 text-red-700',
 };

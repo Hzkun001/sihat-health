@@ -78,16 +78,13 @@ export function Footer() {
   return (
     <footer
       className="relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #303832 0%, #232a25 100%)' }}
+      style={{ backgroundColor: '#687365' }}
     >
       <div
         className="absolute inset-x-0 top-0 h-px"
         style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
       />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-40"
-        style={{ background: 'linear-gradient(180deg, rgba(185, 169, 245, 0.14), transparent)' }}
-      />
+
 
       <div className="relative mx-auto max-w-7xl px-6 py-14 lg:px-8 lg:py-16">
         <div
@@ -156,7 +153,7 @@ export function Footer() {
               whileTap={{ scale: 0.98 }}
               className="inline-flex min-h-12 items-center justify-center rounded-xl px-5 font-semibold text-white transition-colors duration-300"
               style={{
-                backgroundColor: copiedEmail ? 'rgba(185, 169, 245, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: copiedEmail ? 'rgba(120, 169, 74, 0.22)' : 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
               }}
             >
@@ -179,7 +176,7 @@ export function Footer() {
                 className="group flex items-center gap-3 rounded-xl p-3 transition-colors duration-200"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-brand-blue">
                   <Mail size={18} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -196,7 +193,7 @@ export function Footer() {
                 className="group flex items-center gap-3 rounded-xl p-3 transition-colors duration-200"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-brand-blue">
                   <Phone size={18} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -214,7 +211,7 @@ export function Footer() {
                 className="group flex items-start gap-3 rounded-xl p-3 transition-colors duration-200"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
               >
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#c9bee9]">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-brand-blue">
                   <MapPin size={18} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -257,7 +254,7 @@ export function Footer() {
             <ul className="space-y-3">
               {partners.map((partner) => (
                 <li key={partner} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.62)' }}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#c9bee9]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
                   {partner}
                 </li>
               ))}

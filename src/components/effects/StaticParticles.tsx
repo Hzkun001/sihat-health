@@ -30,7 +30,7 @@ export function StaticParticles() {
     updateReduced();
     mql?.addEventListener?.('change', updateReduced);
 
-    const colors = ['#465047', '#b9a9f5', '#dedbd1', '#f1f0ea'];
+    const colors = ['#8fa28a', '#c8a96b', '#c7d3c0', '#f0eee7'];
 
     const generateParticles = () => {
       const width = window.innerWidth;

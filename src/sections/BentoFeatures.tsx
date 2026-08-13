@@ -8,7 +8,7 @@ interface BentoCard {
   description: string;
   href: string;
   span: string; // grid span class
-  accent: string; // gradient accent
+  accent: string; // subtle accent surface
 }
 
 const cards: BentoCard[] = [
@@ -18,7 +18,7 @@ const cards: BentoCard[] = [
     description: 'Visualisasi geospasial fasilitas kesehatan, sebaran penduduk, dan infrastruktur Banjarmasin–Banjarbaru.',
     href: '#/peta',
     span: 'col-span-1 sm:col-span-2 lg:col-span-2 lg:row-span-2',
-    accent: 'from-[#b9a9f5]/20 to-[#f1f0ea]/40',
+    accent: 'bg-[#c7d3c0]/70',
   },
   {
     icon: <MessageSquareWarning size={20} />,
@@ -26,7 +26,7 @@ const cards: BentoCard[] = [
     description: 'Laporkan isu lingkungan langsung dengan foto dan koordinat otomatis.',
     href: '#/laporan',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-[#dedbd1]/35 to-[#b9a9f5]/10',
+    accent: 'bg-[#e9eee5]/70',
   },
   {
     icon: <BarChart3 size={20} />,
@@ -34,7 +34,7 @@ const cards: BentoCard[] = [
     description: 'Data stunting, kepadatan, dan indikator SDG 11 divisualisasikan interaktif.',
     href: '#/insight',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-[#b9a9f5]/15 to-[#465047]/5',
+    accent: 'bg-[#c7d3c0]/55',
   },
   {
     icon: <Bot size={20} />,
@@ -42,7 +42,7 @@ const cards: BentoCard[] = [
     description: 'Tanya seputar data kesehatan dan lingkungan Banjarmasin–Banjarbaru.',
     href: '#/',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-[#8f80db]/12 to-[#f1f0ea]/40',
+    accent: 'bg-[#c8a96b]/20',
   },
   {
     icon: <Newspaper size={20} />,
@@ -50,7 +50,7 @@ const cards: BentoCard[] = [
     description: 'Rujukan data fasilitas, kependudukan, dan indikator wilayah dengan cakupan serta periode yang berbeda.',
     href: '#/insight',
     span: 'col-span-1 sm:col-span-1 lg:col-span-1',
-    accent: 'from-[#d9d6ca]/35 to-[#b9a9f5]/10',
+    accent: 'bg-[#dfe4da]/60',
   },
 ];
 
@@ -77,11 +77,6 @@ const cardVariants = {
 export function BentoFeatures() {
   return (
     <section className="relative py-20 sm:py-24 lg:py-32 overflow-hidden" style={{ backgroundColor: 'var(--surface-0)' }}>
-      {/* Subtle top gradient fade */}
-      <div
-        className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(241,240,234,1) 0%, transparent 100%)' }}
-      />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
@@ -135,31 +130,17 @@ export function BentoFeatures() {
               key={index}
               href={card.href}
               variants={cardVariants}
-              className={`${card.span} group relative rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-7 transition-all duration-300 cursor-pointer overflow-hidden`}
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid var(--surface-200)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-              }}
-              whileHover={{
-                y: -4,
-                boxShadow: '0 12px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.03)',
-              }}
+              className={`${card.span} group relative cursor-pointer overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-green/55 hover:shadow-[0_16px_34px_rgba(104,115,101,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 focus-visible:ring-offset-2 sm:rounded-3xl sm:p-6 lg:p-7`}
+              whileHover={{ y: -4 }}
+              whileTap={{ scale: 0.99 }}
             >
-              {/* Gradient accent background */}
-              <div
-                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${card.accent}`}
-              />
+              <div className="absolute inset-x-5 top-0 h-0.5 origin-left scale-x-0 bg-brand-green transition-transform duration-300 group-hover:scale-x-100 sm:inset-x-6 lg:inset-x-7" aria-hidden="true" />
 
               {/* Content */}
               <div className="relative z-10 h-full flex flex-col">
                 {/* Icon */}
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300"
-                  style={{
-                    backgroundColor: 'var(--surface-100)',
-                    color: 'var(--brand-green)',
-                  }}
+                  className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-surface-100 text-brand-green transition-[background-color,transform] duration-300 group-hover:scale-105 group-hover:bg-brand-mint"
                 >
                   {card.icon}
                 </div>
@@ -181,16 +162,15 @@ export function BentoFeatures() {
                   style={{
                     fontSize: index === 0 ? '15px' : '14px',
                     lineHeight: 1.6,
-                    color: 'var(--ink-600, #52525b)',
+                    color: 'var(--ink-600)',
                   }}
                 >
                   {card.description}
                 </p>
 
-                {/* Arrow indicator */}
-                <div className="mt-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
-                  <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--brand-green)' }}>Jelajahi</span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: 'var(--brand-green)' }}>
+                <div className="mt-6 flex items-center gap-1.5 text-xs font-bold text-brand-green/70 transition-colors group-hover:text-brand-green">
+                  <span>Jelajahi</span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">
                     <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>

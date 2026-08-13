@@ -16,7 +16,9 @@ module.exports = {
         },
         ink: {
           900: 'var(--ink-900)',
+          800: 'var(--ink-800)',
           700: 'var(--ink-700)',
+          600: 'var(--ink-600)',
           500: 'var(--ink-500)',
         },
         surface: {

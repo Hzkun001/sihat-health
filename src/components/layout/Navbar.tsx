@@ -93,13 +93,13 @@ export function Navbar() {
             width: isMobile ? 'min(100%, 360px)' : isScrolled ? 'min(100%, 600px)' : 'min(100%, 640px)',
           }}
           transition={{ duration: 0.28, ease: [0.25, 0.8, 0.25, 1] }}
-          className="pointer-events-auto h-11 rounded-full border border-white/70 bg-white/86 shadow-[0_16px_44px_rgba(42,48,43,0.18)] backdrop-blur-2xl sm:h-12"
+          className="pointer-events-auto h-11 rounded-full border border-white/70 bg-white/86 shadow-[0_16px_44px_rgba(53,64,54,0.16)] backdrop-blur-2xl sm:h-12"
         >
           <div className="flex h-full items-center justify-between gap-2 px-3 sm:px-4">
             <a
               href="#/"
               onClick={(event) => handleNavClick(event, '#/')}
-              className="flex min-w-0 items-center gap-2 rounded-full px-1 text-[#333b35]"
+              className="flex min-w-0 items-center gap-2 rounded-full px-1 text-ink-900"
               aria-label="Ke beranda SIHAT"
             >
               <span className="text-xl font-semibold leading-none tracking-normal sm:text-2xl">SIHAT</span>
@@ -115,13 +115,13 @@ export function Navbar() {
                     href={item.href}
                     onClick={(event) => handleNavClick(event, item.href)}
                     aria-current={isActive ? 'page' : undefined}
-                    className="relative rounded-full px-2.5 py-1 text-xs font-semibold text-[#303832] transition-colors hover:bg-[#eef2eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#435047]/20"
+                    className="relative rounded-full px-2.5 py-1 text-xs font-semibold text-ink-900 transition-colors hover:bg-brand-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
                   >
                     {item.label}
                     {isActive && (
                       <motion.span
                         layoutId="nav-underline"
-                        className="absolute inset-x-2 -bottom-0.5 h-px bg-[#303832]"
+                        className="absolute inset-x-2 -bottom-0.5 h-px bg-brand-green-dark"
                         transition={{ duration: 0.24, ease: [0.25, 0.8, 0.25, 1] }}
                       />
                     )}
@@ -134,7 +134,7 @@ export function Navbar() {
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="hidden h-8 w-8 items-center justify-center rounded-full bg-[#eef2eb] text-[#3c463f] transition-colors hover:bg-[#dfe7dc] md:inline-flex"
+                className="hidden h-8 w-8 items-center justify-center rounded-full bg-brand-mint text-brand-green-dark transition-colors hover:bg-brand-green-light md:inline-flex"
                 aria-label="Buka laporan warga"
               >
                 <ClipboardPlus size={16} />
@@ -143,7 +143,7 @@ export function Navbar() {
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="hidden items-center gap-1.5 rounded-full bg-[#465047] px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(48,56,50,0.22)] transition-colors hover:bg-[#303832] sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-full bg-brand-green px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(104,115,101,0.24)] transition-colors hover:bg-brand-green-dark sm:inline-flex"
               >
                 Lapor
                 <ArrowRight size={13} />
@@ -152,7 +152,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef2eb] text-[#303832] md:hidden"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-mint text-ink-900 md:hidden"
                 aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
               >
                 {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
@@ -180,8 +180,8 @@ export function Navbar() {
                     key={item.href}
                     href={item.href}
                     onClick={(event) => handleNavClick(event, item.href)}
-                    className="rounded-[10px] px-3 py-2.5 text-sm font-semibold text-[#303832] transition-colors"
-                    style={{ backgroundColor: isActive ? '#eef2eb' : 'transparent' }}
+                    className="rounded-[10px] px-3 py-2.5 text-sm font-semibold text-ink-900 transition-colors"
+                    style={{ backgroundColor: isActive ? 'var(--brand-mint)' : 'transparent' }}
                   >
                     {item.label}
                   </a>
@@ -191,7 +191,7 @@ export function Navbar() {
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="mt-1 inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#465047] px-3 py-2.5 text-sm font-semibold text-white"
+                className="mt-1 inline-flex items-center justify-center gap-2 rounded-[10px] bg-brand-green px-3 py-2.5 text-sm font-semibold text-white"
               >
                 Buat Laporan
                 <ArrowRight size={15} />
@@ -210,7 +210,7 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-30 bg-[#303832]/18 backdrop-blur-[2px] md:hidden"
+            className="fixed inset-0 z-30 bg-brand-green-dark/20 backdrop-blur-[2px] md:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}

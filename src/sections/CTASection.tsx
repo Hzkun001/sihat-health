@@ -136,8 +136,8 @@ export function CTASection() {
               }}
             >
               <div
-                className="absolute inset-x-0 top-0 h-1"
-                style={{ background: 'linear-gradient(90deg, var(--brand-green), var(--brand-blue))' }}
+                className="absolute inset-x-0 top-0 h-1 bg-brand-green"
+                aria-hidden="true"
               />
 
               <div className="mb-6 flex items-start justify-between gap-6">
