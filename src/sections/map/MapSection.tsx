@@ -1985,7 +1985,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   return (
     <section id={sectionId ?? undefined} className="relative pt-28 pb-10 sm:pt-28 sm:pb-12 lg:pt-28 lg:pb-20 overflow-hidden">
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 z-[-1]"
         style={{ backgroundColor: '#faf8f2' }}
       />
 
@@ -2009,9 +2009,8 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           </SectionReveal>
         )}
 
-        <SectionReveal delay={0.2}>
-          <div className="relative">
-            <div className="flex gap-6 lg:gap-8">
+        <div className="relative">
+          <div className="flex gap-6 lg:gap-8">
               <div className="hidden lg:block w-80 flex-shrink-0">
                 <div className="sticky top-32 h-[clamp(480px,60vh,760px)] max-h-[calc(100vh-9rem)]">
                   <MapLayerFilter
@@ -2035,7 +2034,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  <div ref={mapRef} className="absolute inset-0 z-0" />
+                  <div ref={mapRef} className="absolute inset-0 z-10" style={{ minHeight: '480px' }} />
 
                   {!isFullscreen && (
                     <MapSearchControl
@@ -2171,8 +2170,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
               }}
             />
           </div>
-        </SectionReveal>
-      </div>
+        </div>
 
       <AnimatePresence>
         {isFullscreen && (
