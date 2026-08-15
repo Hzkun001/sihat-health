@@ -3,6 +3,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { HeroSection } from '@/sections/hero/HeroSection';
 import { loadChatbaseWidget } from '@/lib/chatbase';
+import { startAutoSyncWorker } from '@/lib/reportSyncWorker';
 import { ReportDetailPage } from '@/sections/ReportDetailPage';
 
 // Lazy load below-the-fold sections for better initial load performance
@@ -15,6 +16,9 @@ const FAQSection = lazy(() => import('@/sections/FAQSection').then(m => ({ defau
 const StaffDashboardPage = lazy(() => import('@/sections/StaffDashboardPage').then(m => ({ default: m.StaffDashboardPage })));
 const PrivacyPage = lazy(() => import('@/sections/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const Footer = lazy(() => import('@/components/layout/Footer').then(m => ({ default: m.Footer })));
+const GlobalCommandMenu = lazy(() =>
+  import('@/components/search/GlobalCommandMenu').then((m) => ({ default: m.GlobalCommandMenu }))
+);
 
 type AppRoute = 'home' | 'map' | 'reports' | 'insight' | 'contact' | 'staff' | 'privacy';
 
@@ -54,6 +58,10 @@ export default function App() {
 
   useEffect(() => {
     loadChatbaseWidget();
+    const stopSync = startAutoSyncWorker();
+    return () => {
+      stopSync();
+    };
   }, []);
 
   useEffect(() => {
@@ -136,6 +144,9 @@ export default function App() {
         <main>
           {renderPage()}
         </main>
+        <Suspense fallback={null}>
+          <GlobalCommandMenu />
+        </Suspense>
         <Suspense fallback={<div className="min-h-[400px]" />}>
           <Footer />
         </Suspense>

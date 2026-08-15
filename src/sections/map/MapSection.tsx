@@ -2,22 +2,40 @@
 import { SectionReveal } from '@/components/shared/SectionReveal';
 import {
   AlertTriangle,
+  Building2,
+  Compass,
+  CornerDownLeft,
+  Cross,
+  FileText,
+  Filter,
+  Home,
+  Hospital,
+  Layers3,
   Loader2,
   LocateFixed,
   MapPin,
-  Filter,
-  Layers3,
+  Maximize2,
+  Pill,
+  RotateCcw,
   Search,
+  Sparkles,
+  Trash2,
   X,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  RotateCcw,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapLayerFilter } from './MapLayerFilter';
 import { loadCommunityReports, reportsToFeatureCollection, subscribeToCommunityReports } from '@/lib/communityReports';
+import {
+  buildUnifiedSearchIndex,
+  querySearchIndex,
+  SearchItem,
+  SearchResultItem,
+  FOCUS_MAP_ITEM_EVENT,
+  formatDistanceString,
+} from '@/lib/searchEngine';
 
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 
@@ -81,7 +99,7 @@ const LAYER_CONFIG = {
       'fill-color': [
         'interpolate',
         ['linear'],
-        ['get', 'kepadatan'],
+        ['coalesce', ['get', 'kepadatan'], 0],
         0, '#F7F3EA',
         150, '#E7DED1',
         250, '#B8AA96',
@@ -102,9 +120,9 @@ const LAYER_CONFIG = {
         'interpolate', ['linear'],
         [
           '+',
-          ['get', '00__04'],
-          ['get', '05__09'],
-          ['get', '10__14']
+          ['coalesce', ['get', '00__04'], 0],
+          ['coalesce', ['get', '05__09'], 0],
+          ['coalesce', ['get', '10__14'], 0]
         ],
         0, '#FFF1F5',
         2000, '#FBCFE8',
@@ -125,11 +143,16 @@ const LAYER_CONFIG = {
       'fill-color': [
         'interpolate', ['linear'],
         ['/',
-          ['+', ['get', '60__64'], ['get', '65__69'], ['get', '70__74'], ['get', '>75']],
-          ['+', ['get', '00__04'], ['get', '05__09'], ['get', '10__14'], ['get', '15__19'],
-                ['get', '20__24'], ['get', '25__29'], ['get', '30__34'], ['get', '35__39'],
-                ['get', '40__44'], ['get', '45__49'], ['get', '50__54'], ['get', '55__59'],
-                ['get', '60__64'], ['get', '65__69'], ['get', '70__74'], ['get', '>75']]
+          ['+', ['coalesce', ['get', '60__64'], 0], ['coalesce', ['get', '65__69'], 0], ['coalesce', ['get', '70__74'], 0], ['coalesce', ['get', '>75'], 0]],
+          ['max',
+            ['+',
+              ['coalesce', ['get', '00__04'], 0], ['coalesce', ['get', '05__09'], 0], ['coalesce', ['get', '10__14'], 0], ['coalesce', ['get', '15__19'], 0],
+              ['coalesce', ['get', '20__24'], 0], ['coalesce', ['get', '25__29'], 0], ['coalesce', ['get', '30__34'], 0], ['coalesce', ['get', '35__39'], 0],
+              ['coalesce', ['get', '40__44'], 0], ['coalesce', ['get', '45__49'], 0], ['coalesce', ['get', '50__54'], 0], ['coalesce', ['get', '55__59'], 0],
+              ['coalesce', ['get', '60__64'], 0], ['coalesce', ['get', '65__69'], 0], ['coalesce', ['get', '70__74'], 0], ['coalesce', ['get', '>75'], 0]
+            ],
+            1
+          ]
         ],
         0.05, '#FFF7ED',
         0.10, '#FFEDD5',
@@ -151,12 +174,12 @@ const LAYER_CONFIG = {
         'interpolate', ['linear'],
         [
           '+',
-          ['get', 'dsb_fisik'],
-          ['get', 'dsb_netra'],
-          ['get', 'dsb_rungu'],
-          ['get', 'dsb_mental'],
-          ['get', 'dsb_lainny'],
-          ['get', 'dsb_fismen']
+          ['coalesce', ['get', 'dsb_fisik'], 0],
+          ['coalesce', ['get', 'dsb_netra'], 0],
+          ['coalesce', ['get', 'dsb_rungu'], 0],
+          ['coalesce', ['get', 'dsb_mental'], 0],
+          ['coalesce', ['get', 'dsb_lainny'], 0],
+          ['coalesce', ['get', 'dsb_fismen'], 0]
         ],
         0, '#f2e8f5ff',
         20, '#dfc8e6ff',
@@ -197,7 +220,7 @@ const LAYER_CONFIG = {
       'fill-color': [
         'interpolate',
         ['linear'],
-        ['get', 'Penduduk'],
+        ['coalesce', ['get', 'Penduduk'], 0],
         80000, '#DCFCE7',
         110000, '#86EFAC',
         140000, '#22C55E',
@@ -220,16 +243,13 @@ type LayerId = keyof typeof LAYER_CONFIG;
 type PopupRow = { label: string; value: unknown; format?: 'number' | 'text' };
 type LngLatTuple = [number, number];
 type DetailInfo = {
+  id?: string;
   layerId: LayerId;
   title: string;
   category: string;
+  badge?: string;
   rows: PopupRow[];
   coordinates?: LngLatTuple | null;
-};
-type SearchResult = DetailInfo & {
-  id: string;
-  searchableText: string;
-  distanceMeters?: number;
 };
 type BasemapId = 'streets' | 'light' | 'satellite';
 
@@ -238,7 +258,6 @@ const DEFAULT_CENTER: [number, number] = [114.833, -3.442];
 const DEFAULT_ZOOM = 12;
 const DEFAULT_BASEMAP: BasemapId = 'streets';
 const DEFAULT_DESKTOP_SELECTIONS: Readonly<Record<string, boolean>> = { rumahsakit: true, communityReports: true };
-const FACILITY_LAYER_IDS: readonly LayerId[] = ['rumahsakit', 'puskesmas', 'klinik', 'apotek', 'homecare'];
 const BASEMAP_LOAD_TIMEOUT_MS = 12000;
 
 const FALLBACK_MAP_STYLE = {
@@ -377,6 +396,10 @@ function buildPopupHTML(title: string, rows: PopupRow[]): string {
   `;
 }
 
+const iconImageCache = new Map<string, Promise<ImageBitmap | HTMLCanvasElement | HTMLImageElement>>();
+let cachedReportIcon: ImageData | null = null;
+let cachedReportPhotoIcon: ImageData | null = null;
+
 function normalizeSpriteSource(image: ImageBitmap | HTMLCanvasElement | HTMLImageElement): ImageBitmap | HTMLImageElement | ImageData {
   if (image instanceof HTMLCanvasElement) {
     const ctx = image.getContext('2d');
@@ -390,59 +413,71 @@ async function loadIconImage(
   url: string,
   maxDimension = 1024
 ): Promise<ImageBitmap | HTMLCanvasElement | HTMLImageElement> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
-  const blob = await res.blob();
+  const cacheKey = `${url}_${maxDimension}`;
+  const existing = iconImageCache.get(cacheKey);
+  if (existing) return existing;
 
-  if ('createImageBitmap' in window) {
-    try {
-      let bitmap = await createImageBitmap(blob);
-      const maxDim = Math.max(bitmap.width, bitmap.height);
-      if (maxDim > maxDimension) {
-        const scale = maxDimension / maxDim;
-        bitmap = await createImageBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, {
-          resizeWidth: Math.max(1, Math.round(bitmap.width * scale)),
-          resizeHeight: Math.max(1, Math.round(bitmap.height * scale)),
-          resizeQuality: 'high',
-        });
-        console.info(`[Map] Ikon ${url} di-resize jadi ${bitmap.width}x${bitmap.height}`);
-      }
-      return bitmap;
-    } catch (err) {
-      console.info('[Map] createImageBitmap fallback ke HTMLImageElement untuk', url, err);
-    }
-  }
+  const promise = (async () => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+    const blob = await res.blob();
 
-  return await new Promise<HTMLCanvasElement | HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.decoding = 'async';
-    const objectUrl = URL.createObjectURL(blob);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const maxDim = Math.max(img.naturalWidth, img.naturalHeight);
-      if (maxDim > maxDimension) {
-        const scale = maxDimension / maxDim;
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Tidak bisa mendapatkan konteks canvas'));
-          return;
+    if ('createImageBitmap' in window) {
+      try {
+        let bitmap = await createImageBitmap(blob);
+        const maxDim = Math.max(bitmap.width, bitmap.height);
+        if (maxDim > maxDimension) {
+          const scale = maxDimension / maxDim;
+          bitmap = await createImageBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, {
+            resizeWidth: Math.max(1, Math.round(bitmap.width * scale)),
+            resizeHeight: Math.max(1, Math.round(bitmap.height * scale)),
+            resizeQuality: 'high',
+          });
+          console.info(`[Map] Ikon ${url} di-resize jadi ${bitmap.width}x${bitmap.height}`);
         }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        console.info(`[Map] Ikon ${url} di-resize (fallback) jadi ${canvas.width}x${canvas.height}`);
-        resolve(canvas);
-      } else {
-        resolve(img);
+        return bitmap;
+      } catch (err) {
+        console.info('[Map] createImageBitmap fallback ke HTMLImageElement untuk', url, err);
       }
-    };
-    img.onerror = (err) => {
-      URL.revokeObjectURL(objectUrl);
-      reject(err);
-    };
-    img.src = objectUrl;
+    }
+
+    return await new Promise<HTMLCanvasElement | HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.decoding = 'async';
+      const objectUrl = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const maxDim = Math.max(img.naturalWidth, img.naturalHeight);
+        if (maxDim > maxDimension) {
+          const scale = maxDimension / maxDim;
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Tidak bisa mendapatkan konteks canvas'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          console.info(`[Map] Ikon ${url} di-resize (fallback) jadi ${canvas.width}x${canvas.height}`);
+          resolve(canvas);
+        } else {
+          resolve(img);
+        }
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(objectUrl);
+        reject(err);
+      };
+      img.src = objectUrl;
+    });
+  })();
+
+  iconImageCache.set(cacheKey, promise);
+  promise.catch(() => {
+    iconImageCache.delete(cacheKey);
   });
+  return promise;
 }
 
 function createCommunityReportIcon(hasPhoto: boolean): ImageData {
@@ -564,25 +599,6 @@ function getFeatureCenter(feature: GeoJSON.Feature): LngLatTuple | null {
 
   if (!Number.isFinite(bounds.minLng)) return null;
   return [(bounds.minLng + bounds.maxLng) / 2, (bounds.minLat + bounds.maxLat) / 2];
-}
-
-function formatDistance(meters: number): string {
-  if (!Number.isFinite(meters)) return '-';
-  if (meters < 1000) return `${Math.round(meters)} m`;
-  return `${(meters / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} km`;
-}
-
-function distanceInMeters(from: LngLatTuple, to: LngLatTuple): number {
-  const toRad = (degree: number) => (degree * Math.PI) / 180;
-  const earthRadius = 6371000;
-  const dLat = toRad(to[1] - from[1]);
-  const dLng = toRad(to[0] - from[0]);
-  const lat1 = toRad(from[1]);
-  const lat2 = toRad(to[1]);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function createLayerDetail(layerId: LayerId, props: any, coordinates?: LngLatTuple | null): DetailInfo {
@@ -720,14 +736,6 @@ function createLayerDetail(layerId: LayerId, props: any, coordinates?: LngLatTup
   };
 }
 
-function detailSearchText(detail: DetailInfo): string {
-  return [
-    detail.title,
-    detail.category,
-    ...detail.rows.map((row) => `${row.label} ${String(row.value ?? '')}`),
-  ].join(' ').toLowerCase();
-}
-
 interface MapSectionProps {
   sectionId?: string | null;
 }
@@ -750,7 +758,9 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const [layerErrors, setLayerErrors] = useState<Record<string, string>>({});
   const [selectedDetail, setSelectedDetail] = useState<DetailInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>('semua');
+  const [userLocation, setUserLocation] = useState<LngLatTuple | null>(null);
   const [searchIndexReady, setSearchIndexReady] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [nearestLoading, setNearestLoading] = useState(false);
@@ -766,8 +776,8 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
   const mapInstance = useRef<MLMap | null>(null);
   const isMobileRef = useRef(false);
   const activeSelectionsRef = useRef<Record<string, boolean>>({ ...DEFAULT_DESKTOP_SELECTIONS });
-  const searchIndexRef = useRef<SearchResult[]>([]);
-  const searchIndexPromiseRef = useRef<Promise<SearchResult[]> | null>(null);
+  const searchIndexRef = useRef<SearchItem[]>([]);
+  const searchIndexPromiseRef = useRef<Promise<SearchItem[]> | null>(null);
   const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
   const dataCache = useRef<Record<string, GeoJSON.FeatureCollection | null>>({});
   const basemapStyleCache = useRef<Partial<Record<BasemapId, unknown>>>({});
@@ -1481,12 +1491,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       const active = Boolean(target && fullscreenElement === target);
 
       setIsFullscreen(active);
-      document.body.style.overflow = active ? 'hidden' : 'unset';
-      if (active) setIsFilterOpen(false);
-
-      const resize = () => mapInstance.current?.resize();
-      requestAnimationFrame(resize);
-      window.setTimeout(resize, 180);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -1495,9 +1499,41 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange as any);
-      document.body.style.overflow = 'unset';
     };
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isFullscreen ? 'hidden' : 'unset';
+    if (isFullscreen) setIsFilterOpen(false);
+
+    const resize = () => {
+      mapInstance.current?.resize();
+    };
+
+    requestAnimationFrame(resize);
+    const timers = [50, 150, 300, 500, 800, 1200].map((delay) =>
+      window.setTimeout(resize, delay)
+    );
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        const doc: any = document;
+        if (document.fullscreenElement || doc.webkitFullscreenElement) {
+          const exit = document.exitFullscreen || doc.webkitExitFullscreen;
+          exit?.call(document);
+        }
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      timers.forEach(window.clearTimeout);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isFullscreen]);
 
   const toggleFullscreen = useCallback(() => {
     const target = mapCardRef.current;
@@ -1507,26 +1543,32 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     const fullscreenElement = document.fullscreenElement || doc.webkitFullscreenElement;
 
     // Already fullscreen → exit
-    if (fullscreenElement === target) {
-      const exit = document.exitFullscreen || doc.webkitExitFullscreen;
-      exit?.call(document);
+    if (fullscreenElement === target || isFullscreen) {
+      if (fullscreenElement) {
+        const exit = document.exitFullscreen || doc.webkitExitFullscreen;
+        exit?.call(document);
+      }
+      setIsFullscreen(false);
       return;
     }
 
-    const request = target.requestFullscreen || (target as any).webkitRequestFullscreen;
-    if (!request) return;
-
     setIsFilterOpen(false);
-    try {
-      const result = request.call(target);
-      if (result && typeof result.then === 'function') {
-        // Some browsers return a promise
-        result.catch((err: unknown) => console.warn('[Map] Gagal masuk fullscreen', err));
+    const request = target.requestFullscreen || (target as any).webkitRequestFullscreen;
+    if (request) {
+      try {
+        const result = request.call(target);
+        if (result && typeof result.then === 'function') {
+          result.catch(() => {
+            setIsFullscreen(true);
+          });
+        }
+      } catch {
+        setIsFullscreen(true);
       }
-    } catch (err) {
-      console.warn('[Map] Gagal memanggil requestFullscreen', err);
+    } else {
+      setIsFullscreen(true);
     }
-  }, []);
+  }, [isFullscreen]);
 
   /* --------------------------- zoom controls --------------------------- */
   const handleZoomIn = useCallback(() => {
@@ -1558,11 +1600,34 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       if (!(layerId in LAYER_CONFIG)) return;
       const id = layerId as LayerId;
       const cfg = LAYER_CONFIG[id] as any;
-      setActiveSelections((prev) => ({ ...prev, [id]: enabled }));
-      if (enabled) await loadAndShowLayer(id, Boolean(cfg.fitOnToggle));
-      else {
-        hideLayer(id);
-        setSelectedDetail((prev) => (prev?.layerId === id ? null : prev));
+
+      // Jika layer yang diaktifkan bertipe 'fill' (demografi poligon tematik),
+      // nonaktifkan layer fill lainnya untuk mencegah tumpang tindih visual dan menghemat memori WebGL
+      if (enabled && cfg.render === 'fill') {
+        const otherFillIds = (Object.keys(LAYER_CONFIG) as LayerId[]).filter(
+          (key) => LAYER_CONFIG[key].render === 'fill' && key !== id
+        );
+
+        setActiveSelections((prev) => {
+          const next = { ...prev, [id]: true };
+          otherFillIds.forEach((otherId) => {
+            next[otherId] = false;
+          });
+          return next;
+        });
+
+        otherFillIds.forEach((otherId) => {
+          hideLayer(otherId);
+        });
+
+        await loadAndShowLayer(id, Boolean(cfg.fitOnToggle));
+      } else {
+        setActiveSelections((prev) => ({ ...prev, [id]: enabled }));
+        if (enabled) await loadAndShowLayer(id, Boolean(cfg.fitOnToggle));
+        else {
+          hideLayer(id);
+          setSelectedDetail((prev) => (prev?.layerId === id ? null : prev));
+        }
       }
     },
     [hideLayer, loadAndShowLayer]
@@ -1581,26 +1646,10 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     searchIndexPromiseRef.current = (async () => {
       try {
-        const results: SearchResult[] = [];
-        for (const layerId of FACILITY_LAYER_IDS) {
-          const fc = await fetchLayerData(layerId);
-          if (!fc) continue;
-
-          fc.features.forEach((feature, featureIndex) => {
-            const coordinates = getFeatureCenter(feature);
-            if (!coordinates) return;
-            const detail = createLayerDetail(layerId, feature.properties || {}, coordinates);
-            results.push({
-              ...detail,
-              id: `${layerId}-${feature.id ?? featureIndex}`,
-              searchableText: detailSearchText(detail),
-            });
-          });
-        }
-
-        searchIndexRef.current = results;
+        const unified = await buildUnifiedSearchIndex();
+        searchIndexRef.current = unified;
         setSearchIndexReady(true);
-        return results;
+        return unified;
       } finally {
         setSearchLoading(false);
         searchIndexPromiseRef.current = null;
@@ -1608,7 +1657,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     })();
 
     return searchIndexPromiseRef.current;
-  }, [fetchLayerData, searchIndexReady]);
+  }, [searchIndexReady]);
 
   const focusDetailOnMap = useCallback((detail: DetailInfo, zoom = 14.5) => {
     const map = mapInstance.current;
@@ -1620,36 +1669,94 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     });
   }, [prefersReducedMotion]);
 
-  const selectSearchResult = useCallback(async (result: SearchResult) => {
-    await handleLayerToggle(result.layerId, true);
-    setSelectedDetail(
-      typeof result.distanceMeters === 'number'
-        ? {
-            ...result,
-            rows: [
-              { label: 'Jarak dari lokasi Anda', value: formatDistance(result.distanceMeters), format: 'text' },
-              ...result.rows.filter((row) => row.label !== 'Jarak dari lokasi Anda'),
-            ],
-          }
-        : result
-    );
-    focusDetailOnMap(result);
-    setSearchQuery(result.title);
-    setSearchResults([]);
-  }, [focusDetailOnMap, handleLayerToggle]);
+  const selectSearchResult = useCallback(
+    async (result: SearchResultItem | SearchItem) => {
+      if (result.layerId) {
+        await handleLayerToggle(result.layerId as LayerId, true);
+      }
+
+      if (result.coordinates) {
+        const detailRows =
+          result.detailRows ||
+          (result.subtitle ? [{ label: 'Informasi', value: result.subtitle, format: 'text' as const }] : []);
+
+        const rows =
+          typeof result.distanceMeters === 'number'
+            ? [
+                {
+                  label: 'Jarak dari lokasi Anda',
+                  value: formatDistanceString(result.distanceMeters),
+                  format: 'text' as const,
+                },
+                ...detailRows.filter((r) => r.label !== 'Jarak dari lokasi Anda'),
+              ]
+            : detailRows;
+
+        const detail: DetailInfo = {
+          id: result.id,
+          layerId: (result.layerId as LayerId) || 'rumahsakit',
+          title: result.title,
+          category: result.categoryLabel,
+          badge: result.badge || result.categoryLabel,
+          coordinates: result.coordinates,
+          rows,
+        };
+
+        setSelectedDetail(detail);
+        focusDetailOnMap(detail, 15);
+      }
+
+      setSearchQuery(result.title);
+      setSearchResults([]);
+    },
+    [focusDetailOnMap, handleLayerToggle]
+  );
+
+  // Listen to Global Command Palette (⌘K) search focus
+  useEffect(() => {
+    const handleGlobalFocus = async (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        item: SearchItem;
+        coordinates?: LngLatTuple;
+        layerId?: string;
+      }>;
+      const detail = customEvent.detail;
+      if (!detail || !detail.item) return;
+
+      await selectSearchResult(detail.item);
+    };
+
+    window.addEventListener(FOCUS_MAP_ITEM_EVENT, handleGlobalFocus);
+    return () => window.removeEventListener(FOCUS_MAP_ITEM_EVENT, handleGlobalFocus);
+  }, [selectSearchResult]);
 
   const addUserLocationMarker = useCallback((coordinates: LngLatTuple) => {
     const map = mapInstance.current;
     if (!map) return;
     userLocationMarkerRef.current?.remove();
-    userLocationMarkerRef.current = new maplibregl.Marker({ color: '#8fa28a' })
+
+    const el = document.createElement('div');
+    el.className = 'user-location-marker';
+    el.style.width = '18px';
+    el.style.height = '18px';
+    el.style.borderRadius = '50%';
+    el.style.backgroundColor = '#10B981';
+    el.style.border = '3px solid #FFFFFF';
+    el.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.35), 0 2px 6px rgba(0,0,0,0.3)';
+
+    const popup = new maplibregl.Popup({ offset: 12, closeButton: false }).setHTML(
+      '<div style="font-size:12px;font-weight:700;color:#0f172a;padding:2px 4px;">Lokasi Anda</div>'
+    );
+
+    userLocationMarkerRef.current = new maplibregl.Marker({ element: el })
       .setLngLat(coordinates)
+      .setPopup(popup)
       .addTo(map);
   }, []);
 
   const handleFindNearest = useCallback(async () => {
     if (!navigator.geolocation) {
-      setLocationError('Browser tidak mendukung deteksi lokasi.');
+      setLocationError('Browser Anda tidak mendukung deteksi lokasi.');
       return;
     }
 
@@ -1658,68 +1765,100 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        });
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          (err) => {
+            if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: false,
+                timeout: 12000,
+                maximumAge: 300000,
+              });
+            } else {
+              reject(err);
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 60000,
+          }
+        );
       });
 
       const userCoordinates: LngLatTuple = [position.coords.longitude, position.coords.latitude];
+      setUserLocation(userCoordinates);
       addUserLocationMarker(userCoordinates);
 
       const index = await buildSearchIndex();
-      const nearest = index
-        .filter((item) => item.coordinates)
-        .map((item) => ({
-          ...item,
-          distanceMeters: distanceInMeters(userCoordinates, item.coordinates!),
-        }))
-        .sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
-        .slice(0, 5);
+      const nearest = querySearchIndex(index, '', {
+        userLocation: userCoordinates,
+        limit: 5,
+      });
 
       if (!nearest.length) {
         setLocationError('Belum ada fasilitas yang bisa dibandingkan.');
         return;
       }
 
-      setSearchQuery('Fasilitas terdekat');
       setSearchResults(nearest);
 
       const first = nearest[0];
-      await handleLayerToggle(first.layerId, true);
+      if (first.layerId) {
+        await handleLayerToggle(first.layerId as LayerId, true);
+      }
+
       setSelectedDetail({
-        ...first,
+        id: first.id,
+        layerId: (first.layerId as LayerId) || 'rumahsakit',
+        title: first.title,
+        category: first.categoryLabel,
+        badge: first.badge || first.categoryLabel,
+        coordinates: first.coordinates || userCoordinates,
         rows: [
-          { label: 'Jarak dari lokasi Anda', value: formatDistance(first.distanceMeters ?? 0), format: 'text' },
-          ...first.rows,
+          {
+            label: 'Jarak dari lokasi Anda',
+            value: formatDistanceString(first.distanceMeters ?? 0),
+            format: 'text',
+          },
+          ...(first.detailRows || []),
         ],
       });
 
       const map = mapInstance.current;
       if (map && first.coordinates) {
-        map.fitBounds([userCoordinates, first.coordinates], {
-          padding: 80,
-          duration: prefersReducedMotion ? 0 : 500,
-          maxZoom: 15,
-        });
+        const distance = first.distanceMeters ?? 0;
+        if (distance < 35000) {
+          map.fitBounds([userCoordinates, first.coordinates], {
+            padding: { top: 90, bottom: 90, left: 80, right: 80 },
+            duration: prefersReducedMotion ? 0 : 600,
+            maxZoom: 15,
+          });
+        } else {
+          map.easeTo({
+            center: first.coordinates,
+            zoom: 14.5,
+            duration: prefersReducedMotion ? 0 : 600,
+          });
+        }
       }
-    } catch (err) {
-      const error = err as GeolocationPositionError;
-      setLocationError(
-        error.code === 1
-          ? 'Izin lokasi ditolak. Aktifkan izin lokasi untuk melihat fasilitas terdekat.'
-          : 'Gagal membaca lokasi Anda. Coba lagi beberapa saat.'
-      );
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === 1) {
+        setLocationError('Izin lokasi ditolak. Aktifkan izin lokasi di browser Anda.');
+      } else if (code === 3) {
+        setLocationError('Waktu pencarian lokasi habis. Silakan coba lagi.');
+      } else {
+        setLocationError('Gagal mendeteksi lokasi Anda. Pastikan GPS/layanan lokasi aktif.');
+      }
     } finally {
       setNearestLoading(false);
     }
   }, [addUserLocationMarker, buildSearchIndex, handleLayerToggle, prefersReducedMotion]);
 
   useEffect(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query || query === 'fasilitas terdekat') {
-      if (!nearestLoading) setSearchResults([]);
+    const query = searchQuery.trim();
+    if (!query && categoryFilter === 'semua') {
       return;
     }
 
@@ -1727,17 +1866,18 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     void (async () => {
       const index = await buildSearchIndex();
       if (cancelled) return;
-      setSearchResults(
-        index
-          .filter((item) => item.searchableText.includes(query))
-          .slice(0, 6)
-      );
+      const filtered = querySearchIndex(index, query, {
+        categoryFilter,
+        userLocation,
+        limit: 8,
+      });
+      setSearchResults(filtered);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [buildSearchIndex, nearestLoading, searchQuery]);
+  }, [buildSearchIndex, categoryFilter, searchQuery, userLocation]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -1776,26 +1916,33 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
     const map = mapInstance.current;
     if (!map) return;
 
+    if (!cachedReportIcon) cachedReportIcon = createCommunityReportIcon(false);
+    if (!cachedReportPhotoIcon) cachedReportPhotoIcon = createCommunityReportIcon(true);
+
     if (!map.hasImage('community-report-icon')) {
-      map.addImage('community-report-icon', createCommunityReportIcon(false));
+      map.addImage('community-report-icon', cachedReportIcon);
     }
     if (!map.hasImage('community-report-photo-icon')) {
-      map.addImage('community-report-photo-icon', createCommunityReportIcon(true));
+      map.addImage('community-report-photo-icon', cachedReportPhotoIcon);
     }
 
     const symbolLayers = (Object.entries(LAYER_CONFIG) as [LayerId, any][])
       .filter(([, cfg]) => cfg.render === 'symbol');
 
-    for (const [layerId, cfg] of symbolLayers) {
-      if (!cfg.iconName || !cfg.iconURL || map.hasImage(cfg.iconName)) continue;
-      try {
-        const bitmap = await loadIconImage(cfg.iconURL, cfg.iconBitmapMaxSize ?? 256);
-        map.addImage(cfg.iconName, normalizeSpriteSource(bitmap));
-        console.info(`[Map] Ikon ${layerId} berhasil dimuat`);
-      } catch (iconErr) {
-        console.warn(`[Map] Gagal memuat ikon ${layerId}:`, iconErr);
-      }
-    }
+    await Promise.all(
+      symbolLayers.map(async ([layerId, cfg]) => {
+        if (!cfg.iconName || !cfg.iconURL || map.hasImage(cfg.iconName)) return;
+        try {
+          const bitmap = await loadIconImage(cfg.iconURL, cfg.iconBitmapMaxSize ?? 256);
+          if (!map.hasImage(cfg.iconName)) {
+            map.addImage(cfg.iconName, normalizeSpriteSource(bitmap));
+            console.info(`[Map] Ikon ${layerId} berhasil dimuat`);
+          }
+        } catch (iconErr) {
+          console.warn(`[Map] Gagal memuat ikon ${layerId}:`, iconErr);
+        }
+      })
+    );
   }, []);
 
   const hydrateMapStyle = useCallback(
@@ -1920,26 +2067,13 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
     let fallbackApplied = false;
-    map.on('error', (event) => {
-      const message = event.error?.message || 'Basemap gagal dimuat.';
-      const isMissingStyleImage = message.includes('could not be loaded') && message.includes('Image');
-      if (isMissingStyleImage) {
-        console.warn('[Map] Style image tidak tersedia, diabaikan:', message);
-        return;
-      }
-      console.warn('[Map] MapLibre error:', event.error);
-      if (!fallbackApplied) {
-        fallbackApplied = true;
-        map.setStyle(FALLBACK_MAP_STYLE as any, { diff: false } as any);
-        setMapError('Basemap utama gagal dimuat. Menampilkan tampilan peta dasar.');
-        return;
-      }
-      setMapError(`Peta gagal dimuat: ${message}`);
-    });
+    let initialReady = false;
 
-    map.on('load', async () => {
-      setMapError('');
+    const onMapReady = async () => {
+      if (initialReady) return;
+      initialReady = true;
       setStyleLoaded(true);
+      setMapLoaded(true);
       try {
         interactionCleanups.current = [];
 
@@ -1952,7 +2086,6 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
           console.info('[Map Debug] canvas size:', map.getCanvas().width, map.getCanvas().height);
         }
 
-        setMapLoaded(true);
         void hydrateMapStyle(true).catch((error) => {
           console.warn('[Map] Gagal memuat layer peta:', error);
           setLayerErrors((previous) => ({
@@ -1963,9 +2096,33 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
       } catch (err) {
         console.warn('[Map] Gagal inisialisasi ikon/layer:', err);
       }
+    };
+
+    map.on('error', (event) => {
+      const message = event.error?.message || 'Basemap gagal dimuat.';
+      const isMissingStyleImage = message.includes('could not be loaded') && message.includes('Image');
+      if (isMissingStyleImage) {
+        console.warn('[Map] Style image tidak tersedia, diabaikan:', message);
+        return;
+      }
+      console.warn('[Map] MapLibre error:', event.error);
+      if (!fallbackApplied) {
+        fallbackApplied = true;
+        setMapError('Basemap utama gagal dimuat. Menampilkan tampilan peta dasar.');
+        map.once('style.load', onMapReady);
+        map.setStyle(FALLBACK_MAP_STYLE as any, { diff: false } as any);
+        return;
+      }
+      setMapError(`Peta gagal dimuat: ${message}`);
+    });
+
+    map.once('load', () => {
+      setMapError('');
+      void onMapReady();
     });
 
     return () => {
+      initialReady = true;
       resizeObserver.disconnect();
       teardownInteractions();
       userLocationMarkerRef.current?.remove();
@@ -2024,34 +2181,38 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
               <div className="flex-1">
                 <motion.div
                   ref={mapCardRef}
-                  className={`relative overflow-hidden bg-white ${isFullscreen ? 'rounded-none shadow-none' : 'rounded-3xl'}`}
+                  className={`overflow-hidden bg-white ${
+                    isFullscreen
+                      ? 'fixed inset-0 z-[9999] h-screen w-screen rounded-none shadow-none'
+                      : 'relative rounded-3xl'
+                  }`}
                   style={{
                     boxShadow: isFullscreen ? 'none' : '0 6px 24px rgba(0,0,0,0.05)',
-                    height: isFullscreen ? '100%' : 'clamp(480px, 60vh, 760px)',
-                    minHeight: isFullscreen ? '100%' : undefined,
-                    width: '100%',
+                    height: isFullscreen ? '100vh' : 'clamp(480px, 60vh, 760px)',
+                    minHeight: isFullscreen ? '100vh' : undefined,
+                    width: isFullscreen ? '100vw' : '100%',
                   }}
                   role="region"
                   aria-label="Interactive health map"
                 >
-                  <div ref={mapRef} className="absolute inset-0 z-10" style={{ minHeight: '480px' }} />
+                  <div ref={mapRef} className="absolute inset-0 z-10 w-full h-full" />
 
-                  {!isFullscreen && (
-                    <MapSearchControl
-                      query={searchQuery}
-                      results={searchResults}
-                      loading={searchLoading}
-                      nearestLoading={nearestLoading}
-                      error={locationError}
-                      onQueryChange={setSearchQuery}
-                      onFocus={buildSearchIndex}
-                      onSelect={selectSearchResult}
-                      onFindNearest={handleFindNearest}
-                      onDismissError={() => setLocationError('')}
-                    />
-                  )}
+                  <MapSearchControl
+                    query={searchQuery}
+                    results={searchResults}
+                    categoryFilter={categoryFilter}
+                    onCategoryFilterChange={setCategoryFilter}
+                    loading={searchLoading}
+                    nearestLoading={nearestLoading}
+                    error={locationError}
+                    onQueryChange={setSearchQuery}
+                    onFocus={buildSearchIndex}
+                    onSelect={selectSearchResult}
+                    onFindNearest={handleFindNearest}
+                    onDismissError={() => setLocationError('')}
+                  />
 
-                  {!mapError && !isFullscreen && !styleLoaded && (
+                  {!mapError && !styleLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-4">
                         <motion.div
@@ -2071,7 +2232,7 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     </div>
                   )}
 
-                  {mapError && !isFullscreen && (
+                  {mapError && (
                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-surface-0/90 px-6 text-center">
                       <div className="max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-lg">
                         <AlertTriangle size={28} className="mx-auto text-amber-600" />
@@ -2081,18 +2242,16 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
                     </div>
                   )}
 
-                  {!isFullscreen && (
-                    <motion.button
-                      onClick={() => setIsFilterOpen(true)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="lg:hidden absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm"
-                      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'rgba(255,255,255,0.95)' }}
-                      aria-label="Open filter"
-                    >
-                      <Filter size={20} className="text-brand-green md:w-[22px] md:h-[22px]" strokeWidth={2.5} />
-                    </motion.button>
-                  )}
+                  <motion.button
+                    onClick={() => setIsFilterOpen(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`${isFullscreen ? 'flex' : 'flex lg:hidden'} absolute top-4 left-4 bg-white rounded-full p-3 md:p-3.5 shadow-lg z-20 backdrop-blur-sm items-center justify-center`}
+                    style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'rgba(255,255,255,0.95)' }}
+                    aria-label="Open filter"
+                  >
+                    <Filter size={20} className="text-brand-green md:w-[22px] md:h-[22px]" strokeWidth={2.5} />
+                  </motion.button>
 
                   <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2 sm:bottom-5 sm:right-5">
                     <ZoomControl onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
@@ -2162,11 +2321,11 @@ export function MapSection({ sectionId = 'peta' }: MapSectionProps = {}) {
             <MapLayerFilter
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
-              isMobile={isMobile}
+              isMobile={isMobile || isFullscreen}
               defaultSelections={activeSelections}
               onToggle={async (layerId: string, enabled: boolean) => {
                 await handleLayerToggle(layerId, enabled);
-                setIsFilterOpen(false);
+                if (isMobile || isFullscreen) setIsFilterOpen(false);
               }}
             />
           </div>
@@ -2253,9 +2412,43 @@ function BasemapSwitcher({
   );
 }
 
+function getSearchItemIcon(category: string) {
+  switch (category) {
+    case 'rumahsakit':
+      return { icon: Hospital, color: 'text-blue-600 bg-blue-50 border-blue-100' };
+    case 'puskesmas':
+      return { icon: Cross, color: 'text-emerald-600 bg-emerald-50 border-emerald-100' };
+    case 'klinik':
+      return { icon: Building2, color: 'text-amber-600 bg-amber-50 border-amber-100' };
+    case 'apotek':
+      return { icon: Pill, color: 'text-teal-600 bg-teal-50 border-teal-100' };
+    case 'homecare':
+      return { icon: Home, color: 'text-yellow-700 bg-yellow-50 border-yellow-100' };
+    case 'tps':
+      return { icon: Trash2, color: 'text-stone-600 bg-stone-100 border-stone-200' };
+    case 'wilayah':
+      return { icon: Compass, color: 'text-indigo-600 bg-indigo-50 border-indigo-100' };
+    case 'laporan':
+      return { icon: FileText, color: 'text-rose-600 bg-rose-50 border-rose-100' };
+    default:
+      return { icon: MapPin, color: 'text-brand-green bg-brand-mint/60 border-brand-green/20' };
+  }
+}
+
+const QUICK_SEARCH_SUGGESTIONS = [
+  'RSUD Ulin',
+  'RS Ansari Saleh',
+  'Puskesmas Cempaka',
+  'Apotek Kimia Farma',
+  'Banjarmasin Tengah',
+  'TPS',
+];
+
 function MapSearchControl({
   query,
   results,
+  categoryFilter,
+  onCategoryFilterChange,
   loading,
   nearestLoading,
   error,
@@ -2266,36 +2459,82 @@ function MapSearchControl({
   onDismissError,
 }: {
   query: string;
-  results: SearchResult[];
+  results: SearchResultItem[];
+  categoryFilter: string;
+  onCategoryFilterChange: (cat: string) => void;
   loading: boolean;
   nearestLoading: boolean;
   error: string;
   onQueryChange: (value: string) => void;
   onFocus: () => void;
-  onSelect: (result: SearchResult) => void;
+  onSelect: (result: SearchResultItem) => void;
   onFindNearest: () => void;
   onDismissError: () => void;
 }) {
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [results]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!results.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = focusedIndex >= 0 && results[focusedIndex] ? results[focusedIndex] : results[0];
+      if (target) {
+        onSelect(target);
+        setIsInputFocused(false);
+      }
+    } else if (e.key === 'Escape') {
+      onQueryChange('');
+      setFocusedIndex(-1);
+      setIsInputFocused(false);
+    }
+  };
+
+  const categories = [
+    { id: 'semua', label: 'Semua' },
+    { id: 'faskes', label: 'Faskes' },
+    { id: 'rumahsakit', label: 'RS' },
+    { id: 'puskesmas', label: 'Puskesmas' },
+    { id: 'wilayah', label: 'Wilayah' },
+    { id: 'laporan', label: 'Laporan' },
+  ];
+
   return (
-    <div className="absolute top-4 left-16 right-16 z-30 sm:right-auto sm:w-[380px]">
-      <div className="rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur-sm">
+    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 w-[calc(100%-24px)] sm:w-[430px] max-w-[calc(100vw-24px)]">
+      <div className="overflow-hidden rounded-2xl border border-surface-200/90 bg-white/95 p-2 shadow-[0_12px_36px_rgba(15,23,42,0.12)] backdrop-blur-md transition-all">
+        {/* Search Input Bar */}
         <div className="flex items-center gap-2">
-          <div className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-surface-100 px-3">
+          <div className="flex h-11 flex-1 items-center gap-2 rounded-xl bg-surface-100/90 px-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-green/30">
             <Search size={17} className="flex-shrink-0 text-ink-500" />
             <input
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              onFocus={onFocus}
-              placeholder="Cari fasilitas"
+              onFocus={() => {
+                setIsInputFocused(true);
+                onFocus();
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Cari faskes, RS, wilayah, laporan..."
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ink-900 outline-none placeholder:text-ink-500"
-              aria-label="Cari fasilitas kesehatan"
+              aria-label="Cari fasilitas kesehatan geospasial"
             />
-            {loading && <Loader2 size={16} className="animate-spin text-brand-green" />}
+            {loading && <Loader2 size={16} className="animate-spin text-brand-green flex-shrink-0" />}
             {query && !loading && (
               <button
                 type="button"
                 onClick={() => onQueryChange('')}
-                className="rounded-full p-1 text-ink-500 hover:bg-white hover:text-ink-900"
+                className="rounded-full p-1 text-ink-500 hover:bg-surface-200 hover:text-ink-900 transition-colors"
                 aria-label="Hapus pencarian"
               >
                 <X size={15} />
@@ -2306,52 +2545,153 @@ function MapSearchControl({
             type="button"
             onClick={onFindNearest}
             disabled={nearestLoading}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-green text-white shadow-sm transition-transform active:scale-95 disabled:cursor-wait disabled:opacity-70"
-            aria-label="Cari fasilitas terdekat"
-            title="Cari fasilitas terdekat"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-green text-white shadow-sm transition-transform active:scale-95 disabled:cursor-wait disabled:opacity-70 hover:bg-brand-darkgreen"
+            aria-label="Cari fasilitas terdekat dari GPS"
+            title="Temukan faskes terdekat dari lokasi GPS Anda"
           >
-            {nearestLoading ? <Loader2 size={17} className="animate-spin" /> : <LocateFixed size={17} />}
+            {nearestLoading ? <Loader2 size={18} className="animate-spin" /> : <LocateFixed size={18} />}
           </button>
         </div>
 
+        {/* Category Filter Chips */}
+        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-0.5 pt-0.5 no-scrollbar">
+          {categories.map((cat) => {
+            const active = categoryFilter === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => onCategoryFilterChange(cat.id)}
+                className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold transition-all ${
+                  active
+                    ? 'bg-brand-green text-white shadow-xs'
+                    : 'bg-surface-100 text-ink-600 hover:bg-surface-200 hover:text-ink-900'
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Error Notification */}
         {error && (
           <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-800">
-            <AlertTriangle size={15} className="mt-0.5 flex-shrink-0" />
+            <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-amber-600" />
             <span className="flex-1">{error}</span>
-            <button type="button" onClick={onDismissError} className="rounded-full p-0.5 hover:bg-amber-100" aria-label="Tutup pesan lokasi">
+            <button
+              type="button"
+              onClick={onDismissError}
+              className="rounded-full p-0.5 hover:bg-amber-100 transition-colors"
+              aria-label="Tutup pesan lokasi"
+            >
               <X size={14} />
             </button>
           </div>
         )}
 
+        {/* Quick Suggestions when input is focused and query is empty */}
+        {isInputFocused && !query && (
+          <div className="mt-2.5 border-t border-surface-200/80 pt-2 px-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-ink-500 mb-1.5">
+              <Sparkles size={13} className="text-brand-green" />
+              <span>Pencarian Cepat</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_SEARCH_SUGGESTIONS.map((sug) => (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => onQueryChange(sug)}
+                  className="rounded-lg bg-surface-100 px-2 py-1 text-[11px] font-medium text-ink-700 hover:bg-brand-mint hover:text-brand-green transition-colors cursor-pointer"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Results Dropdown */}
         {results.length > 0 && (
-          <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-gray-100 bg-white">
-            {results.map((result) => {
-              const address = result.rows.find((row) => row.label === 'Alamat')?.value;
+          <div className="mt-2.5 max-h-[300px] overflow-y-auto rounded-xl border border-surface-200/80 bg-white shadow-inner divide-y divide-surface-100">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-surface-50 text-[11px] font-bold text-ink-500 border-b border-surface-200/60 sticky top-0 z-10">
+              <span>Hasil Pencarian ({results.length})</span>
+              <span className="text-[10px] font-normal text-ink-400">Gunakan ↑↓ dan Enter</span>
+            </div>
+
+            {results.map((result, idx) => {
+              const isFocused = idx === focusedIndex;
+              const { icon: ItemIcon, color: iconStyle } = getSearchItemIcon(result.category);
+              const address =
+                result.detailRows?.find((row) => row.label === 'Alamat')?.value || result.subtitle;
+
               return (
                 <button
                   key={result.id}
                   type="button"
-                  onClick={() => onSelect(result)}
-                  className="block w-full border-b border-gray-100 px-3 py-2.5 text-left last:border-b-0 hover:bg-surface-100"
+                  onClick={() => {
+                    onSelect(result);
+                    setIsInputFocused(false);
+                  }}
+                  className={`w-full px-3 py-2.5 text-left transition-colors cursor-pointer flex items-start gap-3 ${
+                    isFocused ? 'bg-brand-mint/70 ring-1 ring-inset ring-brand-green/80' : 'hover:bg-surface-50'
+                  }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                  {/* Category Icon Badge */}
+                  <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border text-sm ${iconStyle}`}>
+                    <ItemIcon size={16} />
+                  </div>
+
+                  {/* Main Content */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
                       <p className="truncate text-sm font-bold text-ink-900">{result.title}</p>
-                      <p className="mt-0.5 truncate text-xs font-semibold text-brand-green">{result.category}</p>
-                      {address ? (
-                        <p className="mt-1 truncate text-xs text-ink-500">{String(address)}</p>
-                      ) : null}
+                      {result.badge && (
+                        <span className="rounded-md bg-surface-100 px-1.5 py-0.2 text-[10px] font-semibold text-ink-600 flex-shrink-0">
+                          {result.badge}
+                        </span>
+                      )}
                     </div>
+
+                    <p className="mt-0.5 truncate text-xs font-semibold text-brand-green">
+                      {result.categoryLabel}
+                    </p>
+
+                    {address ? (
+                      <p className="mt-0.5 truncate text-xs text-ink-500">{String(address)}</p>
+                    ) : null}
+                  </div>
+
+                  {/* Distance & Action */}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     {typeof result.distanceMeters === 'number' && (
-                      <span className="flex-shrink-0 rounded-full bg-brand-mint px-2 py-1 text-[11px] font-bold text-brand-green">
-                        {formatDistance(result.distanceMeters)}
+                      <span className="rounded-full bg-brand-mint px-2 py-0.5 text-[11px] font-bold text-brand-green">
+                        {formatDistanceString(result.distanceMeters)}
+                      </span>
+                    )}
+                    {isFocused && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-brand-green">
+                        <span>Pilih</span>
+                        <CornerDownLeft size={11} />
                       </span>
                     )}
                   </div>
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* Empty Result Notification when query is present but 0 results */}
+        {query && results.length === 0 && !loading && (
+          <div className="mt-2.5 rounded-xl border border-surface-200/80 bg-surface-50 p-4 text-center">
+            <p className="text-xs font-semibold text-ink-700">
+              Tidak ada fasilitas yang cocok dengan &ldquo;<span className="font-bold">{query}</span>&rdquo;
+            </p>
+            <p className="mt-1 text-[11px] text-ink-500">
+              Coba gunakan nama umum (cth: RS, Puskesmas, Apotek) atau bersihkan filter.
+            </p>
           </div>
         )}
       </div>

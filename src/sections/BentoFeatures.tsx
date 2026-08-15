@@ -1,6 +1,7 @@
 // src/components/BentoFeatures.tsx
 import { motion } from 'motion/react';
 import { Map, MessageSquareWarning, BarChart3, Bot, Newspaper } from 'lucide-react';
+import { openChatbaseWidget } from '@/lib/chatbase';
 
 interface BentoCard {
   icon: React.ReactNode;
@@ -129,6 +130,14 @@ export function BentoFeatures() {
             <motion.a
               key={index}
               href={card.href}
+              onClick={(e) => {
+                if (card.title === 'AI Chatbot') {
+                  const opened = openChatbaseWidget();
+                  if (opened) {
+                    e.preventDefault();
+                  }
+                }
+              }}
               variants={cardVariants}
               className={`${card.span} group relative cursor-pointer overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-green/55 hover:shadow-[0_16px_34px_rgba(104,115,101,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 focus-visible:ring-offset-2 sm:rounded-3xl sm:p-6 lg:p-7`}
               whileHover={{ y: -4 }}

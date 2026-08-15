@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, ClipboardPlus, Menu, X } from 'lucide-react';
+import { ArrowRight, ClipboardPlus, Menu, Search, X } from 'lucide-react';
+import { openGlobalCommandMenu } from '@/lib/searchEngine';
 
 const menuItems = [
   { label: 'Beranda', href: '#/' },
@@ -47,7 +48,7 @@ export function Navbar() {
       ticking = true;
 
       window.requestAnimationFrame(() => {
-        setIsScrolled(window.scrollY > 72);
+        setIsScrolled(window.scrollY > 48);
         ticking = false;
       });
     };
@@ -78,34 +79,71 @@ export function Navbar() {
 
   return (
     <>
-      <motion.div
+      <motion.header
         initial={{ y: -80, opacity: 0 }}
         animate={{
           y: 0,
           opacity: 1,
-          top: isScrolled ? (isMobile ? 12 : 16) : (isMobile ? 40 : 54),
+          top: isScrolled ? (isMobile ? 10 : 16) : 0,
         }}
-        transition={{ duration: 0.45, ease: [0.25, 0.8, 0.25, 1] }}
-        className="fixed left-0 right-0 z-50 flex justify-center px-3 pointer-events-none"
+        transition={{ duration: 0.38, ease: [0.25, 0.8, 0.25, 1] }}
+        className={`fixed left-0 right-0 z-50 flex justify-center pointer-events-none transition-all duration-300 ${
+          isScrolled ? 'px-3 sm:px-6' : 'px-0'
+        }`}
       >
         <motion.nav
           animate={{
-            width: isMobile ? 'min(100%, 360px)' : isScrolled ? 'min(100%, 600px)' : 'min(100%, 640px)',
+            width: isScrolled
+              ? isMobile
+                ? 'min(100%, 360px)'
+                : 'min(100%, 680px)'
+              : '100%',
+            height: isScrolled ? (isMobile ? 44 : 48) : (isMobile ? 54 : 64),
+            borderRadius: isScrolled ? 9999 : 0,
+            backgroundColor: isScrolled
+              ? 'rgba(255, 255, 255, 0.92)'
+              : 'rgba(247, 244, 237, 0.95)',
+            borderColor: isScrolled
+              ? 'rgba(226, 232, 240, 0.90)'
+              : 'rgba(247, 244, 237, 0)',
+            boxShadow: isScrolled
+              ? '0 16px 42px rgba(35, 48, 37, 0.14), 0 1px 2px rgba(0,0,0,0.05)'
+              : '0 0 0 rgba(0, 0, 0, 0)',
           }}
-          transition={{ duration: 0.28, ease: [0.25, 0.8, 0.25, 1] }}
-          className="pointer-events-auto h-11 rounded-full border border-white/70 bg-white/86 shadow-[0_16px_44px_rgba(53,64,54,0.16)] backdrop-blur-2xl sm:h-12"
+          transition={{ duration: 0.38, ease: [0.25, 0.8, 0.25, 1] }}
+          className={`pointer-events-auto border will-change-[width,height,border-radius,background-color] ${
+            isScrolled ? 'backdrop-blur-2xl' : 'backdrop-blur-none'
+          }`}
         >
-          <div className="flex h-full items-center justify-between gap-2 px-3 sm:px-4">
+          <div
+            className={`flex h-full items-center justify-between gap-2 transition-all duration-300 ${
+              isScrolled
+                ? 'w-full px-3 sm:px-4'
+                : 'mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12'
+            }`}
+          >
             <a
               href="#/"
               onClick={(event) => handleNavClick(event, '#/')}
-              className="flex min-w-0 items-center gap-2 rounded-full px-1 text-ink-900"
+              className="flex min-w-0 items-center gap-2 rounded-full px-1 text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
               aria-label="Ke beranda SIHAT"
             >
-              <span className="text-xl font-semibold leading-none tracking-normal sm:text-2xl">SIHAT</span>
+              <span
+                className={`font-semibold leading-none tracking-tight transition-all duration-300 text-ink-900 ${
+                  isScrolled ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl font-bold'
+                }`}
+              >
+                SIHAT
+              </span>
+              {!isScrolled && (
+                <span className="hidden lg:inline-flex items-center rounded-full bg-brand-green/10 border border-brand-green/20 px-2.5 py-0.5 text-xs font-semibold text-brand-green-dark">
+                  Kalsel
+                </span>
+              )}
             </a>
 
-            <div className="hidden items-center gap-1 md:flex">
+            {/* Desktop Navigation Links */}
+            <div className="hidden items-center gap-1.5 md:flex">
               {menuItems.map((item) => {
                 const isActive = activeRoute === item.href;
 
@@ -115,7 +153,9 @@ export function Navbar() {
                     href={item.href}
                     onClick={(event) => handleNavClick(event, item.href)}
                     aria-current={isActive ? 'page' : undefined}
-                    className="relative rounded-full px-2.5 py-1 text-xs font-semibold text-ink-900 transition-colors hover:bg-brand-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
+                    className={`relative rounded-full font-semibold text-ink-900 transition-all duration-200 hover:bg-brand-mint/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 ${
+                      isScrolled ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm'
+                    }`}
                   >
                     {item.label}
                     {isActive && (
@@ -130,12 +170,34 @@ export function Navbar() {
               })}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            {/* Right Action Items */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={openGlobalCommandMenu}
+                className={`flex items-center gap-1.5 rounded-full border border-surface-200/80 bg-surface-100/75 text-xs font-medium text-ink-600 transition-all hover:border-surface-300 hover:bg-surface-100 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 cursor-pointer ${
+                  isScrolled ? 'h-8 px-2.5' : 'h-9 px-3.5'
+                }`}
+                aria-label="Cari fasilitas atau menu (⌘K)"
+                title="Cari fasilitas, laporan, wilayah (⌘K)"
+              >
+                <Search size={14} className="text-ink-500" />
+                <span className="hidden sm:inline text-xs text-ink-600">
+                  {isScrolled ? 'Cari...' : 'Cari fasilitas...'}
+                </span>
+                <kbd className="hidden md:inline-flex items-center rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-mono font-medium text-ink-500 border border-surface-200 shadow-2xs">
+                  ⌘K
+                </kbd>
+              </button>
+
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="hidden h-8 w-8 items-center justify-center rounded-full bg-brand-mint text-brand-green-dark transition-colors hover:bg-brand-green-light md:inline-flex"
+                className={`hidden items-center justify-center rounded-full bg-brand-mint text-brand-green-dark transition-colors hover:bg-brand-green-light md:inline-flex ${
+                  isScrolled ? 'h-8 w-8' : 'h-9 w-9'
+                }`}
                 aria-label="Buka laporan warga"
+                title="Buat Laporan Warga"
               >
                 <ClipboardPlus size={16} />
               </a>
@@ -143,12 +205,15 @@ export function Navbar() {
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="hidden items-center gap-1.5 rounded-full bg-brand-green px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(104,115,101,0.24)] transition-colors hover:bg-brand-green-dark sm:inline-flex"
+                className={`hidden items-center gap-1.5 rounded-full bg-brand-green font-semibold text-white shadow-[0_8px_20px_rgba(104,115,101,0.24)] transition-all hover:bg-brand-green-dark sm:inline-flex ${
+                  isScrolled ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-xs'
+                }`}
               >
                 Lapor
                 <ArrowRight size={13} />
               </a>
 
+              {/* Mobile Menu Toggle Button */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((open) => !open)}
@@ -160,8 +225,9 @@ export function Navbar() {
             </div>
           </div>
         </motion.nav>
-      </motion.div>
+      </motion.header>
 
+      {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -169,9 +235,11 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="fixed left-3 right-3 top-24 z-40 overflow-hidden rounded-[14px] border border-white/70 bg-white/95 shadow-[0_22px_56px_rgba(42,48,43,0.18)] backdrop-blur-2xl md:hidden"
+            className={`fixed left-3 right-3 z-40 overflow-hidden rounded-[16px] border border-white/80 bg-white/95 shadow-[0_22px_56px_rgba(42,48,43,0.18)] backdrop-blur-2xl md:hidden ${
+              isScrolled ? 'top-16' : 'top-20'
+            }`}
           >
-            <div className="flex flex-col p-2">
+            <div className="flex flex-col p-2.5">
               {menuItems.map((item) => {
                 const isActive = activeRoute === item.href;
 
@@ -191,7 +259,7 @@ export function Navbar() {
               <a
                 href="#/laporan"
                 onClick={(event) => handleNavClick(event, '#/laporan')}
-                className="mt-1 inline-flex items-center justify-center gap-2 rounded-[10px] bg-brand-green px-3 py-2.5 text-sm font-semibold text-white"
+                className="mt-1.5 inline-flex items-center justify-center gap-2 rounded-[10px] bg-brand-green px-3 py-2.5 text-sm font-semibold text-white"
               >
                 Buat Laporan
                 <ArrowRight size={15} />

@@ -3,6 +3,12 @@
 // One-time loader for the Chatbase embed.
 // Extracted from App.tsx so the inline IIFE doesn't pollute the component file.
 
+declare global {
+  interface Window {
+    chatbase?: any;
+  }
+}
+
 const REMOTE_SCRIPT_ID = 'f_w0Zlu5trRGKUknyahcR';
 const LOADER_ID = 'chatbase-inline-loader';
 const STYLE_ID = 'chatbase-hero-polish';
@@ -27,6 +33,9 @@ const LOADER_BODY = `
     script.src = "https://www.chatbase.co/embed.min.js";
     script.id = "${REMOTE_SCRIPT_ID}";
     script.domain = "www.chatbase.co";
+    script.onerror = function() {
+      console.warn("[Chatbase] Script gagal dimuat (mungkin diblokir oleh AdBlocker atau jaringan offline).");
+    };
     document.body.appendChild(script);
   };
   const onLoad = function () {
@@ -67,3 +76,23 @@ export function loadChatbaseWidget(): void {
   document.body.appendChild(loader);
   loader.remove();
 }
+
+/**
+ * Buka popup dialog widget Chatbase secara programatis.
+ * Jika diblokir oleh adblocker/browser privacy, return false tanpa crash.
+ */
+export function openChatbaseWidget(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    if (typeof window.chatbase === 'function') {
+      window.chatbase('open');
+      return true;
+    }
+  } catch (err) {
+    console.warn('[Chatbase] Gagal membuka widget:', err);
+  }
+
+  return false;
+}
+

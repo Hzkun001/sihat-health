@@ -13,12 +13,13 @@ export const widestRotatingWord =
 
 /** Items for the marquee data ticker at the bottom of the hero. */
 export const heroMarqueeItems = [
-  '47 Puskesmas',
-  '200K+ Warga',
-  '15 Indikator SDG',
-  '5 Rumah Sakit',
-  '32 Apotek',
-  '12 Klinik',
-  'Real-time Data',
-  'AI Chatbot',
+  '17 Rumah Sakit',
+  '32 Puskesmas',
+  '68 Klinik Kesehatan',
+  '176 Apotek & Farmasi',
+  '30 HomeCare Lansia',
+  '19 Titik TPS Sanitasi',
+  '910K+ Penduduk',
+  'Peta Geospasial Real-time',
+  'AI Chatbot SIHAT',
 ] as const;
