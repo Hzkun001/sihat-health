@@ -1,4 +1,4 @@
-import { ensureAnonymousSession, isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { ensureAnonymousSession, isSupabaseConfigured, supabase } from './supabase';
 
 export type ReportStatus = 'baru' | 'diverifikasi' | 'diproses' | 'selesai' | 'ditolak';
 export type ReportPriority = 'rendah' | 'normal' | 'tinggi' | 'darurat';
@@ -34,6 +34,7 @@ export interface CommunityReport {
   assignedTo?: string;
   isPublic: boolean;
   photoPath?: string;
+  isLocalPending?: boolean;
   comments: ReportComment[];
   updates: ReportUpdate[];
 }
@@ -90,7 +91,7 @@ export type ReportStatusCounts = Record<ReportStatus, number>;
 
 const REPORT_PRIORITIES: readonly ReportPriority[] = ['rendah', 'normal', 'tinggi', 'darurat'];
 const STORAGE_KEY = 'sihat-community-reports-v1';
-const REPORTS_UPDATED_EVENT = 'sihat:community-reports-updated';
+export const REPORTS_UPDATED_EVENT = 'sihat:community-reports-updated';
 const PHOTO_BUCKET = 'report-photos';
 const REPORT_QUERY_LIMIT = 200;
 const SIGNED_PHOTO_URL_TTL_SECONDS = 60 * 60;
@@ -138,62 +139,59 @@ function normalizeStatus(value: unknown): ReportStatus {
   return 'baru';
 }
 
-function normalizeReport(value: unknown): CommunityReport | null {
-  const item = value as Partial<CommunityReport> | null;
-  if (!item || typeof item !== 'object') return null;
-  if (typeof item.description !== 'string') return null;
-  if (typeof item.latitude !== 'number' || typeof item.longitude !== 'number') return null;
-  if (!Number.isFinite(item.latitude) || !Number.isFinite(item.longitude)) return null;
+function normalizeReport(raw: any): CommunityReport | null {
+  if (!raw || typeof raw !== 'object') return null;
+  if (!raw.id || typeof raw.description !== 'string') return null;
+  if (typeof raw.latitude !== 'number' || typeof raw.longitude !== 'number') return null;
 
   return {
-    id: typeof item.id === 'string' ? item.id : createId('report'),
-    ticketNumber: typeof item.ticketNumber === 'string' ? item.ticketNumber : undefined,
-    category: typeof item.category === 'string' && item.category.trim() ? item.category : 'lingkungan',
-    description: item.description,
-    latitude: item.latitude,
-    longitude: item.longitude,
-    photoDataUrl: typeof item.photoDataUrl === 'string' ? item.photoDataUrl : undefined,
-    createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
-    updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
-    status: normalizeStatus(item.status),
-    priority: normalizePriority(item.priority),
-    dueAt: typeof item.dueAt === 'string' ? item.dueAt : undefined,
-    assignedTo: typeof item.assignedTo === 'string' ? item.assignedTo : undefined,
-    isPublic: item.isPublic === true,
-    photoPath: typeof item.photoPath === 'string' ? item.photoPath : undefined,
-    comments: Array.isArray(item.comments)
-      ? item.comments
-        .map((comment) => {
-          const normalized = comment as Partial<ReportComment>;
-          if (typeof normalized.message !== 'string' || !normalized.message.trim()) return null;
+    id: String(raw.id),
+    ticketNumber: raw.ticketNumber ? String(raw.ticketNumber) : undefined,
+    category: typeof raw.category === 'string' ? raw.category : 'lingkungan',
+    description: raw.description,
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+    photoDataUrl: typeof raw.photoDataUrl === 'string' ? raw.photoDataUrl : undefined,
+    photoPath: typeof raw.photoPath === 'string' ? raw.photoPath : undefined,
+    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : undefined,
+    status: normalizeStatus(raw.status),
+    priority: normalizePriority(raw.priority),
+    dueAt: typeof raw.dueAt === 'string' ? raw.dueAt : undefined,
+    assignedTo: typeof raw.assignedTo === 'string' ? raw.assignedTo : undefined,
+    isPublic: raw.isPublic === true,
+    isLocalPending: raw.isLocalPending === true,
+    comments: Array.isArray(raw.comments)
+      ? raw.comments
+        .map((comment: any) => {
+          if (!comment || typeof comment !== 'object' || !comment.message) return null;
           return {
-            id: typeof normalized.id === 'string' ? normalized.id : createId('comment'),
-            author: typeof normalized.author === 'string' && normalized.author.trim() ? normalized.author : 'Warga',
-            message: normalized.message,
-            createdAt: typeof normalized.createdAt === 'string' ? normalized.createdAt : new Date().toISOString(),
+            id: String(comment.id || createId('comment')),
+            author: String(comment.author || 'Warga'),
+            message: String(comment.message),
+            createdAt: String(comment.createdAt || new Date().toISOString()),
           };
         })
-        .filter((comment): comment is ReportComment => Boolean(comment))
+        .filter((comment: unknown): comment is ReportComment => comment !== null)
       : [],
-    updates: Array.isArray(item.updates)
-      ? item.updates
-        .map<ReportUpdate | null>((update) => {
-          const normalized = update as Partial<ReportUpdate>;
-          if (typeof normalized.title !== 'string' || !normalized.title.trim()) return null;
+    updates: Array.isArray(raw.updates)
+      ? raw.updates
+        .map((update: any) => {
+          if (!update || typeof update !== 'object' || !update.title) return null;
           return {
-            id: typeof normalized.id === 'string' ? normalized.id : createId('update'),
-            status: normalizeStatus(normalized.status),
-            title: normalized.title,
-            note: typeof normalized.note === 'string' ? normalized.note : undefined,
-            createdAt: typeof normalized.createdAt === 'string' ? normalized.createdAt : new Date().toISOString(),
+            id: String(update.id || createId('update')),
+            status: normalizeStatus(update.status),
+            title: String(update.title),
+            note: update.note ? String(update.note) : undefined,
+            createdAt: String(update.createdAt || new Date().toISOString()),
           };
         })
-        .filter((update): update is ReportUpdate => update !== null)
+        .filter((update: unknown): update is ReportUpdate => update !== null)
       : [],
   };
 }
 
-function getLocalReports(): CommunityReport[] {
+export function getLocalReports(): CommunityReport[] {
   if (!canUseBrowserStorage()) return [];
 
   try {
@@ -231,7 +229,7 @@ function setReportsCache(
   }
 }
 
-function saveLocalReports(reports: CommunityReport[]) {
+export function saveLocalReports(reports: CommunityReport[]) {
   if (!canUseBrowserStorage()) return;
 
   try {
@@ -587,7 +585,7 @@ function extensionForMimeType(mimeType: string) {
   return 'jpg';
 }
 
-function addLocalCommunityReport(input: NewCommunityReportInput): CommunityReport {
+function addLocalCommunityReport(input: NewCommunityReportInput, isPending = false): CommunityReport {
   const report: CommunityReport = {
     id: createId('report'),
     category: input.category?.trim() || 'lingkungan',
@@ -599,13 +597,16 @@ function addLocalCommunityReport(input: NewCommunityReportInput): CommunityRepor
     status: 'baru',
     priority: 'normal',
     isPublic: false,
+    isLocalPending: isPending,
     comments: [],
     updates: [
       {
         id: createId('update'),
         status: 'baru',
-        title: 'Laporan diterima',
-        note: 'Laporan tersimpan secara lokal dan menunggu sinkronisasi.',
+        title: isPending ? 'Tersimpan offline' : 'Laporan diterima',
+        note: isPending
+          ? 'Laporan tersimpan di perangkat lokal dan akan otomatis dikirim saat online.'
+          : 'Laporan tersimpan secara lokal dan menunggu verifikasi.',
         createdAt: new Date().toISOString(),
       },
     ],
@@ -617,6 +618,11 @@ function addLocalCommunityReport(input: NewCommunityReportInput): CommunityRepor
 
 export async function addCommunityReport(input: NewCommunityReportInput): Promise<CommunityReport> {
   if (!isSupabaseConfigured || !supabase) return addLocalCommunityReport(input);
+
+  // Jika browser offline, langsung simpan secara lokal dengan status pending
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return addLocalCommunityReport(input, true);
+  }
 
   let photoPath: string | null = null;
   let reportInserted = false;
@@ -666,12 +672,17 @@ export async function addCommunityReport(input: NewCommunityReportInput): Promis
       if (cleanupError) console.warn('[Reports] Gagal membersihkan foto setelah insert gagal:', cleanupError);
     }
 
-    if (error instanceof Error && error.message?.toLowerCase().includes('load failed')) {
-      const connectionError = new Error(
-        'Gagal mengirim laporan karena request ke Supabase tidak bisa dijangkau. Periksa VITE_SUPABASE_URL, CORS/allowed origins, dan aktifkan Anonymous Sign-Ins.',
-      );
-      Object.defineProperty(connectionError, 'cause', { value: error });
-      throw connectionError;
+    // Fallback otomatis simpan lokal jika terjadi kegagalan jaringan atau anon auth nonaktif
+    if (
+      error instanceof Error &&
+      (error.message?.toLowerCase().includes('load failed') ||
+        error.message?.toLowerCase().includes('failed to fetch') ||
+        error.message?.toLowerCase().includes('network') ||
+        error.message?.toLowerCase().includes('anonymous') ||
+        error.message?.toLowerCase().includes('sign-in'))
+    ) {
+      console.info('[Reports] Server auth atau jaringan tidak siap, menyimpan laporan secara lokal untuk disinkronkan nanti.');
+      return addLocalCommunityReport(input, true);
     }
 
     throw error;

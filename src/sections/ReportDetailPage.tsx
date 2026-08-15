@@ -175,6 +175,11 @@ export function ReportDetailPage({ reportId, onClose }: ReportDetailPageProps) {
                 <span className="rounded-full bg-surface-100 px-3 py-1 text-xs font-bold capitalize text-ink-700">
                   {STATUS_LABELS[report.status]}
                 </span>
+                {report.isLocalPending && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200">
+                    Menunggu Sinkronisasi Server
+                  </span>
+                )}
               </div>
 
               <h1 className="text-2xl font-bold leading-tight text-ink-900 sm:text-3xl">

@@ -1,5 +1,6 @@
 import { SectionReveal } from '@/components/shared/SectionReveal';
 import { addCommunityReport } from '@/lib/communityReports';
+import { compressImageFile } from '@/lib/imageCompression';
 import {
   parseCoordinates,
   REPORT_DESCRIPTION_MAX_LENGTH,
@@ -31,6 +32,7 @@ interface Coordinates {
 
 export function ReportSection() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
   const [description, setDescription] = useState('');
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [coordinateInput, setCoordinateInput] = useState('');
@@ -106,7 +108,7 @@ export function ReportSection() {
     );
   };
 
-  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const validationError = validateReportPhoto(file);
@@ -117,9 +119,18 @@ export function ReportSection() {
     }
 
     setImageError(null);
-    const reader = new FileReader();
-    reader.onloadend = () => setSelectedImage(reader.result as string);
-    reader.readAsDataURL(file);
+    setIsCompressingImage(true);
+    try {
+      const compressedDataUrl = await compressImageFile(file);
+      setSelectedImage(compressedDataUrl);
+    } catch (err) {
+      console.warn('[ReportSection] Gagal mengompres gambar:', err);
+      const reader = new FileReader();
+      reader.onloadend = () => setSelectedImage(reader.result as string);
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCompressingImage(false);
+    }
   };
 
   const handleRemoveImage = () => {
@@ -353,7 +364,14 @@ export function ReportSection() {
                       className="rounded-xl border border-dashed border-surface-200 bg-white p-4"
                     >
                       <div className="mb-4 flex aspect-[4/3] items-center justify-center rounded-lg bg-surface-100">
-                        <ImagePlus size={36} className="text-ink-500" />
+                        {isCompressingImage ? (
+                          <div className="flex flex-col items-center gap-2 text-brand-green">
+                            <Loader2 size={32} className="animate-spin" />
+                            <span className="text-xs font-bold">Mengoptimalkan foto...</span>
+                          </div>
+                        ) : (
+                          <ImagePlus size={36} className="text-ink-500" />
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <button
